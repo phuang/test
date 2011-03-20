@@ -1,3 +1,4 @@
+# vim:set noet:
 CFLAGS   = -g0 -O0
 CXXFLAGS = $(CFLAGS) 
 LDFLAGS = 
@@ -9,3 +10,6 @@ TARGETS = \
 all: $(TARGETS)
 
 bind: bind.cpp
+
+clean:
+	$(RM) *.o *~ $(TARGETS)
