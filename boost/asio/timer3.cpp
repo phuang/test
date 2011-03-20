@@ -32,7 +32,9 @@ int main()
   boost::asio::io_service io;
 
   int count = 0;
+  
   boost::asio::deadline_timer t(io, boost::posix_time::seconds(1));
+  
   t.async_wait(boost::bind(print,
         boost::asio::placeholders::error, &t, &count));
 
