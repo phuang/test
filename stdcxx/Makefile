@@ -5,11 +5,14 @@ LDFLAGS =
 
 TARGETS = \
 	map \
+	list \
 	$(NULL)
 
 all: $(TARGETS)
 
 map: map.cpp
+
+list: list.cpp
 
 clean:
 	$(RM) *.o *~ $(TARGETS)
