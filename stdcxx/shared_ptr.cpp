@@ -1,5 +1,5 @@
 // g++ -std=c++0x 
-#include <tr1/memory>
+#include <memory>
 #include <iostream>
 #include <vector>
 
@@ -20,7 +20,7 @@ public:
     int i;
 };
 
-typedef std::tr1::shared_ptr<A> APtr;
+typedef std::shared_ptr<A> APtr;
 int main()
 {
     APtr p1;
