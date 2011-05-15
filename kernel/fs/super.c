@@ -47,9 +47,87 @@ static const struct super_operations phuang_sops = {
     .statfs         = simple_statfs,
 };
 
-static int phuang_fill_super(struct super_block *sb)
+static struct dentry *phuang_root_lookup(struct inode *dir, struct dentry *dentry, struct nameidata *nd)
+{
+    return NULL;
+}
+
+static int phuang_root_getattr(struct vfsmount *mnt, struct dentry *dentry, struct kstat *stat)
+{
+    generic_fillattr(dentry->d_inode, stat);
+    stat->nlink = 3;
+    return 0;
+}
+
+static const struct inode_operations phuang_inode_ops = {
+    .lookup     = phuang_root_lookup,
+    .getattr    = phuang_root_getattr,
+};
+
+static int phuang_readdir(struct file *filp, void *dirent, filldir_t filldir)
 {
     struct inode *inode;
+    unsigned int ino;
+    int i;
+    int ret = 0;
+    
+    inode = filp->f_path.dentry->d_inode;
+    ino = inode->i_ino;
+    i = filp->f_pos;
+
+    switch(i) {
+        case 0:
+            if (filldir(dirent, ".", 1, i, ino, DT_DIR) < 0)
+                goto out;
+            i++;
+            filp->f_pos++;
+        case 1:
+            if (filldir(dirent, "..", 2, i, ino, DT_DIR) < 0)
+                goto out;
+            i++;
+            filp->f_pos++;
+        case 3:
+            if (filldir(dirent, "phuang", 6, i, ino, DT_DIR) < 0)
+                goto out;
+            i++;
+            filp->f_pos++;
+    }
+    ret = 1;
+out:
+    return ret;
+}
+
+static const struct file_operations phuang_dir_ops = {
+    .llseek         = generic_file_llseek,
+    .read           = generic_read_dir,
+    .readdir        = phuang_readdir,
+};
+
+static struct inode *phuang_get_inode(struct super_block *sb)
+{
+    struct inode *inode;
+    inode = iget_locked(sb, 8989);
+    if (inode == NULL)
+        return inode;
+
+    if (inode->i_state & I_NEW) {
+        inode->i_mtime = 
+            inode->i_atime = 
+            inode->i_ctime = CURRENT_TIME;
+
+        inode->i_mode = S_IFDIR | S_IRUGO | S_IXUGO;
+        inode->i_nlink = 3;
+        inode->i_op = &phuang_inode_ops;
+       
+        if (!S_ISREG(inode->i_mode))
+            inode->i_fop = &phuang_dir_ops;
+    }
+    return inode;
+}
+
+static int phuang_fill_super(struct super_block *sb)
+{
+    struct inode *root_inode;
 
     sb->s_flags |= MS_NODIRATIME | MS_NOSUID | MS_NOEXEC;
     sb->s_blocksize = 1024;
@@ -57,14 +135,13 @@ static int phuang_fill_super(struct super_block *sb)
     sb->s_magic = PHUANG_SUPER_MAGIC;
     sb->s_op = &phuang_sops;
     sb->s_time_gran = 1;
+    
+    root_inode = phuang_get_inode(sb);
 
-    inode = iget_locked(sb, 8989);
-    if (inode == NULL)
-        return -ENOMEM;
+    root_inode->i_uid = 0;
+    root_inode->i_gid = 0;
+    sb->s_root = d_alloc_root(root_inode);
 
-    if (inode->i_state & I_NEW) {
-        inode->i_mtime = inode->i_atime = inode->i_ctime = CURRENT_TIME;
-    }
     return 0;
 }
 
