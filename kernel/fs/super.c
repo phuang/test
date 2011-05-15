@@ -99,9 +99,14 @@ static int phuang_readdir(struct file *filp, void *dirent, filldir_t filldir)
                 goto out;
             i++;
             filp->f_pos++;
-#if 0
+#if 1
+        case 2:
+            if (filldir(dirent, "dir", 3, i, 1, DT_DIR) < 0)
+                goto out;
+            i++;
+            filp->f_pos++;
         case 3:
-            if (filldir(dirent, "phuang", 6, i, ino, DT_DIR) < 0)
+            if (filldir(dirent, "file", 4, i, 2, DT_REG) < 0)
                 goto out;
             i++;
             filp->f_pos++;
