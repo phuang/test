@@ -42,6 +42,9 @@ static void phuang_destroy_inode(struct inode *inode)
 static void phuang_evict_inode(struct inode *inode)
 {
     printk(KERN_DEBUG "%s", __func__);
+
+    truncate_inode_pages(&inode->i_data, 0);
+    end_writeback(inode);
 }
 
 static const struct super_operations phuang_sops = {
@@ -96,11 +99,13 @@ static int phuang_readdir(struct file *filp, void *dirent, filldir_t filldir)
                 goto out;
             i++;
             filp->f_pos++;
+#if 0
         case 3:
             if (filldir(dirent, "phuang", 6, i, ino, DT_DIR) < 0)
                 goto out;
             i++;
             filp->f_pos++;
+#endif
     }
     ret = 0;
 out:
