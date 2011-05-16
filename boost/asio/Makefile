@@ -1,4 +1,4 @@
-CFLAGS   = -g0 -O0
+CFLAGS   = -g0 -O3
 CXXFLAGS = $(CFLAGS) 
 LDFLAGS = -lboost_system
 
@@ -12,3 +12,10 @@ all: $(TARGETS)
 timer3: timer3.cpp
 
 server: server.cpp
+
+strip:
+	strip $(TARGETS)
+
+clean:
+	$(RM) $(TARGETS) *~ *.o
+
