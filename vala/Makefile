@@ -22,6 +22,7 @@ xgrab: xgrab.vala
 
 keybinding-manager: keybinding-manager.vala
 	valac \
+		--save-temps \
 		-g --vapidir .. \
 		--pkg $(ibus_pkgname) \
 		--pkg $(vala_pkgname) \

@@ -177,7 +177,7 @@ public static int main (string[] args)
     Gtk.main ();
     return 0;
 }
- 
+
 private static void test()
 {
     debug("hotkey pressed");
