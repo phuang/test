@@ -1,4 +1,5 @@
 using Clutter;
+using GtkClutter;
 
 class ClutterDemo {
 
@@ -21,15 +22,24 @@ class ClutterDemo {
     };
 
     public ClutterDemo () {
-        stage = Stage.get_default ();
+        var window = new Gtk.Window(Gtk.WindowType.POPUP);
+        window.set_visual(Gdk.Screen.get_default().get_rgba_visual());
+        window.resize(800, 600);
+        window.move(100, 100);
+        window.draw.connect((w,cr) => { return true; });
+        var embed = new GtkClutter.Embed();
+        window.add(embed);
+        stage = (Clutter.Stage)embed.get_stage();
+        // stage = Stage.get_default ();
 
         rectangles = new Rectangle[colors.length];
-        stage.hide.connect (Clutter.main_quit);
+        stage.hide.connect (Gtk.main_quit);
 
         create_rectangles ();
-
-        stage.color = Color () { alpha = 255 };
-        stage.show_all ();
+        stage.use_alpha = true;
+        stage.color = Color () { alpha = 0 };
+        window.show_all ();
+        // window.get_window().set_background_rgba({0.0, 0.0, 0.0, 0.0});
     }
 
     private void create_rectangles () {
@@ -51,7 +61,7 @@ class ClutterDemo {
         var animations = new Animation[rectangles.length];
         for (int i = 0; i < rectangles.length; i++) {
             animations[i] = rectangles[i].animate (
-                                      AnimationMode.LINEAR, 5000,
+                                      AnimationMode.LINEAR, 2000,
                                       x: stage.width / 2,
                                       rotation_angle_z: 500.0);
         }
@@ -64,8 +74,10 @@ class ClutterDemo {
             text.x = stage.width / 2;
             text.y = -text.height;    // Off-stage
             stage.add_actor (text);
-            text.animate (AnimationMode.EASE_OUT_BOUNCE, 3000,
-                          y: stage.height / 2);
+            var animation = text.animate (AnimationMode.EASE_OUT_BOUNCE, 1000,
+                                          y: stage.height / 2);
+            animation.completed.connect(Gtk.main_quit);
+
 
             for (int i = 0; i < rectangles.length; i++) {
                 rectangles[i].animate (
@@ -80,9 +92,13 @@ class ClutterDemo {
     }
 }
 
+extern void clutter_x11_set_use_argb_visual(bool use_argb);
+
 void main (string[] args) {
-    Clutter.init (ref args);
+    clutter_x11_set_use_argb_visual(true);
+    Gtk.init(ref args);
+    GtkClutter.init (ref args);
     var demo = new ClutterDemo ();
     demo.start ();
-    Clutter.main ();
+    Gtk.main();
 }
