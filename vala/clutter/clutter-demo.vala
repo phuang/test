@@ -76,7 +76,7 @@ class ClutterDemo {
             stage.add_actor (text);
             var animation = text.animate (AnimationMode.EASE_OUT_BOUNCE, 1000,
                                           y: stage.height / 2);
-            animation.completed.connect(Gtk.main_quit);
+            // animation.completed.connect(Gtk.main_quit);
 
 
             for (int i = 0; i < rectangles.length; i++) {
