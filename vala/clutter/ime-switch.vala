@@ -2,14 +2,16 @@ class Switchor : GtkClutter.Embed {
     private Gtk.Window m_toplevel;
     private Clutter.Stage m_stage;
     private Clutter.CairoTexture m_texture;
+    private Clutter.CairoTexture m_shadow_texture;
     private Gtk.Allocation m_allocation;
 
     public Switchor() {
+        add_events(Gdk.EventMask.BUTTON_PRESS_MASK);
         // Create toplevel window
         m_toplevel = new Gtk.Window(Gtk.WindowType.POPUP);
         m_toplevel.add(this);
         m_toplevel.set_visual(Gdk.Screen.get_default().get_rgba_visual());
-        m_toplevel.set_default_size(640, 480);
+        m_toplevel.set_default_size(200, 300);
         m_toplevel.set_position(Gtk.WindowPosition.CENTER_ALWAYS);
         m_toplevel.draw.connect((w, cr) => true);
         m_toplevel.delete_event.connect((w,e) => {
@@ -41,13 +43,22 @@ class Switchor : GtkClutter.Embed {
                 allocation.x, allocation.y, allocation.width, allocation.height);
 
             m_allocation = allocation;
-            m_texture = new Clutter.CairoTexture(allocation.width, allocation.height);
-            m_texture.add_effect(new Clutter.ShaderEffect(Clutter.ShaderType.VERTEX_SHADER));
+            m_shadow_texture = new Clutter.CairoTexture(allocation.width, allocation.height);
+            m_shadow_texture.add_effect(new Clutter.BlurEffect());
+            m_shadow_texture.draw.connect(shadow_texture_draw);
+            m_shadow_texture.invalidate();
+            // m_stage.add(m_shadow_texture);
 
+            m_texture = new Clutter.CairoTexture(allocation.width, allocation.height);
             m_texture.draw.connect(texture_draw);
             m_texture.invalidate();
             m_stage.add(m_texture);
         }
+    }
+
+    public override bool button_press_event(Gdk.EventButton e) {
+        stdout.printf("button press\n");
+        return true;
     }
 
     private void rectangle_path(Cairo.Context cr,
@@ -73,17 +84,30 @@ class Switchor : GtkClutter.Embed {
         cr.close_path();
     }
 
+    private bool shadow_texture_draw(Clutter.CairoTexture texture, Cairo.Context cr) {
+        // Draw shadow
+        cr.set_source_rgba(1.0, 1.0, 1.0, 0.0);
+        cr.paint();
+        rectangle_path(cr,
+                       0.0, 0.0,
+                       texture.width - 0.0, texture.height - 0.0,
+                       10.0, false);
+
+        cr.set_source_rgba(0.0, 0.0, 0.0, 0.3);
+        cr.fill();
+        return true;
+    }
+
     private bool texture_draw(Clutter.CairoTexture texture, Cairo.Context cr) {
+        // Draw
         rectangle_path(cr,
                        0.0, 0.0,
                        texture.width, texture.height,
                        10.0, false);
-
         cr.set_source_rgba(0.0, 0.0, 0.0, 0.8);
         cr.fill_preserve();
-
-        cr.set_source_rgba(1.0, 1.0, 1.0, 1.0);
-        cr.set_line_width(2.0);
+        cr.set_source_rgba(1.0, 1.0, 1.0, 0.8);
+        cr.set_line_width(1.0);
         cr.stroke();
 
         return true;
