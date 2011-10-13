@@ -2,6 +2,7 @@ class Switchor : GtkClutter.Embed {
     private Gtk.Window m_toplevel;
     private Clutter.Stage m_stage;
     private Clutter.CairoTexture m_texture;
+    private Gtk.Allocation m_allocation;
 
     public Switchor() {
         // Create toplevel window
@@ -19,20 +20,14 @@ class Switchor : GtkClutter.Embed {
         // Init stage
         m_stage = (Clutter.Stage)get_stage();
         m_stage.use_alpha = true;
-        m_stage.color = Clutter.Color() { alpha = 255 };
-        m_stage.opacity = 0;
+        m_stage.color = Clutter.Color() { alpha = 0 };
+        m_stage.opacity = 255;
 
-        m_texture = new Clutter.CairoTexture(500, 500);
-
-        m_texture.draw.connect(texture_draw);
-        m_texture.invalidate();
-
-        m_stage.add(m_texture);
         m_toplevel.show_all();
     }
 
     public void start() {
-        if (true) {
+        if (false) {
             m_stage.animate(
                 Clutter.AnimationMode.LINEAR, 5000,
                 opacity: 255);
@@ -41,7 +36,18 @@ class Switchor : GtkClutter.Embed {
 
     public override void size_allocate(Gtk.Allocation allocation) {
         base.size_allocate(allocation);
-        stdout.printf("size_allocate(%d %d %d %d)\n", allocation.x, allocation.y, allocation.width, allocation.height);
+        if (m_allocation != allocation) {
+            stdout.printf("size_allocate(%d %d %d %d)\n",
+                allocation.x, allocation.y, allocation.width, allocation.height);
+
+            m_allocation = allocation;
+            m_texture = new Clutter.CairoTexture(allocation.width, allocation.height);
+            m_texture.add_effect(new Clutter.ShaderEffect(Clutter.ShaderType.VERTEX_SHADER));
+
+            m_texture.draw.connect(texture_draw);
+            m_texture.invalidate();
+            m_stage.add(m_texture);
+        }
     }
 
     private void rectangle_path(Cairo.Context cr,
@@ -68,7 +74,10 @@ class Switchor : GtkClutter.Embed {
     }
 
     private bool texture_draw(Clutter.CairoTexture texture, Cairo.Context cr) {
-        rectangle_path(cr, 10.0, 10.0, 400.0, 400.0, 10.0, false);
+        rectangle_path(cr,
+                       0.0, 0.0,
+                       texture.width, texture.height,
+                       10.0, false);
 
         cr.set_source_rgba(0.0, 0.0, 0.0, 0.8);
         cr.fill_preserve();
