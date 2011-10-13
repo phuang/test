@@ -41,6 +41,7 @@ class Switchor : GtkClutter.Embed {
 
     public override void size_allocate(Gtk.Allocation allocation) {
         base.size_allocate(allocation);
+        stdout.printf("size_allocate(%d %d %d %d)\n", allocation.x, allocation.y, allocation.width, allocation.height);
     }
 
     private void rectangle_path(Cairo.Context cr,
