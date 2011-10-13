@@ -66,9 +66,8 @@ class Switchor : GtkClutter.Embed {
         rectangle_path(cr, 10.0, 10.0, 400.0, 400.0, 10.0, false);
 
         cr.set_source_rgba(0.0, 0.0, 0.0, 0.8);
-        cr.fill();
+        cr.fill_preserve();
 
-        rectangle_path(cr, 10.0, 10.0, 400.0, 400.0, 10.0, false);
         cr.set_source_rgba(1.0, 1.0, 1.0, 1.0);
         cr.set_line_width(2.0);
         cr.stroke();
