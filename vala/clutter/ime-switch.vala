@@ -24,7 +24,9 @@ class Switchor : GtkClutter.Embed {
 
         m_texture = new Clutter.CairoTexture(500, 500);
 
-        draw_texture();
+        m_texture.draw.connect(texture_draw);
+        m_texture.invalidate();
+
         m_stage.add(m_texture);
         m_toplevel.show_all();
     }
@@ -37,24 +39,41 @@ class Switchor : GtkClutter.Embed {
         }
     }
 
-    private void draw_texture() {
-        m_texture.clear();
-        Cairo.Context context = m_texture.create();
-        context.set_tolerance(0.1);
-        context.set_line_width(7.0);
-        // context.set_dash(new double[] {30 / 4.0, 30 / 4.0}, 0);
-        context.set_source_rgba(1.0, 1.0, 1.0, 0.8);
-        context.set_line_join(Cairo.LineJoin.ROUND);
-        context.new_path();
-        // context.rectangle(10.0, 10.0, 410.0, 410.0);
-        context.move_to(10.0, 10.10);
-        context.rel_line_to(0.0, 400.0);
-        context.rel_line_to(400.0, 0.0);
-        context.rel_line_to(0.0, -400.0);
-        context.rel_line_to(-400.0, 0.0);
-        context.close_path();
-        context.stroke();
-        // context.paint();
+    private void rectangle_path(Cairo.Context cr,
+                                double x,
+                                double y,
+                                double width,
+                                double height,
+                                double radius,
+                                bool fill) {
+        assert(radius * 2 < double.min(width, height));
+        const double PI = 3.1415926;
+        cr.new_path();
+
+        cr.move_to(x + radius, y);
+        cr.line_to(x + width - radius, y);
+        cr.arc(x + width - radius, y + radius, radius, - PI / 2 , 0.0);
+        cr.line_to(x + width, y + height - radius);
+        cr.arc(x + width - radius, y + height - radius, radius, 0.0, PI / 2);
+        cr.line_to(x + radius, y + height);
+        cr.arc(x + radius, y + height - radius, radius, PI / 2, PI);
+        cr.line_to(x, y + radius);
+        cr.arc(x + radius, y + radius, radius, PI, PI + PI / 2);
+        cr.close_path();
+    }
+
+    private bool texture_draw(Clutter.CairoTexture texture, Cairo.Context cr) {
+        rectangle_path(cr, 10.0, 10.0, 400.0, 400.0, 10.0, false);
+
+        cr.set_source_rgba(0.0, 0.0, 0.0, 0.8);
+        cr.fill();
+
+        rectangle_path(cr, 10.0, 10.0, 400.0, 400.0, 10.0, false);
+        cr.set_source_rgba(1.0, 1.0, 1.0, 1.0);
+        cr.set_line_width(2.0);
+        cr.stroke();
+
+        return true;
     }
 }
 
