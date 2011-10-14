@@ -1,3 +1,5 @@
+using Math;
+
 class Switchor : GtkClutter.Embed {
     private Gtk.Window m_toplevel;
     private Clutter.Stage m_stage;
@@ -69,18 +71,17 @@ class Switchor : GtkClutter.Embed {
                                 double radius,
                                 bool fill) {
         assert(radius * 2 < double.min(width, height));
-        const double PI = 3.1415926;
         cr.new_path();
 
         cr.move_to(x + radius, y);
         cr.line_to(x + width - radius, y);
-        cr.arc(x + width - radius, y + radius, radius, - PI / 2 , 0.0);
+        cr.arc(x + width - radius, y + radius, radius, 3 * PI / 2 , 2 * PI);
         cr.line_to(x + width, y + height - radius);
         cr.arc(x + width - radius, y + height - radius, radius, 0.0, PI / 2);
         cr.line_to(x + radius, y + height);
         cr.arc(x + radius, y + height - radius, radius, PI / 2, PI);
         cr.line_to(x, y + radius);
-        cr.arc(x + radius, y + radius, radius, PI, PI + PI / 2);
+        cr.arc(x + radius, y + radius, radius, PI, 3 * PI / 2);
         cr.close_path();
     }
 
@@ -98,17 +99,35 @@ class Switchor : GtkClutter.Embed {
         return true;
     }
 
+    private void draw_text(Cairo.Context cr,
+                           double x,
+                           double y,
+                           double width,
+                           double height,
+                           string text,
+                           bool highlight) {
+        cr.save();
+        cr.select_font_face("Sans", Cairo.FontSlant.NORMAL, Cairo.FontWeight.BOLD);
+        cr.set_font_size(40.0);
+        cr.move_to(x, y);
+        cr.show_text(text);
+        cr.stroke();
+        cr.restore();
+    }
+
     private bool texture_draw(Clutter.CairoTexture texture, Cairo.Context cr) {
         // Draw
         rectangle_path(cr,
                        0.0, 0.0,
                        texture.width, texture.height,
-                       10.0, false);
+                       20.0, false);
         cr.set_source_rgba(0.0, 0.0, 0.0, 0.8);
         cr.fill_preserve();
-        cr.set_source_rgba(1.0, 1.0, 1.0, 0.8);
-        cr.set_line_width(1.0);
+        cr.set_source_rgba(1.0, 1.0, 1.0, 0.5);
+        cr.set_line_width(0.5);
         cr.stroke();
+
+        draw_text(cr, 50.0, 50.0, 0.0, 0.0, "拼音", true);
 
         return true;
     }
