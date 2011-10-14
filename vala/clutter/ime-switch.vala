@@ -1,10 +1,28 @@
 using Math;
 
+class Text : Clutter.Box {
+    private Clutter.Text m_text;
+    public Text(string text) {
+        layout_manager = new Clutter.BoxLayout();
+        m_text = new Clutter.Text();
+        m_text.text = text;
+        m_text.color = { 255, 255, 255, 255 };
+        pack(m_text,
+            "x-align", Clutter.BoxAlignment.CENTER,
+            "y-align", Clutter.BoxAlignment.CENTER,
+            "expand", true);
+    }
+}
+
+class SwitchorWidget : Clutter.CairoTexture {
+}
+
 class Switchor : GtkClutter.Embed {
     private Gtk.Window m_toplevel;
     private Clutter.Stage m_stage;
     private Clutter.CairoTexture m_texture;
     private Clutter.CairoTexture m_shadow_texture;
+    private Text m_text;
     private Gtk.Allocation m_allocation;
 
     public Switchor() {
@@ -31,11 +49,13 @@ class Switchor : GtkClutter.Embed {
     }
 
     public void start() {
+        /*
         if (false) {
             m_stage.animate(
                 Clutter.AnimationMode.LINEAR, 5000,
                 opacity: 255);
         }
+        */
     }
 
     public override void size_allocate(Gtk.Allocation allocation) {
@@ -55,6 +75,9 @@ class Switchor : GtkClutter.Embed {
             m_texture.draw.connect(texture_draw);
             m_texture.invalidate();
             m_stage.add(m_texture);
+
+            m_text = new Text("拼音");
+            m_stage.add(m_text);
         }
     }
 
@@ -99,22 +122,6 @@ class Switchor : GtkClutter.Embed {
         return true;
     }
 
-    private void draw_text(Cairo.Context cr,
-                           double x,
-                           double y,
-                           double width,
-                           double height,
-                           string text,
-                           bool highlight) {
-        cr.save();
-        cr.select_font_face("Sans", Cairo.FontSlant.NORMAL, Cairo.FontWeight.BOLD);
-        cr.set_font_size(40.0);
-        cr.move_to(x, y);
-        cr.show_text(text);
-        cr.stroke();
-        cr.restore();
-    }
-
     private bool texture_draw(Clutter.CairoTexture texture, Cairo.Context cr) {
         // Draw
         rectangle_path(cr,
@@ -126,9 +133,6 @@ class Switchor : GtkClutter.Embed {
         cr.set_source_rgba(1.0, 1.0, 1.0, 0.5);
         cr.set_line_width(0.5);
         cr.stroke();
-
-        draw_text(cr, 50.0, 50.0, 0.0, 0.0, "拼音", true);
-
         return true;
     }
 }

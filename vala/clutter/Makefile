@@ -2,11 +2,19 @@ TARGET = clutter-demo cairo-demo ime-switch
 
 all:$(TARGET)
 
+VALAC_FLAGS = \
+	--debug \
+	--save-temps \
+	--pkg clutter-1.0 \
+	--pkg clutter-gtk-1.0 \
+	--pkg pango \
+	$(NULL)
+
 clutter-demo: clutter-demo.vala
-	valac --pkg clutter-gtk-1.0 -o $@ $^
+	valac $(VALAC_FLAGS) -o $@ $^
 
 cairo-demo: cairo-demo.vala
-	valac --pkg clutter-gtk-1.0 -o $@ $^
+	valac $(VALAC_FLAGS) -o $@ $^
 
 ime-switch: ime-switch.vala
-	valac --pkg clutter-gtk-1.0 -o $@ $^
+	valac $(VALAC_FLAGS) -o $@ $^
