@@ -1,4 +1,4 @@
-TARGET = clutter-demo cairo-demo
+TARGET = switcher
 
 all:$(TARGET)
 
@@ -10,10 +10,13 @@ VALAC_FLAGS = \
 	--pkg pango \
 	$(NULL)
 
-clutter-demo: clutter-demo.vala
-	valac $(VALAC_FLAGS) -o $@ $^
+switcher_SOURCES = \
+	frame.vala \
+	switcher.vala \
+	text.vala \
+	$(NULL)
 
-cairo-demo: cairo-demo.vala
+switcher: $(switcher_SOURCES)
 	valac $(VALAC_FLAGS) -o $@ $^
 
 clean:
