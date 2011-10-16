@@ -28,6 +28,11 @@ int main (string[] args) {
         grid.add_actor (new Mx.Button.with_label (@"Button $i"));
     }
 
+    var label = new Mx.Label();
+    label.set_text("Hello World");
+    label.x = 300;
+    stage.add(label);
+
     stage.show ();
     Clutter.main ();
 

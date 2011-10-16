@@ -1,4 +1,9 @@
-TARGET = clutter-demo cairo-demo mx-demo
+TARGET = \
+	clutter-demo \
+	cairo-demo \
+	mx-demo \
+	mx-widget-factory \
+	$(NULL)
 
 all:$(TARGET)
 
@@ -18,6 +23,9 @@ cairo-demo: cairo-demo.vala
 	valac $(VALAC_FLAGS) -o $@ $^
 
 mx-demo: mx-demo.vala
+	valac $(VALAC_FLAGS) -o $@ $^
+
+mx-widget-factory: mx-widget-factory.vala
 	valac $(VALAC_FLAGS) -o $@ $^
 
 clean:
