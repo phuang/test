@@ -44,11 +44,15 @@ class Switchor : GtkClutter.Embed {
             var frame = new Frame();
             frame.x = 10;
             frame.y = 10;
+            frame.width = 200;
+            frame.height = 200;
             m_stage.add(frame);
+            /*
             frame.animate(
                 Clutter.AnimationMode.LINEAR, 1000,
                 width : 200.0,
                 height : 200.0);
+                */
             return;
         }
     }

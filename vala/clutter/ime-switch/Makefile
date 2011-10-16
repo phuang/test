@@ -3,8 +3,9 @@ TARGET = switcher
 all:$(TARGET)
 
 VALAC_FLAGS = \
-	--debug \
 	--save-temps \
+	--Xcc -lm \
+	--pkg posix \
 	--pkg clutter-1.0 \
 	--pkg clutter-gtk-1.0 \
 	--pkg pango \
