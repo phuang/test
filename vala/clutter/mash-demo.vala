@@ -37,9 +37,11 @@ int main (string[] args)
       center_vertex.y = 0.0f;
       center_vertex.z = 0.0f;
 
-      var anim = model.animate (Clutter.AnimationMode.LINEAR, 3000,
-                                "rotation-angle-y", 360.0f,
-                                "fixed::rotation-center-y", ref center_vertex);
+      var anim = model.animate (
+            Clutter.AnimationMode.LINEAR, 3000,
+                "rotation-angle-x", 360.0f,
+                "rotation-angle-y", 360.0f,
+                "fixed::rotation-center-y", ref center_vertex);
       anim.loop = true;
 
       stage.add_actor (model);
