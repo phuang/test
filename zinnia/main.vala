@@ -19,36 +19,34 @@ class Application {
     mDrawingArea.add_events(Gdk.EventMask.BUTTON_RELEASE_MASK);
     mDrawingArea.add_events(Gdk.EventMask.BUTTON_MOTION_MASK);
    
-    List<Gdk.Point?> line = null;
-    List<List<Gdk.Point?>> lines = null;
 
     mDrawingArea.button_press_event.connect((e) => {
-      if (lines == null)
-        lines = new List<List<Gdk.Point?>>(); 
-      line = new List<Gdk.Point?>();
+      if (this.mLines == null)
+        this.mLines = new List<List<Gdk.Point?>>(); 
+      this.mLine = new List<Gdk.Point?>();
       return true;
     });
 
     mDrawingArea.button_release_event.connect((e) => {
-      lines.append((owned)line);
+      this.mLines.append((owned)this.mLine);
       mDrawingArea.queue_draw();
       return true;
     });
     
     mDrawingArea.motion_notify_event.connect((e) => {
-      if (line != null) {
+      if (this.mLine != null) {
         var point = Gdk.Point() {
           x = (int)e.x,
           y = (int)e.y
         };
-        line.append(point);
+        this.mLine.append(point);
       }
       return true;
     });
 
     mDrawingArea.draw.connect((cr) => {
       debug("Draw");
-      foreach (unowned List<Gdk.Point?> l in lines) {
+      foreach (unowned List<Gdk.Point?> l in this.mLines) {
         int i = 0;
         foreach (unowned Gdk.Point p in l) {
           debug("x = %d, y = %d", p.x, p.y);
@@ -79,6 +77,8 @@ class Application {
   private Gtk.Window mWindow;
   private Zinnia.Recognizer mRecognizer;
   private Gtk.DrawingArea mDrawingArea;
+  private List<Gdk.Point?> mLine;
+  private List<List<Gdk.Point?>> mLines;
 }
 
 public void main(string[] argv) { 
