@@ -5,4 +5,5 @@ main: main.vala zinnia.deps zinnia.vapi
 	  --pkg cairo \
 	  --pkg zinnia \
 	  --save-temps \
+	  --debug \
 	  main.vala
