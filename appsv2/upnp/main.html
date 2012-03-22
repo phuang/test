@@ -22,7 +22,20 @@ $(document).ready(function() {
       fillData();
   });
   function fillData() {
-    params = new SOAPClientParameters();
+    var url = "http://172.23.176.2:9999/upnp/control/cds";
+    var params = new SOAPClientParameters();
+    params.add("ObjectID", 0);
+    params.add("BrowseFlag", "BrowseDirectChildren");
+    params.add("Filter", "*");
+    params.add("StartingIndex", 0);
+    params.add("RequestedCount", 50);
+    params.add("SortCriteria", "");
+
+    var namespace = "urn:schemas-upnp-org:service:ContentDirectory:1";
+    SOAPClient._sendSoapRequestInternal(url,namespace, "Browse", params, true, function(o, r) {
+      console.log(r);
+    }, null);
+
   };
 });
 

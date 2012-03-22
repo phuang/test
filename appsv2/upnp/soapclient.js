@@ -96,22 +96,29 @@ SOAPClient._sendSoapRequest = function(url, method, parameters, async, callback,
 {
 	// get namespace
 	var ns = (wsdl.documentElement.attributes["targetNamespace"] + "" == "undefined") ? wsdl.documentElement.attributes.getNamedItem("targetNamespace").nodeValue : wsdl.documentElement.attributes["targetNamespace"].value;
+        return SOAPClient._sendSoapRequestInternal(url, ns, method, parameters, async, callback, wsdl);
+}
+SOAPClient._sendSoapRequestInternal = function(url, namespace, method, parameters, async, callback, wsdl)
+{
+	// get namespace
+	var ns = namespace;
 	// build SOAP request
 	var sr = 
-				"<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
-				"<soap:Envelope " +
-				"xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
-				"xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" " +
-				"xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
-				"<soap:Body>" +
-				"<" + method + " xmlns=\"" + ns + "\">" +
+				"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
+				"<s:Envelope " +
+				// "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
+				// "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" " +
+				"xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" " +
+                                "s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\n" +
+				"<s:Body>\n" +
+				"<u:" + method + " xmlns:u=\"" + ns + "\">\n" +
 				parameters.toXml() +
-				"</" + method + "></soap:Body></soap:Envelope>";
+				"</u:" + method + ">\n</s:Body>\n</s:Envelope>\n";
 	// send request
 	var xmlHttp = SOAPClient._getXmlHttp();
 	xmlHttp.open("POST", url, async);
-	var soapaction = ((ns.lastIndexOf("/") != ns.length - 1) ? ns + "/" : ns) + method;
-	xmlHttp.setRequestHeader("SOAPAction", soapaction);
+	var soapaction = ((ns.lastIndexOf("#") != ns.length - 1) ? ns + "#" : ns) + method;
+	xmlHttp.setRequestHeader("SOAPAction", "\"" + soapaction + "\"");
 	xmlHttp.setRequestHeader("Content-Type", "text/xml; charset=utf-8");
 	if(async) 
 	{
