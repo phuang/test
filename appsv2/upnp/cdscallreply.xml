@@ -1,0 +1,8 @@
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"><s:Body>
+<u:BrowseResponse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
+<Result><DIDL-Lite xmlns="urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:upnp="urn:schemas-upnp-org:metadata-1-0/upnp/"><item id="25" parentID="24" restricted="1"><dc:title>Gnarls Barkley - The Odd Couple - Run (I&apos;m A Natural Disaster)</dc:title><upnp:class>object.item.audioItem.musicTrack</upnp:class><upnp:artist>Gnarls Barkley</upnp:artist><upnp:album>The Odd Couple</upnp:album><dc:date>2008-01-01</dc:date><upnp:genre>Fusion</upnp:genre><dc:description>CRC : 6A6DC6F6</dc:description><upnp:originalTrackNumber>4</upnp:originalTrackNumber><res protocolInfo="http-get:*:audio/mpeg:*" size="4454548" bitrate="28160" duration="00:02:40" sampleFrequency="44100" nrAudioChannels="2">http://172.23.176.2:9999/content/media/object_id/25/res_id/0/ext/file.mp3</res><upnp:albumArtURI>http://172.23.176.2:9999/content/media/object_id/25/res_id/1/rct/aa</upnp:albumArtURI></item></DIDL-Lite></Result>
+<NumberReturned>1</NumberReturned>
+<TotalMatches>1</TotalMatches>
+<UpdateID>2</UpdateID>
+</u:BrowseResponse>
+</s:Body> </s:Envelope>

@@ -17,9 +17,11 @@ def m_search():
       'Host: 239.255.255.250:1900')
   data = "\r\n".join(data) + "\r\n\r\n"
   sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  sock.bind(("0.0.0.0", 0))
   # sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
   sock.sendto(data, (HOST, PORT))
   received = sock.recv(1024)
+  print received
 
   values = {}
   lines = received.split("\r\n")

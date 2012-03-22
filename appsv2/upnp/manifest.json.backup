@@ -1,0 +1,22 @@
+{
+  "name": "UPNP Media Player",
+  "description": "UPNP Media Player",
+  "version": "1",
+  "app": {
+    "launch": {
+      "local_path": "main.html",
+      "container": "shell",
+      "width": 400,
+      "height": 400
+    }
+  },
+  "platform_app": true,
+  "icons": {
+    "16": "icon_16.png",
+    "128": "icon_128.png"
+  },
+  "permissions": [
+    "experimental",
+    "socket"
+  ]
+}
