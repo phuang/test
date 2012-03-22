@@ -1,0 +1,778 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN" "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml" >
+<head>
+    <title>JavaScript SOAP Client - DEMOS | GURU4.net</title>
+	<style type="text/css">
+		div.h { display: none; }
+		div.s { display: block; margin: 10px; }
+	</style>
+	<script type="text/javascript" src="soapclient.js"></script>
+	<script type="text/javascript">
+	
+	var url = document.location.href.replace("demo.htm", "webservicedemo.asmx");
+	
+	
+	// DEMO 1
+	function HelloWorld()
+	{
+		var pl = new SOAPClientParameters();
+		SOAPClient.invoke(url, "HelloWorld", pl, true, HelloWorld_callBack);
+	}
+	function HelloWorld_callBack(r)
+	{
+		alert(r);
+	}
+	
+	// DEMO 2
+	function HelloTo()
+	{
+		var pl = new SOAPClientParameters();
+		pl.add("name", document.frmDemo.txtName.value);
+		SOAPClient.invoke(url, "HelloTo", pl, true, HelloTo_callBack);
+	}
+	function HelloTo_callBack(r)
+	{
+		alert(r);
+	}
+	
+	// DEMO 3
+	function ServerTime()
+	{
+		var pl = new SOAPClientParameters();
+		SOAPClient.invoke(url, "ServerTime", pl, true, ServerTime_callBack);
+	}
+	function ServerTime_callBack(st)
+	{
+		var ct = new Date();
+		alert("Server: " + st.toLocaleString() + "\r\n[Client: " + ct.toLocaleString() + "]");
+	}
+	
+	// DEMO 4
+	function Wait()
+	{
+		var duration = parseInt(document.frmDemo.ddSleepDuration[document.frmDemo.ddSleepDuration.selectedIndex].value, 10);
+		var pl = new SOAPClientParameters();
+		pl.add("seconds", duration);
+		var ph = document.getElementById("phWait");
+		ph.style.display = "block";
+		SOAPClient.invoke(url, "Wait", pl, true, Wait_callBack);
+	}
+	function Wait_callBack(r)
+	{
+		var img = document.getElementById("phWait");
+		img.style.display = "none";
+		alert("Call to \"Wait\" method completed");
+	}
+	
+	// DEMO 5
+	function ThrowException()
+	{
+		try
+		{
+			var pl = new SOAPClientParameters();
+			SOAPClient.invoke(url, "ThrowException", pl, false);
+		}
+		catch(e)
+		{
+			alert("An error has occured!");
+		}
+	}
+	
+	// DEMO 6
+	function SyncSample()
+	{
+		var pl = new SOAPClientParameters();
+		pl.add("seconds", 5);
+		var starttime = (new Date).toLocaleTimeString();
+		var r = SOAPClient.invoke(url, "Wait", pl, false);
+		alert("Operation start time: " + starttime + "\r\nOperation end time: " + (new Date).toLocaleTimeString());
+	}
+	
+	// DEMO 7
+	function GetUser()
+	{
+		var username = document.frmDemo.txtUsername.value;
+		var pl = new SOAPClientParameters();
+		pl.add("username", username);
+		SOAPClient.invoke(url, "GetUser", pl, true, GetUser_callBack);
+	}
+	function GetUser_callBack(u)
+	{
+		if(u == null)
+			alert("No user found.\r\n\r\nEnter a username and repeat search.");
+		else
+			alert(
+				"ID: " + u.Id + "\r\n" +
+				"USERNAME: " + u.Username + "\r\n" +
+				"PASSWORD: " + u.Password + "\r\n" +
+				"EXPIRATION: " + u.ExpirationDate.toLocaleString());
+	}
+	
+	// DEMO 8
+	function GetUsers()
+	{
+		var pl = new SOAPClientParameters();
+		SOAPClient.invoke(url, "GetUsers", pl, true, GetUsers_callBack);
+	}
+	function GetUsers_callBack(ul)
+	{
+		alert(ul.length + " user(s) found:");
+		for(var i = 0; i < ul.length; i++)		
+			alert(
+				"User No. " + (i + 1) + "\r\n\r\n" +
+				"ID: " + ul[i].Id + "\r\n" +
+				"USERNAME: " + ul[i].Username + "\r\n" +
+				"PASSWORD: " + ul[i].Password + "\r\n" +
+				"EXPIRATION: " + ul[i].ExpirationDate.toLocaleString());
+	}
+	
+	// DEMO 9
+	function GetUserList()
+	{
+		var pl = new SOAPClientParameters();
+		SOAPClient.invoke(url, "GetUserList", pl, true, GetUserList_callBack);
+	}
+	function GetUserList_callBack(ul)
+	{
+		alert(ul.length + " user(s) found:");
+		for(var i = 0; i < ul.length; i++)		
+			alert(
+				"User No. " + (i + 1) + "\r\n\r\n" +
+				"ID: " + ul[i].Id + "\r\n" +
+				"USERNAME: " + ul[i].Username + "\r\n" +
+				"PASSWORD: " + ul[i].Password + "\r\n" +
+				"EXPIRATION: " + ul[i].ExpirationDate.toLocaleString());
+	}
+	
+	// DEMO 10
+	function GetCars()
+	{
+		var cid = document.frmDemo.ddCompany[document.frmDemo.ddCompany.selectedIndex].value;
+		if(cid != "")
+		{
+			// clear car list
+			while(document.frmDemo.ddCar.options.length > 0)
+				document.frmDemo.ddCar.remove(0);
+			// add waiting element
+			var o = document.createElement("OPTION");
+			document.frmDemo.ddCar.options.add(o);
+			o.value = "";
+			o.innerHTML = "Loading...";
+			// disable dropdown
+			document.frmDemo.ddCar.disabled = true;
+			// invoke
+			var pl = new SOAPClientParameters();
+			pl.add("companyid", cid);
+			SOAPClient.invoke(url, "GetCars", pl, true, GetCars_callBack);
+		}
+	}
+	function GetCars_callBack(cl)
+	{
+		// clear car list
+		var c = document.frmDemo.ddCar.options.length;
+		while(document.frmDemo.ddCar.options.length > 0)
+			document.frmDemo.ddCar.remove(0);
+		// add first (empty) element
+		var o = document.createElement("OPTION");
+		document.frmDemo.ddCar.options.add(o);
+		o.value = "";
+		o.innerHTML = "Please, select a model";					
+		// fill car list
+		for(var i = 0; i < cl.length; i++)
+		{
+			var o = document.createElement("OPTION");
+			document.frmDemo.ddCar.options.add(o);
+			o.value = cl[i].Id.toString();
+			o.innerHTML = cl[i].Label;
+		}
+		// enable dropdown
+		document.frmDemo.ddCar.disabled = false;
+	}
+	
+	// DEMO 11
+	function GetSoapResponse()
+	{
+		var pl = new SOAPClientParameters();
+		SOAPClient.invoke(url, "HelloWorld", pl, true, GetSoapResponse_callBack);
+	}
+	function GetSoapResponse_callBack(r, soapResponse)
+	{
+		alert(soapResponse.xml);
+	}
+	
+	// utils
+	function toggle(id) 
+	{
+		var d = document.getElementById(id);
+		if(d != null)
+			d.className = (d.className == "h") ? "s" : "h"; 
+	} 
+
+	</script>
+</head>
+<body>
+    <form id="frmDemo" name="frmDemo" action="" method="post">
+    <div>
+        <a name="d1"></a>
+        <h2>DEMO 1: "Hello World!"</h2>
+        <p>The simplest example you can imagine (but maybe not the most fanciful...):</p>
+        <input type="button" value="Say &quot;Hello world&quot;" onclick="HelloWorld();" />
+        <p><b>&nbsp;&#187;&nbsp;</b><a href="javascript:toggle('demo1');">Show / hide sample source code</a></p>
+        <div id="demo1" class="h">
+			<fieldset>
+				<legend>Client (javascript)</legend>
+				<kbd>
+					function HelloWorld()<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var pl = new SOAPClientParameters();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;SOAPClient.invoke(url, &quot;HelloWorld&quot;, pl, true, HelloWorld_callBack);<br />
+					}<br />
+					function HelloWorld_callBack(r)<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;alert(r);<br />
+					}            
+				</kbd>
+			</fieldset>
+			<fieldset>			
+					<legend>Server (WebMethod - C#)</legend>
+					<kbd>
+						public string HelloWorld()<br />
+						{<br />
+						&nbsp;&nbsp;&nbsp;&nbsp;return &quot;Hello World!&quot;;<br />
+						}
+					</kbd>
+			</fieldset>
+        </div>
+        <hr /><a name="d2"></a>
+		<h2>DEMO 2: using parameters</h2>
+        <p>Passing parameters to the Web Service:</p> 
+		<label>Your name: </label><input type="text" name="txtName" id="txtName" value="Matteo" />
+		<input type="button" value="Say hello to me" onclick="HelloTo();" />
+        <p><b>&nbsp;&#187;&nbsp;</b><a href="javascript:toggle('demo2');">Show / hide sample source code</a></p>
+        <div id="demo2" class="h">
+			<fieldset>
+				<legend>Client (javascript)</legend>
+				<kbd>
+					function HelloTo()<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var pl = new SOAPClientParameters();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;pl.add(&quot;name&quot;, document.frmDemo.txtName.value);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;SOAPClient.invoke(url, &quot;HelloTo&quot;, pl, true, HelloTo_callBack);<br />
+					}<br />
+					function HelloTo_callBack(r)<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;alert(r);<br />
+					}      
+				</kbd>
+			</fieldset>
+			<fieldset>			
+					<legend>Server (WebMethod - C#)</legend>
+					<kbd>
+						public string HelloTo(string name)<br />
+						{<br />
+						&nbsp;&nbsp;&nbsp;&nbsp;return &quot;Hello &quot; + name + &quot;!&quot;;<br />
+						}
+					</kbd>
+			</fieldset>
+        </div>
+        <hr /><a name="d3"></a>
+        <h2>DEMO 3: using .NET framework core classes</h2>
+        <p>Using a date as return type (.NET "DateTime" automatically converted to JavaScript "Date")</p> 
+		<input type="button" value="Server date and time" onclick="ServerTime();" />
+        <p><b>&nbsp;&#187;&nbsp;</b><a href="javascript:toggle('demo3');">Show / hide sample source code</a></p>
+        <div id="demo3" class="h">
+			<fieldset>
+				<legend>Client (javascript)</legend>
+				<kbd>
+					function ServerTime()<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var pl = new SOAPClientParameters();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;SOAPClient.invoke(url, &quot;ServerTime&quot;, pl, true, ServerTime_callBack);<br />
+					}<br />
+					function ServerTime_callBack(st)<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var ct = new Date();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;alert(&quot;Server: &quot; + st.toLocaleString() + &quot;\r\n[Client: &quot; + ct.toLocaleString() + &quot;]&quot;);<br />
+					}					
+				</kbd>
+			</fieldset>
+			<fieldset>			
+					<legend>Server (WebMethod - C#)</legend>
+					<kbd>
+						public DateTime ServerTime()<br />
+						{<br />
+						&nbsp;&nbsp;&nbsp;&nbsp;return DateTime.Now;<br />
+						}
+					</kbd>
+			</fieldset>
+        </div>      
+        <hr /><a name="d4"></a>
+        <h2>DEMO 4: void methods</h2>
+        <p>Calling a void method with a long response-time (while waiting for the response an orange box is displayed):</p> 
+		<select name="ddSleepDuration" id="ddSleepDuration">
+			<option value="0">Immediate (0 seconds)</option>
+			<option value="5">5-second delay</option>
+			<option value="10">10-second delay</option>
+			<option value="30">30-second delay</option>
+		</select>
+		<input type="button" value="Start" onclick="Wait();" />
+		<div id="phWait" style="display:none; margin: 10px 10px 10px 0px; padding: 10px; border: 3px solid #ffa300; width: 200px; text-align: center;">Please wait... <img src="loading.gif" width="123" height="6" /></div>
+        <p><b>&nbsp;&#187;&nbsp;</b><a href="javascript:toggle('demo4');">Show / hide sample source code</a></p>
+        <div id="demo4" class="h">
+			<fieldset>
+				<legend>Client (javascript)</legend>
+				<kbd>
+					function Wait()<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var duration = parseInt(document.frmDemo.ddSleepDuration[document.frmDemo.ddSleepDuration.selectedIndex].value, 10);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var pl = new SOAPClientParameters();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;pl.add(&quot;seconds&quot;, duration);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var ph = document.getElementById(&quot;phWait&quot;);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;ph.style.display = &quot;block&quot;;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;SOAPClient.invoke(url, &quot;Wait&quot;, pl, true, Wait_callBack);<br />
+					}<br />
+					function Wait_callBack(r)<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var img = document.getElementById(&quot;phWait&quot;);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;img.style.display = &quot;none&quot;;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;alert(&quot;Call to \&quot;Wait\&quot; method completed&quot;);<br />
+					}								
+				</kbd>
+			</fieldset>
+			<fieldset>			
+				<legend>Server (WebMethod - C#)</legend>
+				<kbd>
+					public void Wait(int seconds)<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;System.Threading.Thread.Sleep(seconds * 1000);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;return;<br />
+					}
+				</kbd>
+			</fieldset>
+        </div>
+        <hr /><a name="d5"></a>
+        <h2>DEMO 5: Exceptions</h2>
+        <p>Handling exceptions:</p> 
+		<input type="button" value="Throw exception" onclick="ThrowException();" />
+		<p><b>&nbsp;&#187;&nbsp;</b><a href="javascript:toggle('demo5');">Show / hide sample source code</a></p>
+        <div id="demo5" class="h">
+			<fieldset>
+				<legend>Client (javascript)</legend>
+				<kbd>
+					function ThrowException()<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;try<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var pl = new SOAPClientParameters();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SOAPClient.invoke(url, &quot;ThrowException&quot;, pl, false);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;catch(e)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert(&quot;An error has occured!&quot;);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					}															
+				</kbd>
+			</fieldset>
+			<fieldset>			
+				<legend>Server (WebMethod - C#)</legend>
+				<kbd>
+					public void ThrowException(int seconds)<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;throw new Exception();<br />
+					}
+				</kbd>
+			</fieldset>
+        </div>              
+        <hr /><a name="d6"></a>
+        <h2>DEMO 6: sync calls</h2>
+        <p>Syncronous call example: server response is delayed 5 seconds using "Wait" method (see demo No. 4). Please note that browser is stuck until response is received:</p> 
+		<input type="button" value="Start" onclick="SyncSample();" />
+		<p><b>&nbsp;&#187;&nbsp;</b><a href="javascript:toggle('demo6');">Show / hide sample source code</a></p>
+        <div id="demo6" class="h">
+			<fieldset>
+				<legend>Client (javascript)</legend>
+				<kbd>
+					function SyncSample()<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var pl = new SOAPClientParameters();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;pl.add(&quot;seconds&quot;, 5);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var starttime = (new Date).toLocaleTimeString();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var r = SOAPClient.invoke(url, &quot;Wait&quot;, pl, false);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;alert(&quot;Operation start time: &quot; + starttime + &quot;\r\nOperation end time: &quot; + (new Date).toLocaleTimeString());<br />
+					}										
+				</kbd>
+			</fieldset>
+			<fieldset>			
+				<legend>Server (WebMethod - C#)</legend>
+				<kbd>
+					public void Wait(int seconds)<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;System.Threading.Thread.Sleep(seconds * 1000);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;return;<br />
+					}
+				</kbd>
+			</fieldset>
+        </div> 
+        <hr /><a name="d7"></a>
+        <h2>DEMO 7: using custom entities (classes)</h2>
+        <p>Leaving the textbox empty, the web method will return a <kbd>null</kbd>; entering any value a <kbd>User</kbd> object with random property values will be returned:</p> 
+		<label for="txtUsername">Username: </label><input type="text" name="txtUsername" id="txtUsername" value="" /><input type="button" value="Find user..." onclick="GetUser();" />
+		<p><b>&nbsp;&#187;&nbsp;</b><a href="javascript:toggle('demo7');">Show / hide sample source code</a></p>
+        <div id="demo7" class="h">
+			<fieldset>
+				<legend>Client (javascript)</legend>
+				<kbd>
+					function GetUser()<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var username = document.frmDemo.txtUsername.value;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var pl = new SOAPClientParameters();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;pl.add(&quot;username&quot;, username);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;SOAPClient.invoke(url, &quot;GetUser&quot;, pl, true, GetUser_callBack);<br />
+					}<br />
+					function GetUser_callBack(u)<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;if(u == null)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert(&quot;No user found.\r\n\r\nEnter a username and repeat search.&quot;);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;else<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert(<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;ID: &quot; + u.Id + &quot;\r\n&quot; +<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;USERNAME: &quot; + u.Username + &quot;\r\n&quot; +<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;PASSWORD: &quot; + u.Password + &quot;\r\n&quot; +<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;EXPIRATION: &quot; + u.ExpirationDate.toLocaleString());<br />
+					}															
+				</kbd>
+			</fieldset>
+			<fieldset>			
+				<legend>Server (WebMethod - C#)</legend>
+				<kbd>
+					public User GetUser(string username)<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;if (username.Trim().Length == 0)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return null;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;int id = DateTime.Now.Millisecond;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;string password = &quot;PWD_&quot; + DateTime.Now.Ticks.ToString();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;DateTime expirationdate = DateTime.Now.Add(new TimeSpan(1, 0, 0, 0));<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;return new User(id, username, password, expirationdate);<br />
+					}					
+				</kbd>
+				<p><b>User class:</b></p>
+				<kbd>
+					[Serializable]<br />
+					public class User<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;private int _id = -1;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;private string _username = &quot;&quot;;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;private string _password = &quot;&quot;;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;private DateTime _expirationdate = DateTime.MinValue;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;public User() { }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;public User(int id, string username, string password, DateTime expirationdate)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.Id = id;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.Username = username;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.Password = password;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.ExpirationDate = expirationdate;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;public int Id<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;get { return _id; }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set { _id = value; }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;public string Username<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;get { return _username; }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set { _username = value; }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;public string Password<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;get { return _password; }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set { _password = value; }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;public DateTime ExpirationDate<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;get { return _expirationdate; }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set { _expirationdate = value; }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					}				
+				</kbd>
+			</fieldset>
+        </div> 
+        <hr /><a name="d8"></a>
+        <h2>DEMO 8: arrays</h2>
+        <p>Using custom entity arrays. The web method returns an array with 4 <kbd>User</kbd> objects (see demo No. 7)</p> 
+		<input type="button" value="Get users" onclick="GetUsers();" />
+		<p><b>&nbsp;&#187;&nbsp;</b><a href="javascript:toggle('demo8');">Show / hide sample source code</a></p>
+        <div id="demo8" class="h">
+			<fieldset>
+				<legend>Client (javascript)</legend>
+				<kbd>
+					function GetUsers()<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var pl = new SOAPClientParameters();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;SOAPClient.invoke(url, &quot;GetUsers&quot;, pl, true, GetUsers_callBack);<br />
+					}<br />
+					function GetUsers_callBack(ul)<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;alert(ul.length + &quot; user(s) found:&quot;);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;for(var i = 0; i &lt; ul.length; i++)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert(<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;User No. &quot; + (i + 1) + &quot;\r\n\r\n&quot; +<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;ID: &quot; + ul[i].Id + &quot;\r\n&quot; +<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;USERNAME: &quot; + ul[i].Username + &quot;\r\n&quot; +<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;PASSWORD: &quot; + ul[i].Password + &quot;\r\n&quot; +<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;EXPIRATION: &quot; + ul[i].ExpirationDate.toLocaleString());<br />
+					}										
+				</kbd>
+			</fieldset>
+			<fieldset>			
+				<legend>Server (WebMethod - C#)</legend>
+				<kbd>
+					public User[] GetUsers()<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;User[] ul = new User[4];<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;Random r = new Random();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &lt; ul.Length; i++)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int id = r.Next(100);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;string username = &quot;USR_&quot; + id.ToString();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;string password = &quot;PWD_&quot; + id.ToString();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DateTime expirationdate = DateTime.Now.Add(new TimeSpan((i + 1), 0, 0, 0));<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ul[i] = new User(id, username, password, expirationdate);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;return ul;<br />
+					}					
+				</kbd>
+			</fieldset>
+        </div>
+        <hr /><a name="d9"></a>
+        <h2>DEMO 9: ICollection</h2>
+        <p>Custom entity collection (System.Collections.ICollection). The web method returns a <kbd>UserList</kbd> object, typed collection of <kbd>User</kbd> (see demo No. 7) with 3 elements.</p> 
+		<input type="button" value="Get users" onclick="GetUserList();" />
+		<p><b>&nbsp;&#187;&nbsp;</b><a href="javascript:toggle('demo9');">Show / hide sample source code</a></p>
+        <div id="demo9" class="h">
+			<fieldset>
+				<legend>Client (javascript)</legend>
+				<kbd>
+					function GetUserList()<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var pl = new SOAPClientParameters();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;SOAPClient.invoke(url, &quot;GetUserList&quot;, pl, true, GetUserList_callBack);<br />
+					}<br />
+					function GetUserList_callBack(ul)<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;alert(ul.length + &quot; user(s) found:&quot;);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;for(var i = 0; i &lt; ul.length; i++)&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;alert(<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;User No. &quot; + (i + 1) + &quot;\r\n\r\n&quot; +<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;ID: &quot; + ul[i].Id + &quot;\r\n&quot; +<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;USERNAME: &quot; + ul[i].Username + &quot;\r\n&quot; +<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;PASSWORD: &quot; + ul[i].Password + &quot;\r\n&quot; +<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&quot;EXPIRATION: &quot; + ul[i].ExpirationDate.toLocaleString());<br />
+					}										
+				</kbd>
+			</fieldset>
+			<fieldset>			
+				<legend>Server (WebMethod - C#)</legend>
+				<kbd>
+					public UserList GetUserList()<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;UserList ul = new UserList();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;Random r = new Random();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &lt; 3; i++)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int id = r.Next(100);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;string username = &quot;USR_&quot; + id.ToString();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;string password = &quot;PWD_&quot; + id.ToString();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;DateTime expirationdate = DateTime.Now.Add(new TimeSpan((i + 1), 0, 0, 0));<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;ul.Add(new User(id, username, password, expirationdate));<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;return ul;<br />
+					}					
+				</kbd>
+				<p><b>UserList class:</b></p>
+				<kbd>
+					[Serializable]<br />
+					public class UserList : System.Collections.CollectionBase<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;public UserList() { }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;public int Add(User value)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return base.List.Add(value as object);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;public User this[int index]<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;get { return (base.List[index] as User); }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;public void Remove(User value)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;base.List.Remove(value as object);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					}				
+				</kbd>
+			</fieldset>
+        </div>  
+        <hr /><a name="d10"></a>
+		<h2>DEMO 10: practical usage</h2>
+        <p>Fill options with AJAX:</p> 
+		<select name="ddCompany" id="ddCompany" onchange="GetCars();">
+			<option value="">Please, select a company...</option>
+			<option value="vw">Volkswagen</option>
+			<option value="f">FIAT</option>
+			<option value="bmw">BMW</option>
+		</select>
+		<select name="ddCar" id="ddCar" style="width:200px;"></select>
+		<p><b>&nbsp;&#187;&nbsp;</b><a href="javascript:toggle('demo10');">Show / hide sample source code</a></p>
+        <div id="demo10" class="h">
+			<fieldset>
+				<legend>Client (javascript)</legend>
+				<kbd>
+					function GetCars()<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var cid = document.frmDemo.ddCompany[document.frmDemo.ddCompany.selectedIndex].value;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;if(cid != &quot;&quot;)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// clear car list<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;while(document.frmDemo.ddCar.options.length &gt; 0)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.frmDemo.ddCar.remove(0);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// add waiting element<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var o = document.createElement(&quot;OPTION&quot;);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.frmDemo.ddCar.options.add(o);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;o.value = &quot;&quot;;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;o.innerHTML = &quot;Loading...&quot;;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// disable dropdown<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.frmDemo.ddCar.disabled = true;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;// invoke<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var pl = new SOAPClientParameters();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;pl.add(&quot;companyid&quot;, cid);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;SOAPClient.invoke(url, &quot;GetCars&quot;, pl, true, GetCars_callBack);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					}<br />
+					function GetCars_callBack(cl)<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;// clear car list<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var c = document.frmDemo.ddCar.options.length;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;while(document.frmDemo.ddCar.options.length &gt; 0)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.frmDemo.ddCar.remove(0);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;// add first (empty) element<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var o = document.createElement(&quot;OPTION&quot;);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;document.frmDemo.ddCar.options.add(o);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;o.value = &quot;&quot;;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;o.innerHTML = &quot;Please, select a model...&quot;;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;// fill car list<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;for(var i = 0; i &lt; cl.length; i++)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;var o = document.createElement(&quot;OPTION&quot;);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;document.frmDemo.ddCar.options.add(o);<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;o.value = cl[i].Id.toString();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;o.innerHTML = cl[i].Label;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;// enable dropdown<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;document.frmDemo.ddCar.disabled = false;<br />
+					}																								
+				</kbd>
+			</fieldset>
+			<fieldset>			
+				<legend>Server (WebMethod - C#)</legend>
+				<kbd>
+					public Car[] GetCars(string companyid)<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;Car[] cl;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;switch (companyid.Trim().ToLower())<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case &quot;vw&quot;:<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cl = new Car[] <br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new Car(1, &quot;Passat&quot;),<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new Car(2, &quot;Golf&quot;),<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new Car(3, &quot;Polo&quot;),<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new Car(4, &quot;Lupo&quot;)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;};<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case &quot;f&quot;:<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cl = new Car[] <br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new Car(1, &quot;Stilo&quot;),<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new Car(2, &quot;Punto&quot;),<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new Car(3, &quot;500&quot;)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;};<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case &quot;bmw&quot;:<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cl = new Car[] <br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new Car(1, &quot;X5&quot;),<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;new Car(2, &quot;520&quot;)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;};<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;default:<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;cl = new Car[0];<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;return cl;<br />
+					}								
+				</kbd>
+				<p><b>Car class:</b></p>
+				<kbd>
+					[Serializable]<br />
+					public class Car<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;private int _id = -1;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;private string _label = &quot;&quot;;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;public Car() { }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;public Car(int id, string label)<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.Id = id;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;this.Label = label;<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;public int Id<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;get { return _id; }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set { _id = value; }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;public string Label<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;get { return _label; }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;set { _label = value; }<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;}<br />
+					}				
+				</kbd>
+			</fieldset>
+        </div>  
+		<hr /><a name="d11"></a>
+        <h2>DEMO 11: Using the SOAP response (xml)</h2>
+        <p>
+			How to use the SOAP response (XmlDocument) in callback method.
+			In this example we show only the Xml in an alertbox, but you can - for example - transform the SOAP response using a stylesheet (XSL).
+		</p>
+        <input type="button" value="Show SOAP response" onclick="GetSoapResponse();" />
+        <p><b>&nbsp;&#187;&nbsp;</b><a href="javascript:toggle('demo11');">Show / hide sample source code</a></p>        
+        <div id="demo11" class="h">
+			<fieldset>
+				<legend>Client (javascript)</legend>
+				<kbd>
+					function GetSoapResponse()<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;var pl = new SOAPClientParameters();<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;SOAPClient.invoke(url, &quot;HelloWorld&quot;, pl, true, GetSoapResponse_callBack);<br />
+					}<br />
+					function GetSoapResponse_callBack(r, soapResponse)<br />
+					{<br />
+					&nbsp;&nbsp;&nbsp;&nbsp;alert(soapResponse.xml);<br />
+					}           
+				</kbd>
+			</fieldset>
+			<fieldset>			
+					<legend>Server (WebMethod - C#)</legend>
+					<kbd>
+						public string HelloWorld()<br />
+						{<br />
+						&nbsp;&nbsp;&nbsp;&nbsp;return &quot;Hello World!&quot;;<br />
+						}
+					</kbd>
+			</fieldset>
+        </div>
+        
+    </div>
+    </form>
+</body>
+</html>

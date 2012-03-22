@@ -3,6 +3,7 @@
 <title>UPNP Media Player</title>
 <script src="jquery.js"></script>
 <script src="xml2json.js"></script>
+<script src="soapclient.js"></script>
 <script src="upnp.js"></script>
 <script>
   
@@ -21,10 +22,7 @@ $(document).ready(function() {
       fillData();
   });
   function fillData() {
-    var url = "http://172.23.176.2:9999/description.xml";
-    $.get(url, function(data) {
-      console.log(xmlToJson(data));
-    });
+    params = new SOAPClientParameters();
   };
 });
 

@@ -41,13 +41,16 @@
     return this.makeURL(this.description_.root.device.iconList[0].url);
   };
 
-  Server.prototype.browser = function(path, pattern, callback) {
-  }
+  Server.prototype.browser = function(id, pattern, callback) {
+  };
+
+  Server.prototype.soapCall = function(obj, callback) {
+  };
 
   function T() {
     this.value = 1;
     this.callbacks = {
-      serverFound: null;
+      serverFound: null,
     };
   }
 
