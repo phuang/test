@@ -164,7 +164,6 @@
               this.sampleFrequency = Number(res.getAttribute("sampleFrequency"));
               this.nrAudioChannels = Number(res.getAttribute("nrAudioChannels"));
             }
-
             this.res = new Res($item.find("res").first());
           }
         }
@@ -213,7 +212,7 @@
 
 })(window);
 
-/*
+/* TODO(penghuang): UPNP Server discover
 function m_search() {
   var address = '239.255.255.250';
   var port = 1900;
