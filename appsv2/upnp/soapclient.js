@@ -105,15 +105,15 @@ SOAPClient._sendSoapRequestInternal = function(url, namespace, method, parameter
 	// build SOAP request
 	var sr = 
 				"<?xml version=\"1.0\" encoding=\"utf-8\"?>\n" +
-				"<s:Envelope " +
+				"<soap:Envelope " +
 				// "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
 				// "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" " +
-				"xmlns:s=\"http://schemas.xmlsoap.org/soap/envelope/\" " +
-                                "s:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\n" +
-				"<s:Body>\n" +
-				"<u:" + method + " xmlns:u=\"" + ns + "\">\n" +
+				"xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\" " +
+                                "soap:encodingStyle=\"http://schemas.xmlsoap.org/soap/encoding/\">\n" +
+				"<soap:Body>\n" +
+				"<" + method + " xmlns=\"" + ns + "\">\n" +
 				parameters.toXml() +
-				"</u:" + method + ">\n</s:Body>\n</s:Envelope>\n";
+				"</" + method + ">\n</soap:Body>\n</soap:Envelope>\n";
 	// send request
 	var xmlHttp = SOAPClient._getXmlHttp();
 	xmlHttp.open("POST", url, async);

@@ -1,50 +1,65 @@
+// vim: et sts=2 ts=2 :
 (function(exports) {
 
-  function Server(url) {
+  function UPNPServer(url, callback) {
     this.init_ = false;
     this.url_ = url;
-    this.cdService = null;
-    this.cmService = null;
+    this.cdService_ = null;
+    this.cmService_ = null;
+
+    this._init(callback);
   }
 
-  Server.prototype.init = function(callback) {
-    if (this.init_) {
-      callback(true);
-      return;
-    }
+  UPNPServer.prototype._init = function(callback) {
+    _this = this;
+    $.get(url, function(xml) {
+      _this.descritption_ = xmlToJson(data);
 
-    _self = this;
-    $.get(url, function(data) {
-      _self.descritption_ = xmlToJson(data);
-
-      var services = _self.description_.root.device.serviceList;
+      var services = _this.description_.root.device.serviceList;
       for (var i = 0; i < services.lenght; i++) {
         switch(services[i].serviceId) {
           case "urn:upnp-org:serviceId:ContentDirectory":
-            _self.cdService = service;
+            _this.cdService = service;
             breal;
           case "urn:upnp-org:serviceId:ConnectionManager":
-            _self.cmService = service;
+            _this.cmService = service;
             break;
         }
       }
-      _self.init_ = true;
       callback(true);
     });
   };
 
-  Server.prototype.makeURL = function(path) {
+  UPNPServer.prototype.makeURL = function(path) {
     return this.url_ + path;
   };
 
-  Server.prototype.getIcon = function() {
+  UPNPServer.prototype.getIcon = function() {
     return this.makeURL(this.description_.root.device.iconList[0].url);
   };
 
-  Server.prototype.browser = function(id, pattern, callback) {
+  UPNPServer.prototype.browser = function(id, start, count, callback) {
+    if (this.cdService_ == null)
+      return false;
+    
+    var url = this.makeURL(this.cdService_.cc);
+    var params = new SOAPClientParameters();
+    params.add("ObjectID", id);
+    params.add("BrowseFlag", "BrowseDirectChildren");
+    params.add("Filter", "*");
+    params.add("StartingIndex", start);
+    params.add("RequestedCount", count);
+    params.add("SortCriteria", "");
+
+    var namespace = "urn:schemas-upnp-org:service:ContentDirectory:1";
+    SOAPClient._sendSoapRequestInternal(url,namespace, "Browse", params, true, function(o, r) {
+       
+      console.log(r);
+    }, null);
+    return true;
   };
 
-  Server.prototype.soapCall = function(obj, callback) {
+  UPNPServer.prototype.soapCall = function(obj, callback) {
   };
 
   function T() {

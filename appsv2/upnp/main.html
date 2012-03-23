@@ -21,21 +21,34 @@ $(document).ready(function() {
   $('#btnGet').click(function() {
       fillData();
   });
+
   function fillData() {
-    var url = "http://172.23.176.2:9999/upnp/control/cds";
-    var params = new SOAPClientParameters();
-    params.add("ObjectID", 0);
-    params.add("BrowseFlag", "BrowseDirectChildren");
-    params.add("Filter", "*");
-    params.add("StartingIndex", 0);
-    params.add("RequestedCount", 50);
-    params.add("SortCriteria", "");
+    var url = "http://localhost:9999/description.xml";
+    _this = this;
+    $.get(url, function(xml) { 
+      $(xml).find("service").each(function() {
+        var service = {
+            servicetype: $(this).find("servicetype").text(),
+            serviceid: $(this).find("serviceid").text(),
+            scpdurl: $(this).find("scpdurl").text(),
+            controlurl: $(this).find("controlurl").text(),
+            eventsuburl: $(this).find("eventsuburl").text(),
+        };
+        console.log(service);
+      });
 
-    var namespace = "urn:schemas-upnp-org:service:ContentDirectory:1";
-    SOAPClient._sendSoapRequestInternal(url,namespace, "Browse", params, true, function(o, r) {
-      console.log(r);
-    }, null);
-
+      var services = _this.description_.root.device.serviceList;
+      for (var i = 0; i < services.lenght; i++) {
+        switch(services[i].serviceId) {
+          case "urn:upnp-org:serviceId:ContentDirectory":
+            _this.cdService = service;
+            breal;
+          case "urn:upnp-org:serviceId:ConnectionManager":
+            _this.cmService = service;
+            break;
+        }
+      }
+    });
   };
 });
 
