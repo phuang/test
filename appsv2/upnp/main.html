@@ -24,30 +24,19 @@ $(document).ready(function() {
 
   function fillData() {
     var url = "http://localhost:9999/description.xml";
-    _this = this;
-    $.get(url, function(xml) { 
-      $(xml).find("service").each(function() {
-        var service = {
-            servicetype: $(this).find("servicetype").text(),
-            serviceid: $(this).find("serviceid").text(),
-            scpdurl: $(this).find("scpdurl").text(),
-            controlurl: $(this).find("controlurl").text(),
-            eventsuburl: $(this).find("eventsuburl").text(),
-        };
-        console.log(service);
+    var url = "http://172.23.176.2:9999/description.xml";
+    var server = new UPNPServer(url, function(server){
+      var icon = server.getIcon(120, 120, ["image/png"]);
+      console.log(icon);
+      server.browse(0, 0, 50, function(result){
+        console.log(result);
       });
-
-      var services = _this.description_.root.device.serviceList;
-      for (var i = 0; i < services.lenght; i++) {
-        switch(services[i].serviceId) {
-          case "urn:upnp-org:serviceId:ContentDirectory":
-            _this.cdService = service;
-            breal;
-          case "urn:upnp-org:serviceId:ConnectionManager":
-            _this.cmService = service;
-            break;
-        }
-      }
+      server.browse(7, 0, 50, function(result){
+        console.log(result);
+      });
+      server.browse(32, 0, 50, function(result){
+        console.log(result);
+      });
     });
   };
 });
