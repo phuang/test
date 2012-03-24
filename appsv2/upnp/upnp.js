@@ -144,7 +144,7 @@
           this.childCount = Number(item.getAttribute("childCount"));
           // console.log($item);
 
-          if (this.class !== "object.container") {
+          if (!this.isContainer()) {
             this.artist = $item.find("artist").text();
             this.album = $item.find("album").text();
             this.date = $item.find("date").text();
@@ -167,6 +167,11 @@
             this.res = new Res($item.find("res").first());
           }
         }
+        
+        Item.prototype.isContainer = function() {
+          return this.class.substring(0, 16) === "object.container";
+        };
+
         items.push(new Item($(this)));
       });
 

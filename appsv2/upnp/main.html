@@ -38,7 +38,7 @@ $(document).ready(function() {
           var $ol = $('<ol id="sub"></ol>');
           $(items).each(function(){
             var item = this;
-            if (item.class === "object.container") {
+            if (item.isContainer()) {
               var $li = $("<li></li>");
               $li.append($('<a><img src="images/folder.png" />' + item.title + '</a>"').click(function(){
                 list(item.id, $li);
