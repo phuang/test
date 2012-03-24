@@ -6,7 +6,7 @@
 
   function UPNPServer(url, callback) {
     var self = this;
-    this.device_ = null;
+    this.device = null;
 
     init(callback);
     function init(callback) {
@@ -64,7 +64,7 @@
 
         }
 
-        self.device_ = new Device($device);
+        self.device = new Device($device);
         callback(self);
       });
     }
@@ -76,8 +76,8 @@
 
   UPNPServer.prototype.getIcon = function(width, height, mimetypes) {
     var url = "";
-    if (this.device_ != null) {
-      var $icons = $(this.device_.icons);
+    if (this.device != null) {
+      var $icons = $(this.device.icons);
       $icons = $icons.filter(function(){
         if ($.inArray(this.mimetype, mimetypes) < 0)
           return false;
@@ -108,12 +108,12 @@
   };
 
   UPNPServer.prototype.browse = function(id, start, count, callback) {
-    if (this.device_ == null) {
+    if (this.device == null) {
       callback(null);
       return false;
     }
 
-    var service = this.device_.services[CONTENT_DIRECTORY];
+    var service = this.device.services[CONTENT_DIRECTORY];
     if (service == null) {
       callback(null);
       return false;
@@ -142,7 +142,7 @@
           this.parentID = Number(item.getAttribute("parentID"));
           this.restricted = Boolean(item.getAttribute("restricted"));
           this.childCount = Number(item.getAttribute("childCount"));
-          console.log($item);
+          // console.log($item);
 
           if (this.class !== "object.container") {
             this.artist = $item.find("artist").text();

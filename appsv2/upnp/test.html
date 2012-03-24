@@ -1,0 +1,70 @@
+<html class="yui3-js-enabled"><head>
+<title>UPNP Media Player</title>
+<script type="text/javascript" src="jquery.js"></script>
+<script type="text/javascript" src="xml2json.js"></script>
+<script type="text/javascript" src="soapclient.js"></script>
+<script type="text/javascript" src="upnp.js"></script>
+<script type="text/javascript" src="http://webplayer.yahooapis.com/player.js"></script> 
+<script>
+
+$(document).ready(function() {
+  $('#btnGet').click(function() {
+      test();
+  });
+
+  function test() {
+    var url = "http://localhost:9999/description.xml";
+    //var url = "http://172.23.176.2:9999/description.xml";
+    var server = new UPNPServer(url, function(server){
+      console.log(server);
+      var $div = $("#div");
+      $div.find("#browser").remove();
+      var $browser = $("<ol id=\"browser\"></ol>");
+      var icon = server.getIcon(48, 48, ["image/png"]) || "images/server.png";
+
+      var $li = $("<li></li>");
+      var $server = $('<a><img src="' + icon + '"/>' + server.device.friendlyName + '</a>');
+      $li.append($server);
+      $browser.append($li);
+      $div.append($browser);
+      
+      function list(id, $e) {
+        if ($e.find("#sub").length > 0) {
+          $e.find("#sub").remove();
+          return;
+        }
+        server.browse(id, 0, 50, function(items){
+          var $ol = $('<ol id="sub"></ol>');
+          $(items).each(function(){
+            var item = this;
+            if (item.class === "object.container") {
+              var $li = $("<li></li>");
+              $li.append($('<a><img src="images/folder.png" />' + item.title + '</a>"').click(function(){
+                list(item.id, $li);
+              }));
+              $ol.append($li);
+            } else {
+              var $li = $('<li><img src="' + (item.albumArtURI || "images/video.png") + '" /><a href="' + item.res.URL + '">' + item.title + '</a></li>');
+              $ol.append($li);
+            }
+          });
+          // $e.find("#sub").remove();
+          $e.append($ol);
+        });
+      }
+
+      $server.click(function(){
+        list(0, $li);
+      });
+    });
+  };
+});
+
+</script>
+<script type="text/javascript" src="http://l.yimg.com/pb/webplayer/0.9.28/js/player-min.js"></script><style type="text/css" media="screen">#dummy-swfproxy {visibility:hidden}</style><script defer="" type="text/javascript" src="http://o.analytics.yahoo.com/fpc.pl?v=5.1.0.11.js&amp;a=10001467053656&amp;dpid=2658703085&amp;ittidx=0&amp;flv=Shockwave%20Flash%2011.1%20r102&amp;n=4&amp;g=en-US&amp;h=Y&amp;j=1920x1080&amp;k=24&amp;l=true&amp;f=file%3A%2F%2F%2Fhome%2Fpenghuang%2Fsources%2Ftest%2Fappsv2%2Fupnp%2Fmain.html&amp;b=UPNP%20Media%20Player&amp;enc=ISO-8859-1&amp;d=Sat%2C%2024%20Mar%202012%2004%3A29%3A12%20GMT"></script></head>
+<body class="yahoo-analyze-include">
+<button id="btnGet">getData</button><p>
+</p><div id="div"><ol id="browser"><li><a><img src="http://192.168.1.126:9999/icons/mt-icon48.png">MediaTomb</a><ol id="sub"><li><a><img src="images/folder.png">PC Directory</a></li><li><a><img src="images/folder.png">Photos</a></li><li><a><img src="images/folder.png">Video</a><ol id="sub"><li><a><img src="images/folder.png">All Video</a></li><li><a><img src="images/folder.png">Directories</a><ol id="sub"><li><a><img src="images/folder.png">Videos</a><ol id="sub"><li><a><img src="images/folder.png">Breaking Bad</a></li><li><a><img src="images/folder.png">Dexter Season 1</a></li><li><a><img src="images/folder.png">Dexter Season 2</a></li><li><a><img src="images/folder.png">Early Cuts, Dark Defender + Dissecting Dexter</a></li><li><a><img src="images/folder.png">Game of Thrones Season 1 Complete 720p</a></li><li><img src="images/video.png"><a href="http://192.168.1.126:9999/content/media/object_id/606/res_id/0/ext/file.avi">The Ides of March [2011]DVDRip[Xvid]AC3 5.1[Eng]BlueLady.avi</a></li></ol></li></ol></li></ol></li></ol></li></ol></div>
+
+
+<object type="application/x-shockwave-flash" id="swfproxy" name="swfproxy" style="position:absolute; top:0; left:-30px;" data="http://l.yimg.com/pb/webplayer/0.9.28/flash/swfproxy.swf" width="1" height="1"><param name="allowScriptAccess" value="always"><param name="allowNetworking" value="all"><param name="flashvars" value="onLoad=YAHOO.mediaplayer.SWFProxy.onLoad&amp;rhappcode=yahoooffnet"></object></body></html>
