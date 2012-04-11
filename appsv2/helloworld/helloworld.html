@@ -1,7 +1,8 @@
 <html>
 <head>
 <title>Hello World Platform App</title>
-<script>
+<script src="chrome-extension-resource://analytics/ga.js"></script>
+<!-- <script>
 function send_udp() {
   chrome.experimental.socket.create('udp', {}, function(socketInfo) {
     var socketId = socketInfo.socketId;
@@ -13,11 +14,13 @@ function send_udp() {
   });
 }
 
-</script>
+</script> -->
 </head>
 <body>
+<!--
 <p>Hello, world! Note that this text is not selectable.</p>
 <div><button onclick="window.close()">Close</button></div>
 <p><button onclick="send_udp();">Send something via UDP to localhost:1337</button></p>
+-->
 </body>
 </html>

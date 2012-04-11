@@ -5,7 +5,9 @@
   "app": {
     "launch": {
       "local_path": "popup.html",
-      "container": "shell"
+      "container": "shell",
+      "width": 300,
+      "height": 300
     }
   },
   "platform_app": true,
@@ -14,6 +16,11 @@
     "128": "analytics-extension-icon-128.png"
   },
 
+  "permission": [
+    "chrome://resources"
+  ],
+
   "manifest_version": 2,
-  "content_security_policy": "script-src 'self' https://ssl.google-analytics.com; object-src 'self'"
+  "content_security_policy": "script-src 'self' https://ssl.google-analytics.com; object-src 'self'",
+  "content_security_policy": "script-src 'self' chrome://resources; object-src 'self'"
 }

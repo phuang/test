@@ -12,7 +12,7 @@
     function init(callback) {
       $.get(url, function(xml) {
         var $xml = $(xml);
-        self.URLBase_ = $xml.find("URLBase").text();
+        self.URLBase = $xml.find("URLBase").text();
         // Parses the device.
         var $device = $xml.find("device").first();
         if ($device.length != 1) {
@@ -71,7 +71,7 @@
   }
 
   UPNPServer.prototype.makeURL = function(path) {
-    return this.URLBase_ + path.substring(1);
+    return this.URLBase + path.substring(1);
   };
 
   UPNPServer.prototype.getIcon = function(width, height, mimetypes) {
@@ -142,7 +142,6 @@
           this.parentID = Number(item.getAttribute("parentID"));
           this.restricted = Boolean(item.getAttribute("restricted"));
           this.childCount = Number(item.getAttribute("childCount"));
-          // console.log($item);
 
           if (!this.isContainer()) {
             this.artist = $item.find("artist").text();
