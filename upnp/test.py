@@ -9,22 +9,28 @@ HOST = "239.255.255.250"
 PORT = 1900
 
 def m_search():
-  data = (
+  sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+
+  m_search_package = (
       'M-SEARCH * HTTP/1.1',
       'MX: 5',
       'ST: upnp:rootdevice',
       'MAN: "ssdp:discover"',
       'User-Agent: Platinum/0.5.3.0, DLNADOC/1.50',
       'Host: 239.255.255.250:1900')
-  data = "\r\n".join(data) + "\r\n\r\n"
-  sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-  sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
+  data = "\r\n".join(m_search_package) + "\r\n\r\n"
+
   sock.sendto(data, (HOST, PORT))
+  print "==>"
+  print "To: 239.255.255.250:1900"
+  print data
 
   while True:
     readyfds = select.select([sock.fileno()], [], [])
     if sock.fileno() in readyfds[0]:
       received, address = sock.recvfrom(1024)
+      print "<=="
       print "From: ", address
       print received
 
