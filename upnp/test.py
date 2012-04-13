@@ -10,6 +10,9 @@ PORT = 1900
 
 def m_search():
   sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+
+  # Set the socket multicast TTL to 1+, so the multicast package can pass
+  # router (optional).
   sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, 2)
 
   m_search_package = (
@@ -26,6 +29,7 @@ def m_search():
   print "To: 239.255.255.250:1900"
   print data
 
+  # Wait servers' resopnses.
   while True:
     readyfds = select.select([sock.fileno()], [], [])
     if sock.fileno() in readyfds[0]:
@@ -47,7 +51,7 @@ def get_description(values):
   f = urllib2.urlopen(values["LOCATION"])
   for line in f:
     print line,
-  
+
 
 
 if __name__ == "__main__":
