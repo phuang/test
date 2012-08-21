@@ -10,6 +10,7 @@ PORT = 1900
 
 def m_search():
   sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+  sock.bind()
 
   # Set the socket multicast TTL to 1+, so the multicast package can pass
   # router (optional).

@@ -30,5 +30,5 @@
     }
   },
   "manifest_version": 2,
-  "content_security_policy": "script-src 'self' chrome-extension-resource://analytics; object-src 'self'"
+  "content_security_policy": "script-src 'self' chrome-extension-resource://analytics; object-src 'self'; default-src 'self'"
 }
