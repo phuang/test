@@ -25,24 +25,28 @@ Plugin.prototype.changeRotation_ = function(rotation) {
     
     var width, height, marginTop, marginLeft;
     if ((rotation & 1) == 1) {
-        width = this.screen_.height + PADDING * 2;
-        height = this.screen_.width + PADDING * 2;
+        width = this.screen_.height;
+        height = this.screen_.width;
         marginTop = PADDING - (width - height) / 2;
         marginLeft = PADDING - (height - width) / 2;
     } else {
-        width = this.screen_.width + PADDING * 2;
-        height = this.screen_.height + PADDING * 2;
+        width = this.screen_.width;
+        height = this.screen_.height;
         marginTop = PADDING;
         marginLeft = PADDING;
     }
+
+    this.container_.style.top = '0px';
+    this.container_.style.left = '0px';
+    this.container_.style.width = (width + PADDING * 2) + 'px';
+    this.container_.style.height = (height + 40  + PADDING * 2) + 'px';
     
     this.screen_.style['top'] = marginTop + 'px';
     this.screen_.style['left'] = marginLeft + 'px';
     
     this.button_.style['left'] = PADDING + 'px';
-    this.button_.style['width'] = (width - PADDING * 2) + 'px';
-    this.button_.style['top'] = (height - PADDING) + 'px';
-    this.button_.style['bottom'] = PADDING + 'px';
+    this.button_.style['width'] = width + 'px';
+    this.button_.style['top'] = (height + PADDING) + 'px';
 };
 
 window.onload=function() {

@@ -3,19 +3,26 @@
 <script type="text/javascript" src="plugin.js"></script>
 </head>
 <body style="
-    margin-left: 0px;
-    margin-right: 0px;
-    margin-top: 0px;
-    margin-bottom: 0px;
-">
-<img id="screen" src="screen.jpg" style="
-    -webkit-transform: rotate(0deg);
-    display: block;
-    position: fixed;
-">
-<div id="button" background="black" style="
-    background-color: 0;
-    position: fixed;
-    height: 40px;
-"></div>
-</body></html>
+  margin-left: 0px;
+  margin-right: 0px;
+  margin-top: 0px;
+  margin-bottom: 0px;
+  ">
+    <div id="container" style="
+      position: relative;
+      background-color: 303030;
+      margin: auto auto auto auto;
+      ">
+      <img id="screen" src="screen.jpg" style="
+        display: block;
+        position: absolute;
+        -webkit-transform: rotate(0deg);
+        " />
+      <div id="button" background="black" style="
+        background-color: 0;
+        position: absolute;
+        height: 40px;
+        " />
+    </div>
+</body>
+</html>
