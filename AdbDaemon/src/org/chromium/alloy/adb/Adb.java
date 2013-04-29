@@ -8,7 +8,7 @@ public class Adb {
    * @param args
    */
   public static void main(String[] args) {
-    Server._start();
-    Server.shutdown();
+    AdbServer.start();
+    AdbServer.shutdown();
   }
 }
