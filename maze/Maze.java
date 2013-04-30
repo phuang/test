@@ -11,8 +11,8 @@ import javax.swing.JFrame;
 
 
 public class Maze {
-    private final int X_SIZE = 20;
-    private final int Y_SIZE = 20;
+    private final int X_SIZE = 50;
+    private final int Y_SIZE = 50;
     
     // all cells
     private boolean visited[][] = null;
