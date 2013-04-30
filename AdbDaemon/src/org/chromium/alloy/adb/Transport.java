@@ -7,46 +7,47 @@ import java.nio.channels.ClosedChannelException;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedList;
 
 class Transport implements IOChannel {
   private SocketChannel mChannel = null;
   private int mSelectionOps = 0;
   private SelectionKey mSelectionKey = null;
-  private Deque<ByteBuffer> mOutputQue = new LinkedList<ByteBuffer>(); 
-  
+  private Deque<ByteBuffer> mOutputQue = new LinkedList<ByteBuffer>();
+  private HashMap<Integer, AdbSocket> mSocketMap = new HashMap<Integer, AdbSocket>();
+
   private boolean mOnline = false;
-  
+
   public Transport(SocketChannel channel) {
     mChannel = channel;
   }
-  
+
   public void enableRead(boolean enable) {
+    System.out.println("enableRead: enable=" + enable);
     int Ops = mSelectionOps;
     if (enable) {
       Ops |= SelectionKey.OP_READ;
     } else {
-      Ops &= ~SelectionKey.OP_READ;      
+      Ops &= ~SelectionKey.OP_READ;
     }
 
     updateSelection(Ops);
   }
 
   public void enableWrite(boolean enable) {
+    System.out.println("enableWrite: enable=" + enable);
     int Ops = mSelectionOps;
     if (enable) {
       Ops |= SelectionKey.OP_WRITE;
     } else {
-      Ops &= ~SelectionKey.OP_WRITE;      
+      Ops &= ~SelectionKey.OP_WRITE;
     }
     updateSelection(Ops);
   }
 
   private void updateSelection(int Ops) {
     if (Ops != mSelectionOps) {
-      if (mSelectionKey != null) {
-        mSelectionKey = null;
-      }
       try {
         mSelectionKey = mChannel.register(
             AdbServer.server().selector(), Ops, this);
@@ -56,17 +57,17 @@ class Transport implements IOChannel {
       mSelectionOps = Ops;
     }
   }
-  
+
   private void online() {
-    mOnline = true;  
+    mOnline = true;
   }
-  
+
   private void offline() {
     mOnline = false;
   }
-  
+
   private void createLocalServiceSocket(final String name) {
-    
+
   }
 
   private void handleSync(AdbMessage message) {
@@ -74,30 +75,30 @@ class Transport implements IOChannel {
       offline();
     send(message);
   }
-  
+
   private void handleConnect(AdbMessage message) {
     online();
     StringBuilder builder = new StringBuilder();
     builder.append("device::");
-    
+
     final String[] cnxn_props = {
         "ro.product.name",
         "ro.product.model",
         "ro.product.device"
     };
-    
+
     for (String prop: cnxn_props)
-      builder.append(String.format("%s=%s;", prop, ""));
-    
+      builder.append(String.format("%s=%s;", prop, "alloy"));
+
     AdbMessage cm = new AdbMessage(AdbMessage.A_CNXN, AdbMessage.A_VERSION,
         AdbMessage.MAX_PAYLOAD, builder.toString());
     send(cm);
   }
-  
+
   private void handleAuth(AdbMessage message) {
-    
+
   }
-  
+
   private void handleOpen(AdbMessage message) {
     if (mOnline) {
      String name = new String(message.data);
@@ -105,22 +106,22 @@ class Transport implements IOChannel {
      createLocalServiceSocket(name);
     }
   }
-  
+
   private void handleClose(AdbMessage message) {
-    
+
   }
-  
+
   private void handleWrite(AdbMessage message) {
-    
+
   }
-  
+
   public void send(AdbMessage message) {
     ByteBuffer buffer  = message.toByteBuffer();
     buffer.flip();
-    mOutputQue.add(buffer);
+    mOutputQue.addLast(buffer);
     enableWrite(true);
   }
-  
+
   @Override
   public void onAcceptable() throws IOException {
   }
@@ -128,7 +129,8 @@ class Transport implements IOChannel {
   @Override
   public void onReadable() throws IOException {
     ByteBuffer buffer = ByteBuffer.allocate(AdbMessage.MAX_PAYLOAD + 24);
-    mChannel.read(buffer);
+    int result = mChannel.read(buffer);
+    System.out.println("onReadable: result=" + result);
     buffer.flip();
     while(buffer.hasRemaining()) {
       AdbMessage message = new AdbMessage(buffer);
@@ -149,6 +151,7 @@ class Transport implements IOChannel {
 
   @Override
   public void onWritable() throws IOException {
+    System.out.println("onWriteable: size=" + mOutputQue.size());
     if (!mOutputQue.isEmpty()) {
       ByteBuffer buffer = mOutputQue.getFirst();
       mChannel.write(buffer);
