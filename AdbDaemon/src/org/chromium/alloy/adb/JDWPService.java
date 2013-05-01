@@ -22,19 +22,23 @@ class JDWPService extends AdbSocket {
       mPeer.close();
     }
   }
+}
 
-  @Override
-  public int enqueue(AdbMessage message) {
-    mPeer.close();
-    return -1;
+class TrackJDWPService extends AdbSocket {
+  private boolean mNeedUpdate = true;
+  
+  private String listProcess() {
+    // TODO(penghuang): returns processes.
+    return "0000";
   }
 
   @Override
-  public void close() {
-    AdbSocket peer = mPeer;
-    if (peer != null) {
-      mPeer = null;
-      peer.close();
+  public void ready() {
+    if (mNeedUpdate) {
+      AdbMessage message = new AdbMessage();
+      message.setData(listProcess());
+      mPeer.enqueue(message);      
+      mNeedUpdate = false;
     }
   }
 }

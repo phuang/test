@@ -59,10 +59,20 @@ class AdbMessage {
     buffer.get(data);
     checkData();
   }
+
+  public void setData(byte[] data) {
+    this.data = data;
+    this.needAppendZero = false;
+  }
   
   public void setData(final String data) {
     this.data = data.getBytes();
-    this.needAppendZero = true;
+    setData(data, true);
+  }
+  
+  public void setData(final String data, boolean needAppendZero) {
+    this.data = data.getBytes();
+    this.needAppendZero = needAppendZero;    
   }
   
   public ByteBuffer toByteBuffer() {

@@ -7,13 +7,13 @@ class AdbRemoteSocket extends AdbSocket {
   private Transport mTransport = null; 
 
   public AdbRemoteSocket(int id, Transport transport) {
-    mId = id;
+    super(id);
     mTransport = transport;
   }
   
   @Override
   public void ready() {
-    AdbMessage message = new AdbMessage(AdbMessage.A_OKAY, mId, mPeer.mId, "");
+    AdbMessage message = new AdbMessage(AdbMessage.A_OKAY, mPeer.mId, mId, null);
     mTransport.send(message);
   }
 
@@ -28,13 +28,9 @@ class AdbRemoteSocket extends AdbSocket {
 
   @Override
   public void close() {
-    AdbMessage message = new AdbMessage(AdbMessage.A_CLSE, 0, mId, "");
-    if (mPeer != null) {
-      message.arg1 = mPeer.mId;
-      mPeer.mPeer = null;
-      mPeer.close();
-    }
+    AdbMessage message = new AdbMessage(AdbMessage.A_CLSE,
+        mPeer != null ? mPeer.mId : 0, mId, "");
     mTransport.send(message);
+    super.close();
   }
-
 }
