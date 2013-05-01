@@ -21,14 +21,14 @@ class ShellService extends AdbSocket {
     mEnvs.put("EXTERNAL_STORAGE", "/mnt/sdcard");
     mEnvs.put("ANDROID_DATA", "/data");
     mEnvs.put("ANDROID_ROOT", "/system");
-    mCommands = commands.isEmpty() ? null : parseCommands(commands);    
+    mCommands = commands.isEmpty() ? null : parseCommands(commands);
   }
-  
+
   private String getEnv(final String name) {
     String value = mEnvs.get(name);
     return value != null ? value : "";
   }
-  
+
   private Vector<String[]> parseCommands(String commands) {
     Vector<String[]> cmds = new Vector<String[]>();
     Vector<String> cmd = new Vector<String>();
@@ -59,7 +59,7 @@ class ShellService extends AdbSocket {
               sb.append(next);
               i++;
             } else {
-              sb.append('\\');              
+              sb.append('\\');
             }
           }
           break;
@@ -84,7 +84,7 @@ class ShellService extends AdbSocket {
               cmd.clear();
             }
           } else {
-            sb.append(c);            
+            sb.append(c);
           }
           break;
         case '$':
@@ -121,13 +121,13 @@ class ShellService extends AdbSocket {
           break;
       }
     }
-    
+
     if (quote != 0) {
       sendToPeer(String.format("unexpected EOF while looking for matching `%c'\n", quote));
       cmds.clear();
       return cmds;
     }
-    
+
     String s = sb.toString();
     if (!s.isEmpty())
       cmd.add(s);
@@ -135,7 +135,7 @@ class ShellService extends AdbSocket {
       cmds.add(cmd.toArray(new String[0]));
     return cmds;
   }
-  
+
   private void cdMain(String[] args) {
     String newPath = null;
     if (args.length >= 2) {
@@ -150,18 +150,18 @@ class ShellService extends AdbSocket {
       sendToPeer("cd: no home directory (HOME not set)\n");
       return;
     }
-    
+
     File directory = new File(newPath);
     if (!directory.exists()) {
       sendToPeer(String.format("cd: %s: No such file or directory\n", newPath));
-      return;      
+      return;
     }
 
     if (!directory.isDirectory()) {
       sendToPeer(String.format("cd: %s: Not a directory\n", newPath));
-      return;      
+      return;
     }
-    
+
     mCurrentDir = directory.getAbsolutePath();
     sendToPeer("");
   }
@@ -169,7 +169,7 @@ class ShellService extends AdbSocket {
   private void echoMain(String[] args) {
     StringBuffer sb = new StringBuffer();
     if (args.length >= 2) {
-      sb.append(args[1]);      
+      sb.append(args[1]);
       for (int i = 2; i < args.length; i++) {
         sb.append(" ");
         sb.append(args[i]);
@@ -178,7 +178,7 @@ class ShellService extends AdbSocket {
     sb.append("\n");
     sendToPeer(sb.toString());
   }
-  
+
   private void exportMain(String[] args) {
     if (args.length == 1) {
       Iterator<Entry<String,String>> iterator = mEnvs.entrySet().iterator();
@@ -200,15 +200,15 @@ class ShellService extends AdbSocket {
       }
     }
   }
-  
+
   private void getpropMain(String[] args) {
     sendToPeer("");
   }
-  
+
   private void logcatMain(String[] args) {
     sendToPeer("");
   }
-  
+
   private void lsMain(String[] args) {
     String path = mCurrentDir;
     File directory = new File(path);
@@ -220,7 +220,7 @@ class ShellService extends AdbSocket {
   private void pwdMain(String[] args) {
     sendToPeer(mCurrentDir + "\n");
   }
-    
+
   private void execute(String[] args) {
     if ("cd".equals(args[0])) {
       cdMain(args);
@@ -240,7 +240,7 @@ class ShellService extends AdbSocket {
       sendToPeer("Unknown command.");
     }
   }
-  
+
   @Override
   protected void sendToPeer(final String data) {
     mOutputQue.addLast(data);
@@ -250,20 +250,20 @@ class ShellService extends AdbSocket {
   public void close() {
     super.close();
   }
-  
+
   @Override
   public int enqueue(AdbMessage message) {
     assert (false);
     return 0;
   }
-  
+
   @Override
   public void ready() {
     if (mCommands == null) {
       mPeer.close();
       return;
     }
-    
+
     if (mPass == 0) {
       // The first time, we execute all commands
       Iterator<String[]> iterator = mCommands.iterator();
@@ -278,7 +278,7 @@ class ShellService extends AdbSocket {
       }
       mPass++;
     }
-    
+
     if (!mOutputQue.isEmpty()) {
       drainOutputBuffer();
     } else {

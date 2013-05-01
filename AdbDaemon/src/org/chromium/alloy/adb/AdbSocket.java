@@ -6,23 +6,23 @@ class AdbSocket {
   private boolean mClosing = false;
   private boolean mExitOnClose = false;
   protected AdbSocket mPeer = null;
-  
+
   protected AdbSocket() {
     mId = sNextId++;
   }
-  
+
   protected AdbSocket(int id) {
     mId = id;
   }
-  
+
   public int id() {
     return mId;
   }
-  
+
   public AdbSocket peer() {
     return mPeer;
   }
-  
+
   public void connectPeer(AdbSocket peer) {
     assert(mPeer == null);
     assert(peer != null);
@@ -30,7 +30,7 @@ class AdbSocket {
     mPeer = peer;
     peer.mPeer = this;
   }
-  
+
   public void ready() {
   }
 
@@ -45,10 +45,10 @@ class AdbSocket {
       mPeer.close();
     }
   }
-  
+
   public void disconnect() {
   }
-  
+
   protected void sendToPeer(final String data) {
     AdbMessage message = new AdbMessage();
     message.setData(data);

@@ -10,7 +10,7 @@ class JDWPService extends AdbSocket {
     // TODO(penghuang): returns processes.
     return "";
   }
-  
+
   @Override
   public void ready() {
     if (mPass == 0) {
@@ -26,7 +26,7 @@ class JDWPService extends AdbSocket {
 
 class TrackJDWPService extends AdbSocket {
   private boolean mNeedUpdate = true;
-  
+
   private String listProcess() {
     // TODO(penghuang): returns processes.
     return "0000";
@@ -37,7 +37,7 @@ class TrackJDWPService extends AdbSocket {
     if (mNeedUpdate) {
       AdbMessage message = new AdbMessage();
       message.setData(listProcess());
-      mPeer.enqueue(message);      
+      mPeer.enqueue(message);
       mNeedUpdate = false;
     }
   }

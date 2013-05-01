@@ -4,19 +4,19 @@ import java.io.IOException;
 
 class IOChannel {
   /**
-   * @throws IOException  
+   * @throws IOException
    */
   public void onAcceptable() throws IOException {}
-  
+
   /**
-   * @throws IOException  
+   * @throws IOException
    */
   public void onReadable() throws IOException {}
-  
+
   /**
-   * @throws IOException  
+   * @throws IOException
    */
   public void onWritable() throws IOException {}
-  
+
   public void close() {}
 }

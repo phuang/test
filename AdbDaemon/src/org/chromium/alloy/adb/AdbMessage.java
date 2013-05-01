@@ -10,7 +10,7 @@ import java.util.Arrays;
  */
 class AdbMessage {
   public static final int MAX_PAYLOAD = 4096;
-  
+
   public static final int A_SYNC = 0x434e5953;
   public static final int A_CNXN = 0x4e584e43;
   public static final int A_OPEN = 0x4e45504f;
@@ -18,7 +18,7 @@ class AdbMessage {
   public static final int A_CLSE = 0x45534c43;
   public static final int A_WRTE = 0x45545257;
   public static final int A_AUTH = 0x48545541;
-  
+
   public static final int A_VERSION = 0x01000000;
 
   public int command = 0;
@@ -28,12 +28,12 @@ class AdbMessage {
   public int dataCheck = 0;
   public int magic = 0;
   public byte[] data = null;
-  
+
   private boolean needAppendZero = false;
-  
+
   public AdbMessage() {
   }
-  
+
   public AdbMessage(int command, int arg0, int arg1, String data) {
     this.command = command;
     this.arg0 = arg0;
@@ -43,7 +43,7 @@ class AdbMessage {
       this.needAppendZero = true;
     }
   }
-  
+
   public AdbMessage(ByteBuffer buffer) throws IOException {
     buffer.order(ByteOrder.LITTLE_ENDIAN);
 
@@ -64,17 +64,17 @@ class AdbMessage {
     this.data = data;
     this.needAppendZero = false;
   }
-  
+
   public void setData(final String data) {
     this.data = data.getBytes();
     setData(data, true);
   }
-  
+
   public void setData(final String data, boolean needAppendZero) {
     this.data = data.getBytes();
-    this.needAppendZero = needAppendZero;    
+    this.needAppendZero = needAppendZero;
   }
-  
+
   public ByteBuffer toByteBuffer() {
     prepare();
     ByteBuffer buffer = ByteBuffer.allocate(dataLength + 24);
@@ -91,11 +91,11 @@ class AdbMessage {
       buffer.put((byte)0);
     return buffer;
   }
-  
+
   private void checkHeader() throws IOException {
     if (magic != (command ^ 0xffffffff))
       throw new IOException("Invalid magic.");
-    
+
     if (dataLength > MAX_PAYLOAD)
       throw new IOException("Message data length > MAX_PAYLOAD.");
   }
@@ -104,7 +104,7 @@ class AdbMessage {
     if (sum() != dataCheck)
       throw new IOException("Message data checking failed.");
   }
-  
+
   private int sum() {
     long result = 0;
     if (data != null) {
@@ -114,15 +114,15 @@ class AdbMessage {
     }
     return (int)(result & 0xffffffff);
   }
-  
+
   private void prepare() {
     dataLength = data != null ? data.length : 0;
     if (needAppendZero)
       dataLength += 1;
     dataCheck = sum();
-    magic = command ^ 0xffffffff;    
+    magic = command ^ 0xffffffff;
   }
-  
+
   @Override
   public String toString() {
     String tag = null;
