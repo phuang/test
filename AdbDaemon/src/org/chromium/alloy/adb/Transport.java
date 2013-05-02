@@ -13,6 +13,7 @@ import java.util.LinkedList;
 class Transport extends IOChannel {
   private SocketChannel mChannel = null;
   private int mSelectionOps = 0;
+  private ByteBuffer mReadBuffer = null;
   private Deque<ByteBuffer> mOutputQue = new LinkedList<ByteBuffer>();
   private HashMap<Integer, AdbSocket> mSocketMap = new HashMap<Integer, AdbSocket>();
 
@@ -20,6 +21,8 @@ class Transport extends IOChannel {
 
   public Transport(SocketChannel channel) {
     mChannel = channel;
+    mReadBuffer = ByteBuffer.allocate(AdbMessage.MAX_PAYLOAD + 24);
+    mReadBuffer.order(ByteOrder.LITTLE_ENDIAN);
   }
 
   public void enableRead(boolean enable) {
@@ -59,6 +62,7 @@ class Transport extends IOChannel {
     if (Ops != mSelectionOps) {
       try {
         mChannel.register(AdbServer.server().selector(), Ops, this);
+        AdbServer.server().selector().wakeup();
       } catch (ClosedChannelException e) {
         e.printStackTrace();
       }
@@ -82,13 +86,19 @@ class Transport extends IOChannel {
       socket = new TrackJDWPService();
     } else if (name.startsWith("shell:")) {
       socket = new ShellService(name.substring(6));
+    } else if (name.startsWith("sync:")) {
+      socket = new SyncService();
     }
     return socket;
   }
 
   private void handleSync(AdbMessage message) {
-    if (message.arg0 == 0) offline();
-    send(message);
+    if (message.arg0 != 0) {
+      send(message);
+    } else {
+      offline();
+      send(message);
+    }
   }
 
   private void handleConnect(AdbMessage message) {
@@ -167,12 +177,12 @@ class Transport extends IOChannel {
 
   @Override
   public void onReadable() throws IOException {
-    ByteBuffer buffer = ByteBuffer.allocate(AdbMessage.MAX_PAYLOAD + 24);
-    int result = mChannel.read(buffer);
+    mReadBuffer.rewind().clear();
+    int result = mChannel.read(mReadBuffer);
     System.out.println("onReadable: result=" + result);
-    buffer.flip();
-    while (buffer.hasRemaining()) {
-      AdbMessage message = new AdbMessage(buffer);
+    mReadBuffer.flip();
+    while (mReadBuffer.hasRemaining()) {
+      AdbMessage message = new AdbMessage(mReadBuffer);
       System.out.println("dest = " + message);
       switch (message.command) {
         case AdbMessage.A_SYNC:

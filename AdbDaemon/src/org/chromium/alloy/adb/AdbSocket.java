@@ -3,8 +3,6 @@ package org.chromium.alloy.adb;
 class AdbSocket {
   private static int sNextId = 1;
   protected int mId = -1;
-  private boolean mClosing = false;
-  private boolean mExitOnClose = false;
   protected AdbSocket mPeer = null;
 
   protected AdbSocket() {

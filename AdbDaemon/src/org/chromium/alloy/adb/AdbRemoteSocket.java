@@ -13,7 +13,7 @@ class AdbRemoteSocket extends AdbSocket {
 
   @Override
   public void ready() {
-    AdbMessage message = new AdbMessage(AdbMessage.A_OKAY, mPeer.mId, mId, null);
+    AdbMessage message = new AdbMessage(AdbMessage.A_OKAY, mPeer.mId, mId);
     mTransport.send(message);
   }
 

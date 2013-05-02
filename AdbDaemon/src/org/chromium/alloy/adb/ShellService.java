@@ -221,6 +221,23 @@ class ShellService extends AdbSocket {
     sendToPeer(mCurrentDir + "\n");
   }
 
+  private void rmMain(String[] args) {
+    for (int i = 1; i < args.length; ++i) {
+      File file = new File(args[i]);
+      if (!file.exists()) {
+        sendToPeer(String.format("rm failed for %s, No such file or directory\n", args[i]));
+        return;
+      }
+      if (file.isDirectory()) {
+        sendToPeer(String.format("rm failed for %s, Is a directory\n", args[i]));
+        return;
+      }
+      if (!file.delete()) {
+        sendToPeer(String.format("rm failed for %s\n", args[i]));
+      }
+    }
+  }
+
   private void execute(String[] args) {
     if ("cd".equals(args[0])) {
       cdMain(args);
@@ -236,7 +253,9 @@ class ShellService extends AdbSocket {
       lsMain(args);
     } else if ("pwd".equals(args[0])) {
       pwdMain(args);
-    }else {
+    } else if ("rm".equals(args[0])) {
+      rmMain(args);
+    } else {
       sendToPeer("Unknown command.");
     }
   }
