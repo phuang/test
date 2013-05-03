@@ -8,11 +8,16 @@ import java.nio.ByteOrder;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 
+class AdbSyncException extends Exception {
+  public AdbSyncException(String message) {
+    super(message);
+  }
+}
 
 class SyncService extends AdbSocket implements Runnable {
   private static final int MESSAGE_QUE_SIZE = 32;
   private static final int SYNC_DATA_MAX = 64 * 1024;
-  private BlockingDeque<AdbMessage> mMessageQue = new LinkedBlockingDeque<AdbMessage>(MESSAGE_QUE_SIZE);
+  private final BlockingDeque<AdbMessage> mMessageQue = new LinkedBlockingDeque<AdbMessage>(MESSAGE_QUE_SIZE);
   private boolean mBlocking = false;
   private ByteBuffer mBuffer = null;
   private Thread mThread = null;
@@ -29,6 +34,7 @@ class SyncService extends AdbSocket implements Runnable {
     static final int ID_OKAY = 0x59414b4f;
     static final int ID_FAIL = 0x4c494146;
     static final int ID_QUIT = 0x54495551;
+
 
     static String idToStrig(int id) {
       switch (id) {
@@ -131,7 +137,7 @@ class SyncService extends AdbSocket implements Runnable {
     req.id = mBuffer.getInt();
     req.nameLen = mBuffer.getInt();
     if (req.nameLen > 1024) {
-      throw new Exception("invalid namelen");
+      throw new AdbSyncException("invalid namelen");
     }
     req.name = readString(req.nameLen);
     return req;
@@ -146,12 +152,12 @@ class SyncService extends AdbSocket implements Runnable {
       return data;
     if (data.id == Msg.ID_DATA) {
       if (data.size > SYNC_DATA_MAX)
-        throw new Exception("oversize data message");
+        throw new AdbSyncException("oversize data message");
       data.data = readBytes(data.size);
       return data;
     }
 
-    throw new Exception("invalid data message");
+    throw new AdbSyncException("invalid data message");
   }
 
   private void writeStat(Msg.Stat stat) {
@@ -173,6 +179,18 @@ class SyncService extends AdbSocket implements Runnable {
     buffer.putInt(status.msgLen);
     mPeer.enqueue(new AdbMessage(0, 0, 0, bytes));
   }
+
+  private void writeData(Msg.Data data) {
+    assert (data.size <= data.data.length);
+    byte[] bytes = new byte[16 + data.size];
+    ByteBuffer buffer = ByteBuffer.wrap(bytes);
+    buffer.order(ByteOrder.LITTLE_ENDIAN);
+    buffer.putInt(data.id);
+    buffer.putInt(data.size);
+    buffer.put(data.data, 0, data.size);
+    mPeer.enqueue(new AdbMessage(0, 0, 0, bytes));
+  }
+
 
   private byte[] readBytes(int len) throws InterruptedException, IOException {
     waitData(len);
@@ -257,7 +275,7 @@ class SyncService extends AdbSocket implements Runnable {
     long timestamp = 0;
 
     if (file.exists() || !file.createNewFile())
-      throw new IOException(String.format("create file %s failed", path));
+      throw new AdbSyncException(String.format("create file %s failed", path));
 
     file.setExecutable((mode & 0111) != 0);
     file.setWritable((mode & 0222) != 0);
@@ -301,8 +319,6 @@ class SyncService extends AdbSocket implements Runnable {
     try {
       while (true) {
         Msg.Req req = readReq();
-        System.out.println(
-            String.format("%s: %d %d \"%s\"", Msg.idToStrig(req.id), req.nameLen, req.name.length(), req.name));
         switch (req.id) {
           case Msg.ID_STAT: handleStat(req); break;
           case Msg.ID_LIST: handleList(req); break;
@@ -313,7 +329,13 @@ class SyncService extends AdbSocket implements Runnable {
             throw new Exception("unknown command");
         }
       }
-    } catch (Exception e) {
+    } catch (AdbSyncException e) {
+      Msg.Data msg = new Msg.Data();
+      msg.id = Msg.ID_FAIL;
+      msg.data = e.getMessage().getBytes();
+      msg.size = msg.data.length;
+      writeData(msg);
+    }catch (Exception e) {
       e.printStackTrace();
     } finally {
       if (mPeer != null) {
