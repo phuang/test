@@ -147,7 +147,7 @@ public class AdbServer extends IOChannel implements Runnable {
   public static void start() {
     assert (sServer == null);
     sServer = new AdbServer();
-    sServerThread = new Thread(sServer, "adb");
+    sServerThread = new Thread(sServer, "Adb");
     sServerThread.start();
   }
 

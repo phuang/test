@@ -217,6 +217,10 @@ class ShellService extends AdbSocket {
     }
   }
 
+  private void pmMain(String[] args) {
+    sendToPeer("");
+  }
+
   private void pwdMain(String[] args) {
     sendToPeer(mCurrentDir + "\n");
   }
@@ -251,12 +255,14 @@ class ShellService extends AdbSocket {
       logcatMain(args);
     } else if ("ls".equals(args[0])) {
       lsMain(args);
+    } else if ("pm".equals(args[0])) {
+      pmMain(args);
     } else if ("pwd".equals(args[0])) {
       pwdMain(args);
     } else if ("rm".equals(args[0])) {
       rmMain(args);
     } else {
-      sendToPeer("Unknown command.");
+      sendToPeer(String.format("shell: %s: command not found\n", args[0]));
     }
   }
 

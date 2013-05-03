@@ -60,8 +60,8 @@ class AdbMessage {
 
     data = new byte[dataLength];
     buffer.get(data);
-    checkData();
     needAppendZero = false;
+    checkData();
   }
 
   public void setData(byte[] data) {
@@ -105,8 +105,10 @@ class AdbMessage {
   }
 
   private void checkData() throws IOException {
-    if (sum() != dataCheck)
+    int s = sum();
+    if (s != dataCheck) {
       throw new IOException("Message data checking failed.");
+    }
   }
 
   private int sum() {
@@ -114,7 +116,7 @@ class AdbMessage {
     if (data != null) {
       int count = data.length;
       while (count-- > 0)
-        result += data[count];
+        result += ((long)data[count]) & 0xff;
     }
     return (int)(result & 0xffffffff);
   }
@@ -141,6 +143,6 @@ class AdbMessage {
       default: tag = "????"; break;
     }
     return String.format("%s %08x %08x %04x %s",
-        tag, arg0, arg1, dataLength, new String(data));
+        tag, arg0, arg1, dataLength, new String(data, 0, Math.min(data.length, 8)));
   }
 }
