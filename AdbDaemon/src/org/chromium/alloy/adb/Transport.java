@@ -161,7 +161,8 @@ class Transport extends IOChannel {
     if (mOnline) {
       AdbSocket socket = mSocketMap.get(message.arg1);
       if (socket != null) {
-        if (socket.enqueue(message) == 0) socket.peer().ready();
+        if (socket.enqueue(message) == 0)
+          socket.peer().ready();
       }
     }
   }
@@ -177,12 +178,16 @@ class Transport extends IOChannel {
 
   @Override
   public void onReadable() throws IOException {
-    mReadBuffer.rewind().clear();
     int result = mChannel.read(mReadBuffer);
-    System.out.println("onReadable: result=" + result);
+    // System.out.println("onReadable: result=" + result);
     mReadBuffer.flip();
-    while (mReadBuffer.hasRemaining()) {
-      AdbMessage message = new AdbMessage(mReadBuffer);
+    while (true) {
+      AdbMessage message = null;
+      message = AdbMessage.read(mReadBuffer);
+      if (message == null) {
+        mReadBuffer.compact();
+        return;
+      }
       System.out.println("dest = " + message);
       switch (message.command) {
         case AdbMessage.A_SYNC:

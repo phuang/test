@@ -49,19 +49,29 @@ class AdbMessage {
     this.needAppendZero = true;
   }
 
-  public AdbMessage(ByteBuffer buffer) throws IOException {
-    command = buffer.getInt();
-    arg0 = buffer.getInt();
-    arg1 = buffer.getInt();
-    dataLength = buffer.getInt();
-    dataCheck = buffer.getInt();
-    magic = buffer.getInt();
-    checkHeader();
+  public static AdbMessage read(ByteBuffer buffer) throws IOException {
+    if (buffer.remaining() < 24)
+      return null;
+    buffer.mark();
+    AdbMessage message = new AdbMessage();
+    message.command = buffer.getInt();
+    message.arg0 = buffer.getInt();
+    message.arg1 = buffer.getInt();
+    message.dataLength = buffer.getInt();
+    message.dataCheck = buffer.getInt();
+    message.magic = buffer.getInt();
+    message.checkHeader();
 
-    data = new byte[dataLength];
-    buffer.get(data);
-    needAppendZero = false;
-    checkData();
+    if (buffer.remaining() < message.dataLength) {
+      buffer.reset();
+      return null;
+    }
+
+    message.data = new byte[message.dataLength];
+    buffer.get(message.data);
+    message.needAppendZero = false;
+    message.checkData();
+    return message;
   }
 
   public void setData(byte[] data) {

@@ -335,7 +335,7 @@ class SyncService extends AdbSocket implements Runnable {
       msg.data = e.getMessage().getBytes();
       msg.size = msg.data.length;
       writeData(msg);
-    }catch (Exception e) {
+    } catch (Exception e) {
       e.printStackTrace();
     } finally {
       if (mPeer != null) {
