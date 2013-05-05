@@ -9,6 +9,7 @@ import java.nio.ByteOrder;
  */
 class AdbMessage {
   public static final int MAX_PAYLOAD = 4096;
+  public static final int MAX_MESSAGE_SIZE = MAX_PAYLOAD + 6 * 4;
 
   public static final int A_SYNC = 0x434e5953;
   public static final int A_CNXN = 0x4e584e43;
@@ -93,6 +94,16 @@ class AdbMessage {
     prepare();
     ByteBuffer buffer = ByteBuffer.allocate(dataLength + 24);
     buffer.order(ByteOrder.LITTLE_ENDIAN);
+    writeToByteBufferInternal(buffer);
+    return buffer;
+  }
+  
+  public void writeToByteBuffer(ByteBuffer buffer) {
+    prepare();
+    writeToByteBufferInternal(buffer);
+  }
+  
+  private void writeToByteBufferInternal(ByteBuffer buffer) {
     buffer.putInt(command);
     buffer.putInt(arg0);
     buffer.putInt(arg1);
@@ -103,7 +114,6 @@ class AdbMessage {
       buffer.put(data);
     if (needAppendZero)
       buffer.put((byte)0);
-    return buffer;
   }
 
   private void checkHeader() throws IOException {

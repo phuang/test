@@ -5,23 +5,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
 
 class AdbSyncException extends Exception {
-  public AdbSyncException(String message) {
+	public AdbSyncException(String message) {
     super(message);
   }
 }
 
-class SyncService extends AdbSocket implements Runnable {
-  private static final int MESSAGE_QUE_SIZE = 32;
+class SyncService extends AdbThreadSocket {
   private static final int SYNC_DATA_MAX = 64 * 1024;
-  private final BlockingDeque<AdbMessage> mMessageQue = new LinkedBlockingDeque<AdbMessage>(MESSAGE_QUE_SIZE);
-  private boolean mBlocking = false;
   private ByteBuffer mBuffer = null;
-  private Thread mThread = null;
-
   static class Msg {
     static final int ID_STAT = 0x54415453;
     static final int ID_LIST = 0x5453494c;
@@ -34,7 +27,6 @@ class SyncService extends AdbSocket implements Runnable {
     static final int ID_OKAY = 0x59414b4f;
     static final int ID_FAIL = 0x4c494146;
     static final int ID_QUIT = 0x54495551;
-
 
     static String idToStrig(int id) {
       switch (id) {
@@ -86,10 +78,11 @@ class SyncService extends AdbSocket implements Runnable {
     }
   }
 
-  public SyncService() {
+  public SyncService() throws IOException {
+  	super("AdbSync");
     mBuffer = ByteBuffer.allocate(SYNC_DATA_MAX * 2);
-    mBuffer.flip();
     mBuffer.order(ByteOrder.LITTLE_ENDIAN);
+    mBuffer.flip();
   }
 
   private void waitData(int len) throws InterruptedException, IOException {
@@ -99,35 +92,10 @@ class SyncService extends AdbSocket implements Runnable {
     if (mBuffer.remaining() >= len)
       return;
 
-    AdbMessage message = mMessageQue.takeFirst();
-    synchronized (this) {
-      if (mBlocking) {
-        mPeer.ready();
-        mBlocking = false;
-      }
-    }
     mBuffer.compact();
-    mBuffer.put(message.data);
-    while (true) {
-      if (mMessageQue.isEmpty()) {
-        if (mBuffer.position() >= len)
-          break;
-        message = mMessageQue.takeFirst();
-        assert (mBuffer.remaining() < message.dataLength);
-      } else {
-        message = mMessageQue.peekFirst();
-        if (mBuffer.remaining() < message.dataLength)
-          break;
-        mMessageQue.removeFirst();
-      }
-      synchronized (this) {
-        if (mBlocking) {
-          mPeer.ready();
-          mBlocking = false;
-        }
-      }
-      mBuffer.put(message.data, 0, message.dataLength);
-    }
+    do {
+    	input().read(mBuffer);
+    } while (mBuffer.position() < len);
     mBuffer.flip();
   }
 
@@ -160,35 +128,41 @@ class SyncService extends AdbSocket implements Runnable {
     throw new AdbSyncException("invalid data message");
   }
 
-  private void writeStat(Msg.Stat stat) {
-    byte[] bytes = new byte[16];
-    ByteBuffer buffer = ByteBuffer.wrap(bytes);
+  private void writeStat(Msg.Stat stat) throws IOException {
+    ByteBuffer buffer = ByteBuffer.allocate(16);
     buffer.order(ByteOrder.LITTLE_ENDIAN);
     buffer.putInt(stat.id);
     buffer.putInt(stat.mode);
     buffer.putInt(stat.size);
     buffer.putInt(stat.time);
-    mPeer.enqueue(new AdbMessage(0, 0, 0, bytes));
+    buffer.flip();
+    write(buffer);
   }
 
-  private void writeStatus(Msg.Status status) {
-    byte[] bytes = new byte[8];
-    ByteBuffer buffer = ByteBuffer.wrap(bytes);
+  private void write(ByteBuffer buffer) throws IOException {
+  	while (buffer.hasRemaining()) {
+  		output().write(buffer);
+  	}
+  }
+
+	private void writeStatus(Msg.Status status) throws IOException {
+    ByteBuffer buffer = ByteBuffer.allocate(8);
     buffer.order(ByteOrder.LITTLE_ENDIAN);
     buffer.putInt(status.id);
     buffer.putInt(status.msgLen);
-    mPeer.enqueue(new AdbMessage(0, 0, 0, bytes));
+    buffer.flip();
+    write(buffer);
   }
 
-  private void writeData(Msg.Data data) {
+  private void writeData(Msg.Data data) throws IOException {
     assert (data.size <= data.data.length);
-    byte[] bytes = new byte[16 + data.size];
-    ByteBuffer buffer = ByteBuffer.wrap(bytes);
+    ByteBuffer buffer = ByteBuffer.allocate(8 + data.size);
     buffer.order(ByteOrder.LITTLE_ENDIAN);
     buffer.putInt(data.id);
     buffer.putInt(data.size);
     buffer.put(data.data, 0, data.size);
-    mPeer.enqueue(new AdbMessage(0, 0, 0, bytes));
+    buffer.flip();
+    write(buffer);
   }
 
 
@@ -203,41 +177,7 @@ class SyncService extends AdbSocket implements Runnable {
     return new String(readBytes(len));
   }
 
-  @Override
-  public int enqueue(AdbMessage message) {
-    boolean result = mMessageQue.offerLast(message);
-    assert (result);
-    if (mMessageQue.remainingCapacity() == 0) {
-      synchronized (this) {
-        assert (!mBlocking);
-        mBlocking = true;
-      }
-      // We can not accept more data, return 1;
-      return 1;
-    }
-    return 0;
-  }
-
-  @Override
-  public void ready() {
-    if (mThread == null) {
-      mThread = new Thread(this, "AdbSync");
-      mThread.start();
-    }
-  }
-
-  @Override
-  public void close() {
-    try {
-      mThread.interrupt();
-      mThread.join();
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-    }
-    super.close();
-  }
-
-  private void handleStat(Msg.Req req) {
+  private void handleStat(Msg.Req req) throws IOException {
     File file = new File (req.name);
     Msg.Stat msg = new Msg.Stat();
     if (file.exists()) {
@@ -315,7 +255,7 @@ class SyncService extends AdbSocket implements Runnable {
   }
 
   @Override
-  public void run() {
+  protected void loop() {
     try {
       while (true) {
         Msg.Req req = readReq();
@@ -334,7 +274,11 @@ class SyncService extends AdbSocket implements Runnable {
       msg.id = Msg.ID_FAIL;
       msg.data = e.getMessage().getBytes();
       msg.size = msg.data.length;
-      writeData(msg);
+      try {
+	      writeData(msg);
+      } catch (IOException e1) {
+	      e1.printStackTrace();
+      }
     } catch (Exception e) {
       e.printStackTrace();
     } finally {

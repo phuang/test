@@ -1,5 +1,6 @@
 package org.chromium.alloy.adb;
 
+
 class AdbSocket {
   private static int sNextId = 1;
   protected int mId = -1;

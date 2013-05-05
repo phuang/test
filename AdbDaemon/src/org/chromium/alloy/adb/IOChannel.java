@@ -2,21 +2,21 @@ package org.chromium.alloy.adb;
 
 import java.io.IOException;
 
-class IOChannel {
+interface IOChannel {
   /**
    * @throws IOException
    */
-  public void onAcceptable() throws IOException {}
+  public void onAcceptable() throws IOException;
 
   /**
    * @throws IOException
    */
-  public void onReadable() throws IOException {}
+  public void onReadable() throws IOException;
 
   /**
    * @throws IOException
    */
-  public void onWritable() throws IOException {}
+  public void onWritable() throws IOException;
 
-  public void close() {}
+  public void onClose();
 }

@@ -10,7 +10,7 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
 
-class Transport extends IOChannel {
+class Transport implements IOChannel {
   private SocketChannel mChannel = null;
   private int mSelectionOps = 0;
   private ByteBuffer mReadBuffer = null;
@@ -21,7 +21,7 @@ class Transport extends IOChannel {
 
   public Transport(SocketChannel channel) {
     mChannel = channel;
-    mReadBuffer = ByteBuffer.allocate(AdbMessage.MAX_PAYLOAD + 24);
+    mReadBuffer = ByteBuffer.allocate(AdbMessage.MAX_MESSAGE_SIZE * 32);
     mReadBuffer.order(ByteOrder.LITTLE_ENDIAN);
   }
 
@@ -87,7 +87,11 @@ class Transport extends IOChannel {
     } else if (name.startsWith("shell:")) {
       socket = new ShellService(name.substring(6));
     } else if (name.startsWith("sync:")) {
-      socket = new SyncService();
+      try {
+	      socket = new SyncService();
+      } catch (IOException e) {
+	      e.printStackTrace();
+      }
     }
     return socket;
   }
@@ -178,8 +182,7 @@ class Transport extends IOChannel {
 
   @Override
   public void onReadable() throws IOException {
-    int result = mChannel.read(mReadBuffer);
-    // System.out.println("onReadable: result=" + result);
+    mChannel.read(mReadBuffer);
     mReadBuffer.flip();
     while (true) {
       AdbMessage message = null;
@@ -229,5 +232,13 @@ class Transport extends IOChannel {
       }
       if (mOutputQue.isEmpty()) enableWriteLocked(false);
     }
+  }
+
+	@Override
+  public void onAcceptable() throws IOException {
+  }
+
+	@Override
+  public void onClose() {
   }
 }
