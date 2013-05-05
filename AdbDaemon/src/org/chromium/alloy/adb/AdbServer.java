@@ -93,18 +93,17 @@ public class AdbServer implements IOChannel, Runnable {
       while(keyIterator.hasNext()) {
         SelectionKey key = keyIterator.next();
         IOChannel iochannel = (IOChannel)key.attachment();
-        try {
-          if (key.isAcceptable()) {
-            iochannel.onAcceptable();
-          } else if (key.isReadable()){
-            iochannel.onReadable();
-          } else if (key.isWritable()) {
-            iochannel.onWritable();
-          }
-        } catch (IOException e) {
-          e.printStackTrace();
-          key.cancel();
-          iochannel.onClose();
+        boolean result = false;
+        if (key.isAcceptable()) {
+				  result = iochannel.onAcceptable();
+				} else if (key.isReadable()){
+				  result = iochannel.onReadable();
+				} else if (key.isWritable()) {
+				  result = iochannel.onWritable();
+				}
+        if (!result) {
+        	iochannel.onClose();
+        	key.cancel();
         }
         keyIterator.remove();
       }
@@ -116,12 +115,18 @@ public class AdbServer implements IOChannel, Runnable {
   }
 
   @Override
-  public void onAcceptable() throws IOException {
-    SocketChannel channel = mChannel.accept();
-    channel.configureBlocking(false);
-    Transport socket = new Transport(channel);
-    socket.enableRead(true);
-    System.out.println("Got an incoming connection, s = " + channel);
+  public boolean onAcceptable() {
+  	try {
+  		SocketChannel channel = mChannel.accept();
+  		channel.configureBlocking(false);
+  		Transport socket = new Transport(channel);
+  		socket.enableRead(true);
+  		System.out.println("Got an incoming connection, s = " + channel);
+  		return true;
+  	} catch (IOException e) {
+  		e.printStackTrace();
+  		return false;
+  	}
   }
 
   @Override
@@ -162,12 +167,10 @@ public class AdbServer implements IOChannel, Runnable {
   }
 
 	@Override
-  public void onReadable() throws IOException {
-  }
+  public boolean onReadable() { return false;}
 
 	@Override
-  public void onWritable() throws IOException {
-  }
+  public boolean onWritable() { return false; }
 
 	@Override
   public void onClose() {

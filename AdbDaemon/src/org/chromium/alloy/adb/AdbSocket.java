@@ -47,10 +47,4 @@ class AdbSocket {
 
   public void disconnect() {
   }
-
-  protected void sendToPeer(final String data) {
-    AdbMessage message = new AdbMessage();
-    message.setData(data);
-    mPeer.enqueue(message);
-  }
 }

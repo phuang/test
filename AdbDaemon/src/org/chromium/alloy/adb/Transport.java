@@ -85,7 +85,12 @@ class Transport implements IOChannel {
     } else if ("track-jdwp".equals(name)) {
       socket = new TrackJDWPService();
     } else if (name.startsWith("shell:")) {
-      socket = new ShellService(name.substring(6));
+      try {
+	      socket = new ShellService(name.substring(6));
+      } catch (IOException e) {
+	      // TODO Auto-generated catch block
+	      e.printStackTrace();
+      }
     } else if (name.startsWith("sync:")) {
       try {
 	      socket = new SyncService();
@@ -181,62 +186,75 @@ class Transport implements IOChannel {
   }
 
   @Override
-  public void onReadable() throws IOException {
-    mChannel.read(mReadBuffer);
-    mReadBuffer.flip();
-    while (true) {
-      AdbMessage message = null;
-      message = AdbMessage.read(mReadBuffer);
-      if (message == null) {
-        mReadBuffer.compact();
-        return;
+  public boolean onReadable() {
+  	try {
+      if (mChannel.read(mReadBuffer) < 0)
+      	return false;
+      mReadBuffer.flip();
+      while (true) {
+        AdbMessage message = null;
+        message = AdbMessage.read(mReadBuffer);
+        if (message == null) {
+          mReadBuffer.compact();
+          return true;
+        }
+        System.out.println("dest = " + message);
+        switch (message.command) {
+          case AdbMessage.A_SYNC:
+            handleSync(message);
+            break;
+          case AdbMessage.A_CNXN:
+            handleConnect(message);
+            break;
+          case AdbMessage.A_AUTH:
+            handleAuth(message);
+            break;
+          case AdbMessage.A_OKAY:
+            handleOkay(message);
+            break;
+          case AdbMessage.A_OPEN:
+            handleOpen(message);
+            break;
+          case AdbMessage.A_CLSE:
+            handleClose(message);
+            break;
+          case AdbMessage.A_WRTE:
+            handleWrite(message);
+            break;
+          default:
+            System.err.println(String.format(
+                "Unknown message: command is 0x%08x", message.command));
+            break;
+        }
       }
-      System.out.println("dest = " + message);
-      switch (message.command) {
-        case AdbMessage.A_SYNC:
-          handleSync(message);
-          break;
-        case AdbMessage.A_CNXN:
-          handleConnect(message);
-          break;
-        case AdbMessage.A_AUTH:
-          handleAuth(message);
-          break;
-        case AdbMessage.A_OKAY:
-          handleOkay(message);
-          break;
-        case AdbMessage.A_OPEN:
-          handleOpen(message);
-          break;
-        case AdbMessage.A_CLSE:
-          handleClose(message);
-          break;
-        case AdbMessage.A_WRTE:
-          handleWrite(message);
-          break;
-        default:
-          System.err.println(String.format(
-              "Unknown message: command is 0x%08x", message.command));
-          break;
-      }
-    }
-  }
-
-  @Override
-  public void onWritable() throws IOException {
-    synchronized (this) {
-      if (!mOutputQue.isEmpty()) {
-        ByteBuffer buffer = mOutputQue.getFirst();
-        mChannel.write(buffer);
-        if (!buffer.hasRemaining()) mOutputQue.removeFirst();
-      }
-      if (mOutputQue.isEmpty()) enableWriteLocked(false);
-    }
+  	} catch (IOException e) {
+  		e.printStackTrace();
+  		return false;
+  	}
   }
 
 	@Override
-  public void onAcceptable() throws IOException {
-  }
+	public boolean onWritable() {
+		try {
+			synchronized (this) {
+				if (!mOutputQue.isEmpty()) {
+					ByteBuffer buffer = mOutputQue.getFirst();
+					mChannel.write(buffer);
+					if (!buffer.hasRemaining())
+						mOutputQue.removeFirst();
+				}
+				if (mOutputQue.isEmpty())
+					enableWriteLocked(false);
+			}
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
+		}
+	}
+
+	@Override
+  public boolean onAcceptable() { return false; }
 
 	@Override
   public void onClose() {

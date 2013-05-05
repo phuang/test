@@ -26,6 +26,16 @@ abstract class AdbThreadSocket extends AdbSocket implements IOChannel {
 			@Override
       public void run() {
 				loop();
+				try {
+	        output().close();
+        } catch (IOException e) {
+	        e.printStackTrace();
+        }
+				try {
+	        input().close();
+        } catch (IOException e) {
+	        e.printStackTrace();
+        }
       }
 		}, name);
 	}
@@ -99,7 +109,6 @@ abstract class AdbThreadSocket extends AdbSocket implements IOChannel {
       } catch (InterruptedException e) {
 	      e.printStackTrace();
       }
-  		mThread = null;
   	}
   	super.close();
   }
@@ -108,40 +117,55 @@ abstract class AdbThreadSocket extends AdbSocket implements IOChannel {
   }
 
 	@Override
-  public void onAcceptable() throws IOException {
+  public boolean onAcceptable() {
+		return false;
   }
 
 	@Override
-  public void onReadable() throws IOException {
+  public boolean onReadable() {
 		if (!mReady) {
 			try {
 		    mOutput.source().register(AdbServer.server().selector(),
 		    		0, this);
 	    } catch (ClosedChannelException e) {
 		    e.printStackTrace();
-		    close();
+		    return false;
 	    }
 		}
 		mOutputBuffer.rewind().clear();
-		int result = mOutput.source().read(mOutputBuffer);
+		int result = -1;
+    try {
+	    result = mOutput.source().read(mOutputBuffer);
+    } catch (IOException e) {
+	    e.printStackTrace();
+    }
+		if (result < 0)
+			return false;
 		mOutputBuffer.flip();
 		AdbMessage message = new AdbMessage();
 		message.data = new byte[result];
 		mOutputBuffer.get(message.data);
 		mPeer.enqueue(message);
 		mReady = false;
+		return true;
 	}
 
 	@Override
-  public void onWritable() throws IOException {
-		if (mInputBuffer != null) {
-			mInput.sink().write(mInputBuffer);
-			if (!mInputBuffer.hasRemaining())
-				mInputBuffer = null;
-		}
-		if (mInputBuffer == null) {
-      mInput.sink().register(AdbServer.server().selector(),
-      		SelectionKey.OP_WRITE, this);
+  public boolean onWritable() {
+		try {
+			if (mInputBuffer != null) {
+				mInput.sink().write(mInputBuffer);
+				if (!mInputBuffer.hasRemaining())
+					mInputBuffer = null;
+			}
+			if (mInputBuffer == null) {
+				mInput.sink().register(AdbServer.server().selector(),
+				    SelectionKey.OP_WRITE, this);
+			}
+			return true;
+		} catch (IOException e) {
+			e.printStackTrace();
+			return false;
 		}
 	}
 

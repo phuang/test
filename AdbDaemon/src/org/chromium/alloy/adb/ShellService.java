@@ -1,23 +1,23 @@
 package org.chromium.alloy.adb;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.LinkedList;
 import java.util.Map.Entry;
 import java.util.Vector;
 
 
-class ShellService extends AdbSocket {
+class ShellService extends AdbThreadSocket {
   private String mCurrentDir = "/";
   private HashMap<String, String> mEnvs = new HashMap<String, String>();
   private Vector<String[]> mCommands = null;
-  private int mPass = 0;
   private int mLastResult = 0;
-  private LinkedList<String> mOutputQue = new LinkedList<String>();
 
-  public ShellService(final String commands) {
+  public ShellService(final String commands) throws IOException {
+  	super("AdbShell");
     mEnvs.put("EXTERNAL_STORAGE", "/mnt/sdcard");
     mEnvs.put("ANDROID_DATA", "/data");
     mEnvs.put("ANDROID_ROOT", "/system");
@@ -29,7 +29,7 @@ class ShellService extends AdbSocket {
     return value != null ? value : "";
   }
 
-  private Vector<String[]> parseCommands(String commands) {
+  private Vector<String[]> parseCommands(String commands) throws IOException {
     Vector<String[]> cmds = new Vector<String[]>();
     Vector<String> cmd = new Vector<String>();
     char[] chars = commands.toCharArray();
@@ -136,7 +136,7 @@ class ShellService extends AdbSocket {
     return cmds;
   }
 
-  private void cdMain(String[] args) {
+  private void cdMain(String[] args) throws IOException {
     String newPath = null;
     if (args.length >= 2) {
       newPath = args[1];
@@ -163,10 +163,10 @@ class ShellService extends AdbSocket {
     }
 
     mCurrentDir = directory.getAbsolutePath();
-    sendToPeer("");
+    sendToPeer("\n");
   }
 
-  private void echoMain(String[] args) {
+  private void echoMain(String[] args) throws IOException {
     StringBuffer sb = new StringBuffer();
     if (args.length >= 2) {
       sb.append(args[1]);
@@ -179,7 +179,7 @@ class ShellService extends AdbSocket {
     sendToPeer(sb.toString());
   }
 
-  private void exportMain(String[] args) {
+  private void exportMain(String[] args) throws IOException {
     if (args.length == 1) {
       Iterator<Entry<String,String>> iterator = mEnvs.entrySet().iterator();
       while (iterator.hasNext()) {
@@ -201,15 +201,15 @@ class ShellService extends AdbSocket {
     }
   }
 
-  private void getpropMain(String[] args) {
-    sendToPeer("");
+  private void getpropMain(String[] args) throws IOException {
+    sendToPeer("\n");
   }
 
-  private void logcatMain(String[] args) {
-    sendToPeer("");
+  private void logcatMain(String[] args) throws IOException {
+    sendToPeer("\n");
   }
 
-  private void lsMain(String[] args) {
+  private void lsMain(String[] args) throws IOException {
     String path = mCurrentDir;
     File directory = new File(path);
     for (String file: directory.list()) {
@@ -217,15 +217,15 @@ class ShellService extends AdbSocket {
     }
   }
 
-  private void pmMain(String[] args) {
-    sendToPeer("");
+  private void pmMain(String[] args) throws IOException {
+    sendToPeer("shell: pm: command not found\n");
   }
 
-  private void pwdMain(String[] args) {
+  private void pwdMain(String[] args) throws IOException {
     sendToPeer(mCurrentDir + "\n");
   }
 
-  private void rmMain(String[] args) {
+  private void rmMain(String[] args) throws IOException {
     for (int i = 1; i < args.length; ++i) {
       File file = new File(args[i]);
       if (!file.exists()) {
@@ -242,7 +242,7 @@ class ShellService extends AdbSocket {
     }
   }
 
-  private void execute(String[] args) {
+  private void execute(String[] args) throws IOException {
     if ("cd".equals(args[0])) {
       cdMain(args);
     } else if ("echo".equals(args[0])) {
@@ -266,55 +266,27 @@ class ShellService extends AdbSocket {
     }
   }
 
-  @Override
-  protected void sendToPeer(final String data) {
-    mOutputQue.addLast(data);
+  private void sendToPeer(final String data) throws IOException {
+    ByteBuffer buffer = ByteBuffer.wrap(data.getBytes());
+  	while (buffer.hasRemaining())
+  		output().write(buffer);
   }
 
-  @Override
-  public void close() {
-    super.close();
-  }
-
-  @Override
-  public int enqueue(AdbMessage message) {
-    assert (false);
-    return 0;
-  }
-
-  @Override
-  public void ready() {
-    if (mCommands == null) {
-      mPeer.close();
-      return;
-    }
-
-    if (mPass == 0) {
-      // The first time, we execute all commands
-      Iterator<String[]> iterator = mCommands.iterator();
-      while (iterator.hasNext()) {
-        String[] args = iterator.next();
-        if ("exec".equals(args[0])) {
-          execute(Arrays.copyOfRange(args, 1, args.length));
-          break;
-        } else {
-          execute(args);
-        }
-      }
-      mPass++;
-    }
-
-    if (!mOutputQue.isEmpty()) {
-      drainOutputBuffer();
-    } else {
-      mPeer.close();
-    }
-  }
-
-  private void drainOutputBuffer() {
-    if (!mOutputQue.isEmpty()) {
-      String data = mOutputQue.removeFirst();
-      super.sendToPeer(data);
-    }
+	@Override
+	protected void loop() {
+		try {
+	    Iterator<String[]> iterator = mCommands.iterator();
+	    while (iterator.hasNext()) {
+	      String[] args = iterator.next();
+	      if ("exec".equals(args[0])) {
+	        execute(Arrays.copyOfRange(args, 1, args.length));
+	        break;
+	      } else {
+	        execute(args);
+	      }
+	    }
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
   }
 }

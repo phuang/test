@@ -6,17 +6,17 @@ interface IOChannel {
   /**
    * @throws IOException
    */
-  public void onAcceptable() throws IOException;
+  public boolean onAcceptable();
 
   /**
    * @throws IOException
    */
-  public void onReadable() throws IOException;
+  public boolean onReadable();
 
   /**
-   * @throws IOException
+   * @return TODO
    */
-  public void onWritable() throws IOException;
+  public boolean onWritable();
 
   public void onClose();
 }
