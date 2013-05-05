@@ -123,7 +123,7 @@ class ShellService extends AdbThreadSocket {
     }
 
     if (quote != 0) {
-      sendToPeer(String.format("unexpected EOF while looking for matching `%c'\n", quote));
+      print(String.format("unexpected EOF while looking for matching `%c'\n", quote));
       cmds.clear();
       return cmds;
     }
@@ -147,23 +147,23 @@ class ShellService extends AdbThreadSocket {
     if (newPath == null)
       newPath = getEnv("HOME");
     if (newPath.isEmpty()) {
-      sendToPeer("cd: no home directory (HOME not set)\n");
+      print("cd: no home directory (HOME not set)\n");
       return;
     }
 
     File directory = new File(newPath);
     if (!directory.exists()) {
-      sendToPeer(String.format("cd: %s: No such file or directory\n", newPath));
+      print(String.format("cd: %s: No such file or directory\n", newPath));
       return;
     }
 
     if (!directory.isDirectory()) {
-      sendToPeer(String.format("cd: %s: Not a directory\n", newPath));
+      print(String.format("cd: %s: Not a directory\n", newPath));
       return;
     }
 
     mCurrentDir = directory.getAbsolutePath();
-    sendToPeer("\n");
+    print("\n");
   }
 
   private void echoMain(String[] args) throws IOException {
@@ -176,7 +176,7 @@ class ShellService extends AdbThreadSocket {
       }
     }
     sb.append("\n");
-    sendToPeer(sb.toString());
+    print(sb.toString());
   }
 
   private void exportMain(String[] args) throws IOException {
@@ -184,7 +184,7 @@ class ShellService extends AdbThreadSocket {
       Iterator<Entry<String,String>> iterator = mEnvs.entrySet().iterator();
       while (iterator.hasNext()) {
         Entry<String, String> entry = iterator.next();
-        sendToPeer(String.format("export -x %s=\"%s\"\n",
+        print(String.format("export -x %s=\"%s\"\n",
             entry.getKey(), entry.getValue()));
       }
       return;
@@ -202,42 +202,42 @@ class ShellService extends AdbThreadSocket {
   }
 
   private void getpropMain(String[] args) throws IOException {
-    sendToPeer("\n");
+    print("\n");
   }
 
   private void logcatMain(String[] args) throws IOException {
-    sendToPeer("\n");
+    print("\n");
   }
 
   private void lsMain(String[] args) throws IOException {
     String path = mCurrentDir;
     File directory = new File(path);
     for (String file: directory.list()) {
-      sendToPeer(file + "\n");
+      print(file + "\n");
     }
   }
 
   private void pmMain(String[] args) throws IOException {
-    sendToPeer("shell: pm: command not found\n");
+    print("shell: pm: command not found\n");
   }
 
   private void pwdMain(String[] args) throws IOException {
-    sendToPeer(mCurrentDir + "\n");
+    print(mCurrentDir + "\n");
   }
 
   private void rmMain(String[] args) throws IOException {
     for (int i = 1; i < args.length; ++i) {
       File file = new File(args[i]);
       if (!file.exists()) {
-        sendToPeer(String.format("rm failed for %s, No such file or directory\n", args[i]));
+        print(String.format("rm failed for %s, No such file or directory\n", args[i]));
         return;
       }
       if (file.isDirectory()) {
-        sendToPeer(String.format("rm failed for %s, Is a directory\n", args[i]));
+        print(String.format("rm failed for %s, Is a directory\n", args[i]));
         return;
       }
       if (!file.delete()) {
-        sendToPeer(String.format("rm failed for %s\n", args[i]));
+        print(String.format("rm failed for %s\n", args[i]));
       }
     }
   }
@@ -262,11 +262,11 @@ class ShellService extends AdbThreadSocket {
     } else if ("rm".equals(args[0])) {
       rmMain(args);
     } else {
-      sendToPeer(String.format("shell: %s: command not found\n", args[0]));
+      print(String.format("shell: %s: command not found\n", args[0]));
     }
   }
 
-  private void sendToPeer(final String data) throws IOException {
+  private void print(final String data) throws IOException {
     ByteBuffer buffer = ByteBuffer.wrap(data.getBytes());
   	while (buffer.hasRemaining())
   		output().write(buffer);

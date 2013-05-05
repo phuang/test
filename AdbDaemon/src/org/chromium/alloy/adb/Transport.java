@@ -8,10 +8,13 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.SocketChannel;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
+import java.util.Map.Entry;
 
 class Transport implements IOChannel {
-  private SocketChannel mChannel = null;
+  private static final boolean DEBUG = true;
+	private SocketChannel mChannel = null;
   private int mSelectionOps = 0;
   private ByteBuffer mReadBuffer = null;
   private Deque<ByteBuffer> mOutputQue = new LinkedList<ByteBuffer>();
@@ -88,7 +91,6 @@ class Transport implements IOChannel {
       try {
 	      socket = new ShellService(name.substring(6));
       } catch (IOException e) {
-	      // TODO Auto-generated catch block
 	      e.printStackTrace();
       }
     } else if (name.startsWith("sync:")) {
@@ -115,7 +117,11 @@ class Transport implements IOChannel {
     StringBuilder builder = new StringBuilder();
     builder.append("device::");
 
-    final String[] cnxn_props = {"ro.product.name", "ro.product.model", "ro.product.device"};
+    final String[] cnxn_props = {
+    	"ro.product.name",
+    	"ro.product.model",
+    	"ro.product.device"
+    };
 
     for (String prop : cnxn_props)
       builder.append(String.format("%s=%s;", prop, "alloy"));
@@ -198,7 +204,8 @@ class Transport implements IOChannel {
           mReadBuffer.compact();
           return true;
         }
-        System.out.println("dest = " + message);
+        if (DEBUG)
+        	System.out.println("dest = " + message);
         switch (message.command) {
           case AdbMessage.A_SYNC:
             handleSync(message);
@@ -222,9 +229,11 @@ class Transport implements IOChannel {
             handleWrite(message);
             break;
           default:
-            System.err.println(String.format(
-                "Unknown message: command is 0x%08x", message.command));
-            break;
+          	if (DEBUG) {
+          		System.err.println(String.format(
+          				"Unknown message: command is 0x%08x", message.command));
+          	}
+          	return false;
         }
       }
   	} catch (IOException e) {
@@ -258,5 +267,11 @@ class Transport implements IOChannel {
 
 	@Override
   public void onClose() {
+		Iterator<Entry<Integer, AdbSocket>> iterator = 
+				mSocketMap.entrySet().iterator();
+		while (iterator.hasNext()) {
+			iterator.next().getValue().close();
+		}
+		mSocketMap.clear();
   }
 }

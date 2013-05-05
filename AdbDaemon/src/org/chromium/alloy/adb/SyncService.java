@@ -6,16 +6,11 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
-class AdbSyncException extends Exception {
-	public AdbSyncException(String message) {
-    super(message);
-  }
-}
-
 class SyncService extends AdbThreadSocket {
   private static final int SYNC_DATA_MAX = 64 * 1024;
   private ByteBuffer mBuffer = null;
-  static class Msg {
+
+  private static class Msg {
     static final int ID_STAT = 0x54415453;
     static final int ID_LIST = 0x5453494c;
     static final int ID_ULNK = 0x4b4e4c55;
@@ -28,7 +23,7 @@ class SyncService extends AdbThreadSocket {
     static final int ID_FAIL = 0x4c494146;
     static final int ID_QUIT = 0x54495551;
 
-    static String idToStrig(int id) {
+    private static String idToString(int id) {
       switch (id) {
         case ID_STAT: return "STAT";
         case ID_LIST: return "LIST";
@@ -46,9 +41,14 @@ class SyncService extends AdbThreadSocket {
     }
 
     static class Req {
-      int id;
-      int nameLen;
-      String name;
+      int id = 0;
+      int nameLen = 0;
+      String name = null;
+      
+      @Override
+      public String toString() {
+      	return String.format("%s: %d %s", Msg.idToString(id), nameLen, name);
+      }
     }
 
     static class Stat {
@@ -56,25 +56,42 @@ class SyncService extends AdbThreadSocket {
       int mode = 0;
       int size = 0;
       int time = 0;
+      
+      @Override
+      public String toString() {
+      	return String.format("STAT: 0%04o %ld %ld",
+      			mode, ((long)size) & 0xffffffff, ((long)time) & 0xffffffff);
+      }
     }
 
+    @SuppressWarnings("unused")
     static class Dent {
-      int id;
-      int mode;
-      int size;
-      int time;
-      int nameLen;
+      int id = 0;
+      int mode = 0;
+      int size = 0;
+      int time = 0;
+      int nameLen = 0;
     }
 
     static class Data {
-      int id;
-      int size;
-      byte[] data;
+      int id = 0;
+      int size = 0;
+      byte[] data = null;
+
+      @Override
+      public String toString() {
+      	return String.format("%s: %d", Msg.idToString(id), size);
+      }
     }
 
     static class Status {
-      int id;
-      int msgLen;
+      int id = 0;
+      int msgLen = 0;
+
+      @Override
+      public String toString() {
+      	return String.format("%s: %d", Msg.idToString(id), msgLen);
+      }
     }
   }
 
@@ -97,6 +114,17 @@ class SyncService extends AdbThreadSocket {
     	input().read(mBuffer);
     } while (mBuffer.position() < len);
     mBuffer.flip();
+  }
+
+  private byte[] readBytes(int len) throws InterruptedException, IOException {
+    waitData(len);
+    byte[] bytes = new byte[len];
+    mBuffer.get(bytes);
+    return bytes;
+  }
+
+  private String readString(int len) throws InterruptedException, IOException {
+    return new String(readBytes(len));
   }
 
   private Msg.Req readReq() throws Exception {
@@ -128,6 +156,12 @@ class SyncService extends AdbThreadSocket {
     throw new AdbSyncException("invalid data message");
   }
 
+  private void write(ByteBuffer buffer) throws IOException {
+  	while (buffer.hasRemaining()) {
+  		output().write(buffer);
+  	}
+  }
+  
   private void writeStat(Msg.Stat stat) throws IOException {
     ByteBuffer buffer = ByteBuffer.allocate(16);
     buffer.order(ByteOrder.LITTLE_ENDIAN);
@@ -137,12 +171,6 @@ class SyncService extends AdbThreadSocket {
     buffer.putInt(stat.time);
     buffer.flip();
     write(buffer);
-  }
-
-  private void write(ByteBuffer buffer) throws IOException {
-  	while (buffer.hasRemaining()) {
-  		output().write(buffer);
-  	}
   }
 
 	private void writeStatus(Msg.Status status) throws IOException {
@@ -165,18 +193,6 @@ class SyncService extends AdbThreadSocket {
     write(buffer);
   }
 
-
-  private byte[] readBytes(int len) throws InterruptedException, IOException {
-    waitData(len);
-    byte[] bytes = new byte[len];
-    mBuffer.get(bytes);
-    return bytes;
-  }
-
-  private String readString(int len) throws InterruptedException, IOException {
-    return new String(readBytes(len));
-  }
-
   private void handleStat(Msg.Req req) throws IOException {
     File file = new File (req.name);
     Msg.Stat msg = new Msg.Stat();
@@ -194,7 +210,7 @@ class SyncService extends AdbThreadSocket {
   }
 
   private void handleList(Msg.Req req) {
-
+  	// TODO(penghuang): support list.
   }
 
   private void handleSend(Msg.Req req) throws Exception {
@@ -252,6 +268,7 @@ class SyncService extends AdbThreadSocket {
   }
 
   private void handleRecv(Msg.Req req) {
+  	// TODO(penghuang): support recv.
   }
 
   @Override
@@ -269,15 +286,15 @@ class SyncService extends AdbThreadSocket {
             throw new Exception("unknown command");
         }
       }
-    } catch (AdbSyncException e) {
+    } catch (AdbSyncException ase) {
       Msg.Data msg = new Msg.Data();
       msg.id = Msg.ID_FAIL;
-      msg.data = e.getMessage().getBytes();
+      msg.data = ase.getMessage().getBytes();
       msg.size = msg.data.length;
       try {
 	      writeData(msg);
-      } catch (IOException e1) {
-	      e1.printStackTrace();
+      } catch (IOException ie) {
+	      ie.printStackTrace();
       }
     } catch (Exception e) {
       e.printStackTrace();
