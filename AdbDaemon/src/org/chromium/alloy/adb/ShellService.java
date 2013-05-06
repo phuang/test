@@ -11,11 +11,11 @@ import java.util.Vector;
 
 class ShellService extends AdbSocket {
   private String mCurrentDir = "/";
-  private HashMap<String, String> mEnvs = new HashMap<String, String>();
+  private final HashMap<String, String> mEnvs = new HashMap<String, String>();
   private Vector<String[]> mCommands = null;
   private int mPass = 0;
-  private int mLastResult = 0;
-  private LinkedList<String> mOutputQue = new LinkedList<String>();
+  private final int mLastResult = 0;
+  private final LinkedList<String> mOutputQue = new LinkedList<String>();
 
   public ShellService(final String commands) {
     mEnvs.put("EXTERNAL_STORAGE", "/mnt/sdcard");
@@ -218,7 +218,7 @@ class ShellService extends AdbSocket {
   }
 
   private void pmMain(String[] args) {
-    sendToPeer("");
+    sendToPeer("shell: pm: command not found\n");
   }
 
   private void pwdMain(String[] args) {
