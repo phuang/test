@@ -14,11 +14,11 @@ import java.util.Map.Entry;
 
 class Transport implements IOChannel {
   private static final boolean DEBUG = true;
-	private SocketChannel mChannel = null;
+  private final SocketChannel mChannel;
   private int mSelectionOps = 0;
-  private ByteBuffer mReadBuffer = null;
-  private Deque<ByteBuffer> mOutputQue = new LinkedList<ByteBuffer>();
-  private HashMap<Integer, AdbSocket> mSocketMap = new HashMap<Integer, AdbSocket>();
+  private final ByteBuffer mReadBuffer;
+  private final Deque<ByteBuffer> mOutputQue = new LinkedList<ByteBuffer>();
+  private final HashMap<Integer, AdbSocket> mSocketMap = new HashMap<Integer, AdbSocket>();
 
   private boolean mOnline = false;
 

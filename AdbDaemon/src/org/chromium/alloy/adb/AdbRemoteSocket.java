@@ -1,7 +1,7 @@
 package org.chromium.alloy.adb;
 
 class AdbRemoteSocket extends AdbSocket {
-  private Transport mTransport = null;
+  private final Transport mTransport;
 
   public AdbRemoteSocket(int id, Transport transport) {
     super(id);
