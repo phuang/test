@@ -205,7 +205,7 @@ class Transport implements IOChannel {
           return true;
         }
         if (DEBUG)
-        	System.out.println("dest = " + message);
+        	System.err.println("message = " + message);
         switch (message.command) {
           case AdbMessage.A_SYNC:
             handleSync(message);

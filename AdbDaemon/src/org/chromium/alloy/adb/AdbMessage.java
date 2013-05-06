@@ -162,7 +162,9 @@ class AdbMessage {
       case A_AUTH: tag = "AUTH"; break;
       default: tag = "????"; break;
     }
+    
     return String.format("%s %08x %08x %04x %s",
-        tag, arg0, arg1, dataLength, new String(data, 0, Math.min(data.length, 8)));
+        tag, arg0, arg1, dataLength,
+        command != A_WRTE ? new String(data) : new String(data, 0, Math.min(data.length, 16)));
   }
 }

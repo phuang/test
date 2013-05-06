@@ -298,11 +298,6 @@ class SyncService extends AdbThreadSocket {
       }
     } catch (Exception e) {
       e.printStackTrace();
-    } finally {
-      if (mPeer != null) {
-        mPeer.mPeer = null;
-        mPeer.close();
-      }
     }
   }
 }

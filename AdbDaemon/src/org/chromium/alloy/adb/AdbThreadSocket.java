@@ -59,12 +59,7 @@ abstract class AdbThreadSocket extends AdbSocket implements IOChannel {
   		mThread.start();
   		mInitialized = true;
   	}
-  	
-  	if (!mThread.isAlive()) {
-  		close();
-  		return;
-  	}
-  	
+  
   	try {
 	    mOutput.source().register(AdbServer.server().selector(),
 	    		SelectionKey.OP_READ, this);
@@ -132,21 +127,24 @@ abstract class AdbThreadSocket extends AdbSocket implements IOChannel {
 		    return false;
 	    }
 		}
-		mOutputBuffer.rewind().clear();
+		mOutputBuffer.clear();
 		int result = -1;
     try {
 	    result = mOutput.source().read(mOutputBuffer);
     } catch (IOException e) {
 	    e.printStackTrace();
     }
-		if (result < 0)
+		if (result < 0) {
+			// Pipe is closed.
 			return false;
-		mOutputBuffer.flip();
-		AdbMessage message = new AdbMessage();
-		message.data = new byte[result];
-		mOutputBuffer.get(message.data);
-		mPeer.enqueue(message);
-		mReady = false;
+		} else if (result > 0) {
+			mOutputBuffer.flip();
+			AdbMessage message = new AdbMessage();
+			message.data = new byte[result];
+			mOutputBuffer.get(message.data);
+			mPeer.enqueue(message);
+			mReady = false;
+		}
 		return true;
 	}
 
