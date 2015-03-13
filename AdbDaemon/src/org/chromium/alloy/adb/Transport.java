@@ -12,8 +12,12 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map.Entry;
 
+<<<<<<< HEAD
 class Transport implements IOChannel {
   private static final boolean DEBUG = true;
+=======
+class Transport extends IOChannel {
+>>>>>>> master
   private final SocketChannel mChannel;
   private int mSelectionOps = 0;
   private final ByteBuffer mReadBuffer;

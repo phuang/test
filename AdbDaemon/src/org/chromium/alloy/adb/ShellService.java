@@ -12,9 +12,15 @@ import java.util.Vector;
 
 class ShellService extends AdbThreadSocket {
   private String mCurrentDir = "/";
-  private HashMap<String, String> mEnvs = new HashMap<String, String>();
+  private final HashMap<String, String> mEnvs = new HashMap<String, String>();
   private Vector<String[]> mCommands = null;
+<<<<<<< HEAD
   private int mLastResult = 0;
+=======
+  private int mPass = 0;
+  private final int mLastResult = 0;
+  private final LinkedList<String> mOutputQue = new LinkedList<String>();
+>>>>>>> master
 
   public ShellService(final String commands) throws IOException {
   	super("AdbShell");
@@ -217,8 +223,13 @@ class ShellService extends AdbThreadSocket {
     }
   }
 
+<<<<<<< HEAD
   private void pmMain(String[] args) throws IOException {
     print("shell: pm: command not found\n");
+=======
+  private void pmMain(String[] args) {
+    sendToPeer("shell: pm: command not found\n");
+>>>>>>> master
   }
 
   private void pwdMain(String[] args) throws IOException {
