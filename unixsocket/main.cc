@@ -16,6 +16,11 @@
   eintr_wrapper_result; \
 })
 
+bool EnableReceivProcessId(int fd) {
+  const int enable = 1;
+  return setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &enable, sizeof(enable)) == 0;
+}
+
 bool SendMsg(int fd,
              const std::vector<std::pair<void*, size_t> >& buffers,
              const std::vector<int>& fds) {
