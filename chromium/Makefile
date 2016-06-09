@@ -34,3 +34,9 @@ deploy_mash: mash mus_demo
 
 run_mus_demo: mus_demo
 	$(OUT)/mojo_runner mojo:mus_demo --use-chrome-gpu-command-buffer-in-mus
+
+run_mus_mash: mash
+	$(OUT)/mojo_runner mojo:mash_session --use-chrome-gpu-command-buffer-in-mus
+
+run_mus_chrome: mash chrome
+	$(OUT)/chrome --mash --use-chrome-gpu-command-buffer-in-mus
