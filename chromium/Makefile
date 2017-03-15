@@ -3,12 +3,13 @@ OUT = out/brand
 OUT = out/mus_Debug
 OUT = out/link
 OUT = out_cyan/Release
+OUT = out/release
 OUT = out_link/mus
 OUT = out/mus
 NINJIA_ARGS = -j1000 -k50 -C $(OUT)
 NINJIA = ninja $(NINJIA_ARGS)
 
-DEVICE_IP = 100.107.103.92
+DEVICE_IP = 100.107.103.78
 STRIP_FLAGS = --strip-flags=-d
 TARGET_FLAGS = --target-dir=/tmp/chrome --mount  --mash
 TARGET_FLAGS = --target-dir=/tmp/chrome --mount
@@ -16,17 +17,20 @@ DEPLOY_FLAGS = \
 	--build-dir=$(OUT) \
 	$(TARGET_FLAGS) \
 	--to=$(DEVICE_IP) \
+	--debug \
 	$(STRIP_FLAGS) \
+	--nostartui \
 	$(NULL)
-	# --nostartui \
 
-CHROME_FLAGS =  --show-composited-layer-borders \
-								--show-fps-counter --no-sandbox \
+
+CHROME_FLAGS =  \
+								--show-composited-layer-borders \
+								--show-fps-counter \
 								--enable-wayland-server \
 								--no-sandbox \
 								--user-data-dir=/tmp/penghuang-mustash
 
-CHROME_FLAGS =  --no-sandbox \
+CHROME_FLAGS =  \
 								--enable-wayland-server \
 								--no-sandbox \
 								--user-data-dir=/tmp/penghuang-mustash
@@ -34,7 +38,7 @@ CHROME_FLAGS =  --no-sandbox \
 # CHROME_FLAGS += --wait-for-debugger=ui
 # EXO_DEMO = exo_demo
 
-.PHONY: chrome content mash mus_demo $(EXO_DEMO) exo_unittests
+.PHONY: chrome content mash mus_demo $(EXO_DEMO) exo_unittests clean
 
 chrome:
 	$(NINJIA) chrome chrome_sandbox nacl_helper
@@ -52,10 +56,10 @@ exo_demo:
 	$(NINJIA) exo_demo
 
 deploy_chrome: chrome mash mus_demo
-	deploy_chrome $(DEPLOY_FLAGS)
+	GN_ARGS='is_component_build=true is_chrome_branded=true' deploy_chrome $(DEPLOY_FLAGS)
 
 deploy_mash: mash mus_demo
-	deploy_chrome $(DEPLOY_FLAGS)
+	GN_ARGS='is_component_build=true is_chrome_branded=true' deploy_chrome $(DEPLOY_FLAGS)
 
 run_mus_demo: mus_demo mash chrome
 	$(OUT)/mash --service=mus_demo
@@ -108,6 +112,8 @@ exo_unittests:
 components_unittests:
 	$(NINJIA) $@ && $(OUT)/$@
 
+display_unittests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
 components_perftests:
 	$(NINJIA) $@ && $(OUT)/$@
@@ -120,6 +126,25 @@ browser_tests:
 
 interactive_ui_tests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER) --no-sandbox
+
+unit_tests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+
+ash_unittests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+
+
+views_unittests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+
+telemetry_perf_unittests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+
+mus_ws_unittests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+
+mash_unittests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
 ppapi_example_compositor:
 	$(NINJIA) ppapi/examples/compositor
@@ -137,8 +162,17 @@ run_mus_ppapi_compositor: chrome ppapi_example_compositor mash
 args:
 	gn args $(OUT)
 
+check:
+	gn check $(OUT)
+
 clean:
 	$(NINJIA) -t clean
+
+cros_flush:
+	cros flash ssh://$(DEVICE_IP)  chromiumos_test_image.bin
+
+cros_flush_usb:
+	cros flash usb://  chromiumos_test_image.bin
 
 ssh:
 	ssh root@$(DEVICE_IP)
