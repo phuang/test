@@ -12,19 +12,21 @@ OUT := out/mus
 NINJIA_ARGS = -j1000 -k50 -C $(OUT)
 NINJIA = ninja $(NINJIA_ARGS)
 
-DEVICE_IP = 100.107.103.100
-STRIP_FLAGS = --strip-flags=-d
+DEVICE_IP = my_crbook
+STRIP_FLAGS = --strip-flags="--strip-debug -w -N '*blink*' -w -N '*WebCore*' -w -N '*Sk*' -w -N '*content*'"
+# STRIP_FLAGS = --nostrip
 TARGET_FLAGS = --target-dir=/tmp/chrome --mount  --mash
 TARGET_FLAGS = --target-dir=/tmp/chrome --mount
+TARGET_FLAGS =
 DEPLOY_FLAGS = \
 	--build-dir=$(OUT) \
 	$(TARGET_FLAGS) \
 	--to=$(DEVICE_IP) \
-	--debug \
 	$(STRIP_FLAGS) \
-	--nostartui \
+	--debug \
 	$(NULL)
 
+	# --nostartui \
 
 CHROME_FLAGS =  \
 								--enable-wayland-server \
@@ -42,7 +44,7 @@ CHROME_FLAGS +=  \
 .PHONY: chrome content mash mus_demo $(EXO_DEMO) exo_unittests clean
 
 chrome:
-	$(NINJIA) chrome chrome_sandbox nacl_helper
+	$(NINJIA) chrome chrome_sandbox
 
 content:
 	$(NINJIA) content
@@ -85,14 +87,26 @@ run_mus_ui: mash ui
 run_chrome: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS)
 
+run_chrome_scale_2: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --force-device-scale-factor=2.0
+
 run_chrome_mojo_sink: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --mojo-compositor-frame-sink
+
+run_chrome_two_displays: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --ash-host-window-bounds=900x900*2,900+0-900x900 --ash-dev-shortcuts --ash-debug-shortcuts --use-first-display-as-internal
 
 run_chrome_touch: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --touch-devices=12 --force-enable-stylus-tools --force-tablet-mode --ash-enable-palette-on-all-displays
 
 run_mus_chrome: mash chrome
 	$(OUT)/chrome --mus http://www.google.com $(CHROME_FLAGS)
+
+run_mus_chrome_scale_2: mash chrome
+	$(OUT)/chrome --mus http://www.google.com $(CHROME_FLAGS) --force-device-scale-factor=2.0
+
+run_mus_chrome_two_displays: mash chrome
+	$(OUT)/chrome --mus http://www.google.com $(CHROME_FLAGS) --mus --ash-debug-shortcuts --ash-dev-shortcuts --screen-config=900x900^300/i,900x900
 
 run_mus_chrome_sync: mash chrome
 	$(OUT)/chrome --mus http://www.google.com $(CHROME_FLAGS) --enable-surface-synchronization
