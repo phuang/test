@@ -1,4 +1,5 @@
 WEBGL_DEMO = http://www.yuichiroharai.com/wgl/
+GTEST_FILTER := *
 OUT := out/brand
 OUT := out/mus_Debug
 OUT := out/link
@@ -32,7 +33,7 @@ CHROME_FLAGS =  \
 								--enable-wayland-server \
 								--no-sandbox \
 								--user-data-dir=/tmp/penghuang-mustash \
- 								--screen-config=1280x800
+ 								--screen-config=1000x800
 CHROME_FLAGS +=  \
 								--show-composited-layer-borders \
 								--ui-show-composited-layer-borders=renderpass,surface,layer \
@@ -152,7 +153,7 @@ display_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
 components_perftests:
-	$(NINJIA) $@ && $(OUT)/$@
+	$(NINJIA) $@ && $(OUT)/$@ --mus
 
 content_browsertests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
@@ -169,6 +170,8 @@ unit_tests:
 ash_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
+ash_perftests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
 views_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
@@ -194,6 +197,12 @@ aura_unittests:
 ui_service_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
+cc_perftests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+
+gpu_perftests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+
 wayland_rects_client:
 	$(NINJIA) $@ && $(OUT)/$@ --num-rects=10  --show-fps-counter  --benchmark-interval=60
 
@@ -203,8 +212,11 @@ wayland_simple_client:
 wayland_subsurface_client:
 	$(NINJIA) $@ && $(OUT)/$@
 
+wayland_client_perftests:
+	$(NINJIA) $@ && $(OUT)/$@  --mus
+
 ash_standalone:
-	$(NINJIA) mash mash/session && $(OUT)/mash --service=mash_session --window-manager=ash_standalone
+	$(NINJIA) mash mash/session ash_standalone && $(OUT)/mash --service=mash_session --window-manager=ash_standalone
 
 ppapi_example_compositor:
 	$(NINJIA) ppapi/examples/compositor
