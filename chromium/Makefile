@@ -15,6 +15,7 @@ NINJIA = ninja $(NINJIA_ARGS)
 
 DEVICE_IP = my_crbook
 STRIP_FLAGS = --strip-flags="--strip-debug -w -N '*blink*' -w -N '*WebCore*' -w -N '*Sk*' -w -N '*content*'"
+STRIP_FLAGS = --strip-flags="--strip-debug -w -N '*blink*' -w -N '*WebCore*' -w -N '*Sk*'"
 # STRIP_FLAGS = --nostrip
 TARGET_FLAGS = --target-dir=/tmp/chrome --mount  --mash
 TARGET_FLAGS = --target-dir=/tmp/chrome --mount
@@ -27,6 +28,7 @@ DEPLOY_FLAGS = \
 	--debug \
 	$(NULL)
 
+	# --debug \
 	# --nostartui \
 
 CHROME_FLAGS =  \
@@ -44,8 +46,14 @@ CHROME_FLAGS +=  \
 
 .PHONY: chrome content mash mus_demo $(EXO_DEMO) exo_unittests clean
 
-chrome:
-	$(NINJIA) chrome chrome_sandbox
+chrome_sandbox:
+	$(NINJIA) chrome_sandbox
+
+chrome: chrome_sandbox
+	$(NINJIA) chrome
+
+test_chrome: chrome_sandbox
+	$(NINJIA) test_chrome
 
 content:
 	$(NINJIA) content
@@ -213,6 +221,9 @@ wayland_subsurface_client:
 	$(NINJIA) $@ && $(OUT)/$@
 
 wayland_client_perftests:
+	$(NINJIA) $@ && $(OUT)/$@
+
+wayland_client_perftests_mus:
 	$(NINJIA) $@ && $(OUT)/$@  --mus
 
 ash_standalone:
@@ -230,6 +241,12 @@ run_mus_ppapi_compositor: chrome ppapi_example_compositor mash
 	$(OUT)/chrome --mash $(CHROME_FLAGS) \
 		--register-pepper-plugins="$(OUT)/libppapi_example_compositor.so;application/x-ppapi-example-compositor" \
 		file://`pwd`/ppapi/examples/compositor/compositor.html
+
+smoothness.top_25_smooth_mash: test_chrome
+	./tools/perf/run_benchmark --browser=exact \
+		--browser-executable=$(OUT)/test_chrome \
+		--extra-browser-args="--mash" \
+		smoothness.top_25_smooth
 
 args:
 	gn args $(OUT)
