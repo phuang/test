@@ -8,12 +8,11 @@
 namespace wayland {
 
 const struct wl_seat_listener Seat::listener_ = {
-  Seat::OnCapabilitiesThunk,
-  Seat::OnNameThunk,
+    Seat::OnCapabilitiesThunk,
+    Seat::OnNameThunk,
 };
 
-Seat::Seat(struct wl_seat* seat)
-  : Proxy(seat) {
+Seat::Seat(struct wl_seat* seat) : Proxy(seat) {
   wl_seat_add_listener(id(), &listener_, this);
 }
 
@@ -37,4 +36,4 @@ void Seat::OnName(struct wl_seat* seat, const char* name) {
   fprintf(stderr, "EEE %s name=%s\n", __func__, name);
 }
 
-}   // namespace wayland
+}  // namespace wayland

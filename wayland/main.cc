@@ -14,14 +14,13 @@ void draw(int r, int g, int b, int a) {
   glClear(GL_COLOR_BUFFER_BIT);
 }
 
-int
-main(int argc, char** argv) {
+int main(int argc, char** argv) {
   std::unique_ptr<wayland::Display> display(new wayland::Display());
- 
+
   // Create the toplevel surface
   auto surface = display->compositor()->CreateSurface();
-  auto shell_surface = display->shell()->GetShellSurface(
-      surface.get(), nullptr);
+  auto shell_surface =
+      display->shell()->GetShellSurface(surface.get(), nullptr);
   shell_surface->SetToplevel();
   wayland::EGLWindow egl_window(surface.get(), 200, 200);
   egl_window.MakeCurrent();
@@ -30,8 +29,8 @@ main(int argc, char** argv) {
 
   auto surface2 = display->compositor()->CreateSurface();
 
-  auto subsurface = display->subcompositor()->GetSubsurface(surface2.get(),
-                                                            surface.get());
+  auto subsurface =
+      display->subcompositor()->GetSubsurface(surface2.get(), surface.get());
   subsurface->SetPosition(100, 100);
   wayland::EGLWindow egl_window2(surface2.get(), 50, 50);
   egl_window2.MakeCurrent();

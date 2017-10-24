@@ -22,20 +22,20 @@ Display* g_instance_ = nullptr;
 }
 
 const struct wl_shm_listener Display::shm_listener_ = {
-  Display::OnShmFormatThunk,
+    Display::OnShmFormatThunk,
 };
 
 Display::Display() : Proxy(wl_display_connect(nullptr)) {
   assert(!g_instance_);
   g_instance_ = this;
-  
+
   if (!id()) {
     fprintf(stderr, "can't connect to display\n");
     exit(EXIT_FAILURE);
   }
 
   registry_.reset(new Registry(wl_display_get_registry(id()), this));
-  
+
   wl_display_dispatch(id());
   wl_display_roundtrip(id());
 
@@ -46,36 +46,29 @@ Display::~Display() {
   assert(g_instance_ == this);
   g_instance_ = nullptr;
 
-  if (shm_)
-    wl_shm_destroy(shm_);
+  if (shm_) wl_shm_destroy(shm_);
 
-  if (egl_context_)
-    eglDestroyContext(egl_display_, egl_context_);
+  if (egl_context_) eglDestroyContext(egl_display_, egl_context_);
 
-  if (egl_display_)
-    eglTerminate(egl_display_);
+  if (egl_display_) eglTerminate(egl_display_);
 }
 
 // static
-Display* Display::current() {
-  return g_instance_;
-}
+Display* Display::current() { return g_instance_; }
 
 void Display::InitEGL() {
   EGLint major, minor;
   EGLint n;
 
-  static const EGLint argb_cfg_attribs[] = {
-    EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
-    EGL_RED_SIZE, 1,
-    EGL_GREEN_SIZE, 1,
-    EGL_BLUE_SIZE, 1,
-    EGL_ALPHA_SIZE, 1,
-    EGL_DEPTH_SIZE, 1,
-    EGL_NONE
-  };
+  static const EGLint argb_cfg_attribs[] = {EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+                                            EGL_RED_SIZE,     1,
+                                            EGL_GREEN_SIZE,   1,
+                                            EGL_BLUE_SIZE,    1,
+                                            EGL_ALPHA_SIZE,   1,
+                                            EGL_DEPTH_SIZE,   1,
+                                            EGL_NONE};
 
-  EGLint *context_attribs = NULL;
+  EGLint* context_attribs = NULL;
   EGLint api = EGL_OPENGL_ES_API;
 
   egl_display_ = eglGetDisplay(id());
@@ -104,10 +97,9 @@ void Display::InitEGL() {
 }
 
 void Display::Run() {
-  while(1) {
+  while (1) {
     int ret = wl_display_dispatch(id());
-    if (ret == -1)
-      break;
+    if (ret == -1) break;
 #if 0
     int ret = wl_display_flush(id());
     struct epoll_event ep[16];
@@ -126,19 +118,18 @@ void Display::Run() {
 }
 
 void Display::OnGlobal(uint32_t id, const char* interface, uint32_t version) {
-  printf("Got a registry event for id %d interface %s\n",
-         id, interface);
+  printf("Got a registry event for id %d interface %s\n", id, interface);
   if (strcmp(interface, "wl_compositor") == 0) {
-    auto compositor = registry_->Bind<struct wl_compositor>(
-        id, &wl_compositor_interface, 3);
+    auto compositor =
+        registry_->Bind<struct wl_compositor>(id, &wl_compositor_interface, 3);
     compositor_.reset(new Compositor(compositor));
   } else if (strcmp(interface, "wl_output") == 0) {
-    auto output = registry_->Bind<struct wl_output>(
-        id, &wl_output_interface, 2);
+    auto output =
+        registry_->Bind<struct wl_output>(id, &wl_output_interface, 2);
   } else if (strcmp(interface, "wl_seat") == 0) {
     seat_version_ = version;
-    auto seat =  registry_->Bind<struct wl_seat>(
-        id, &wl_seat_interface, std::max(seat_version_, 3u));
+    auto seat = registry_->Bind<struct wl_seat>(id, &wl_seat_interface,
+                                                std::max(seat_version_, 3u));
     std::unique_ptr<Seat> input(new Seat(seat));
     seats_.push_back(std::move(input));
   } else if (strcmp(interface, "wl_shell") == 0) {
@@ -159,8 +150,7 @@ void Display::OnGlobalRemove(uint32_t id) {
   printf("Got a registry remover event for id %d\n", id);
 }
 
-void Display::OnShmFormat(struct wl_shm* shm,
-                          uint32_t format) {
+void Display::OnShmFormat(struct wl_shm* shm, uint32_t format) {
   fprintf(stderr, "%s format=%u\n", __func__, format);
 }
 

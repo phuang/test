@@ -1,28 +1,28 @@
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <unistd.h>
 #include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 #include <vector>
 
-#define HANDLE_EINTR(x) ({ \
-  decltype(x) eintr_wrapper_result; \
-  do { \
-    eintr_wrapper_result = (x); \
-  } while (eintr_wrapper_result == -1 && errno == EINTR); \
-  eintr_wrapper_result; \
-})
+#define HANDLE_EINTR(x)                                     \
+  ({                                                        \
+    decltype(x) eintr_wrapper_result;                       \
+    do {                                                    \
+      eintr_wrapper_result = (x);                           \
+    } while (eintr_wrapper_result == -1 && errno == EINTR); \
+    eintr_wrapper_result;                                   \
+  })
 
 bool EnableReceivProcessId(int fd) {
   const int enable = 1;
   return setsockopt(fd, SOL_SOCKET, SO_PASSCRED, &enable, sizeof(enable)) == 0;
 }
 
-bool SendMsg(int fd,
-             const std::vector<std::pair<void*, size_t> >& buffers,
+bool SendMsg(int fd, const std::vector<std::pair<void*, size_t> >& buffers,
              const std::vector<int>& fds) {
   struct msghdr msg = {};
   std::vector<struct iovec> iov(buffers.size());
@@ -41,7 +41,7 @@ bool SendMsg(int fd,
   if (fds.size()) {
     const size_t control_len = CMSG_SPACE(sizeof(int) * fds.size());
     control_buffer = new char[control_len];
-    struct cmsghdr *cmsg;
+    struct cmsghdr* cmsg;
     msg.msg_control = control_buffer;
     msg.msg_controllen = control_len;
     cmsg = CMSG_FIRSTHDR(&msg);
@@ -61,16 +61,13 @@ bool SendMsg(int fd,
 
 static const int kMaxFileDescriptors = 16;
 
-ssize_t RecvMsg(int fd,
-                void *buffer,
-                size_t length,
-                std::vector<int>* fds,
-                pid_t *pid) {
+ssize_t RecvMsg(int fd, void* buffer, size_t length, std::vector<int>* fds,
+                pid_t* pid) {
   fds->clear();
   *pid = -1;
 
   struct msghdr msg = {};
-  struct iovec iov = { buffer, length };
+  struct iovec iov = {buffer, length};
   msg.msg_iov = &iov;
   msg.msg_iovlen = 1;
 
@@ -83,8 +80,7 @@ ssize_t RecvMsg(int fd,
   msg.msg_controllen = kControlBuifferSize;
 
   const ssize_t r = HANDLE_EINTR(recvmsg(fd, &msg, 0));
-  if (r == -1)
-    return -1;
+  if (r == -1) return -1;
 
   int* wire_fds = NULL;
   unsigned wire_fds_len = 0;
@@ -104,15 +100,13 @@ ssize_t RecvMsg(int fd,
   }
 
   if (msg.msg_flags & MSG_TRUNC || msg.msg_flags & MSG_CTRUNC) {
-    for (unsigned int i = 0; i < wire_fds_len; ++i)
-      close(wire_fds[i]);
+    for (unsigned int i = 0; i < wire_fds_len; ++i) close(wire_fds[i]);
     errno = EMSGSIZE;
     return -1;
   }
 
   if (wire_fds) {
-    for (unsigned int i = 0; i < wire_fds_len; ++i)
-      fds->push_back(wire_fds[i]);
+    for (unsigned int i = 0; i < wire_fds_len; ++i) fds->push_back(wire_fds[i]);
   }
 
   return r;
@@ -122,13 +116,11 @@ static void child_process(int fd) {
   char buf1[] = "Hello World!";
   char buf2[] = "Hello";
   const std::vector<std::pair<void*, size_t> > buffers = {
-    { buf1, sizeof(buf1) - 1 },
-    { buf2, sizeof(buf2) - 1 },
+      {buf1, sizeof(buf1) - 1},
+      {buf2, sizeof(buf2) - 1},
   };
 
-  const std::vector<int> fds = {
-    1, 2, 2, 1
-  };
+  const std::vector<int> fds = {1, 2, 2, 1};
   bool ret;
   ret = SendMsg(fd, buffers, fds);
   fprintf(stderr, "SendfMsg() =%d\n", ret);
@@ -138,7 +130,6 @@ static void child_process(int fd) {
   sleep(2);
 }
 
-
 static void parent_process(int fd) {
   sleep(1);
   char buf[] = "XXX";
@@ -147,7 +138,7 @@ static void parent_process(int fd) {
   ssize_t ret;
   ret = RecvMsg(fd, buf, sizeof(buf), &fds, &pid);
   fprintf(stderr, "RECV buf=%s fds.size()=%ld pid=%d\n", buf, fds.size(), pid);
-  
+
   ret = RecvMsg(fd, buf, sizeof(buf), &fds, &pid);
   fprintf(stderr, "RECV buf=%s fds.size()=%ld pid=%d\n", buf, fds.size(), pid);
 }
@@ -170,4 +161,3 @@ int main() {
     parent_process(fd_parent);
   }
 }
-
