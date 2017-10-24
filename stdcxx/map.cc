@@ -1,8 +1,6 @@
 #include <map>
 #include <iostream>
 
-
-
 int main(int argc, char **argv)
 {
     std::map<std::string, int> week_name;

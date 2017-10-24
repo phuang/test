@@ -33,6 +33,7 @@ DEPLOY_FLAGS = \
 
 CHROME_FLAGS =  \
 								--enable-wayland-server \
+								--ash-enable-wayland-server \
 								--no-sandbox \
 								--user-data-dir=/tmp/penghuang-mustash \
  								--screen-config=1000x800
@@ -45,6 +46,9 @@ CHROME_FLAGS +=  \
 # EXO_DEMO = exo_demo
 
 .PHONY: chrome content mash mus_demo $(EXO_DEMO) exo_unittests clean
+
+all:
+	$(NINJIA)
 
 chrome_sandbox:
 	$(NINJIA) chrome_sandbox
@@ -59,7 +63,8 @@ content:
 	$(NINJIA) content
 
 mash:
-	$(NINJIA) mash:all
+	# $(NINJIA) mash:all
+	echo mash
 
 mus_demo:
 	$(NINJIA) mus_demo
@@ -211,8 +216,11 @@ cc_perftests:
 gpu_perftests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
+viz_unittests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+
 wayland_rects_client:
-	$(NINJIA) $@ && $(OUT)/$@ --num-rects=10  --show-fps-counter  --benchmark-interval=60
+	$(NINJIA) $@ && $(OUT)/$@ --num-rects=10  --show-fps-counter  --size=256x256
 
 wayland_simple_client:
 	$(NINJIA) $@ && $(OUT)/$@
@@ -223,8 +231,8 @@ wayland_subsurface_client:
 wayland_client_perftests:
 	$(NINJIA) $@ && $(OUT)/$@
 
-wayland_client_perftests_mus:
-	$(NINJIA) $@ && $(OUT)/$@  --mus
+wayland_client_perftests_external_wayland:
+	$(NINJIA) wayland_client_perftests && $(OUT)/wayland_client_perftests  --run-with-external-wayland-server
 
 ash_standalone:
 	$(NINJIA) mash mash/session ash_standalone && $(OUT)/mash --service=mash_session --window-manager=ash_standalone
@@ -245,7 +253,7 @@ run_mus_ppapi_compositor: chrome ppapi_example_compositor mash
 smoothness.top_25_smooth_mash: test_chrome
 	./tools/perf/run_benchmark --browser=exact \
 		--browser-executable=$(OUT)/test_chrome \
-		--extra-browser-args="--mash" \
+		--extra-browser-args="--use-gl=egl --mash --gpu-no-complete-info-collection" \
 		smoothness.top_25_smooth
 
 args:
