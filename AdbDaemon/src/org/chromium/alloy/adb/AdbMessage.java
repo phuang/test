@@ -31,8 +31,7 @@ class AdbMessage {
 
   boolean needAppendZero = false;
 
-  public AdbMessage() {
-  }
+  public AdbMessage() {}
 
   public AdbMessage(int command, int arg0, int arg1) {
     this.command = command;
@@ -97,12 +96,12 @@ class AdbMessage {
     writeToByteBufferInternal(buffer);
     return buffer;
   }
-  
+
   public void writeToByteBuffer(ByteBuffer buffer) {
     prepare();
     writeToByteBufferInternal(buffer);
   }
-  
+
   private void writeToByteBufferInternal(ByteBuffer buffer) {
     buffer.putInt(command);
     buffer.putInt(arg0);
@@ -113,7 +112,7 @@ class AdbMessage {
     if (data != null)
       buffer.put(data);
     if (needAppendZero)
-      buffer.put((byte)0);
+      buffer.put((byte) 0);
   }
 
   private void checkHeader() throws IOException {
@@ -135,10 +134,9 @@ class AdbMessage {
     long result = 0;
     if (data != null) {
       int count = data.length;
-      while (count-- > 0)
-        result += ((long)data[count]) & 0xff;
+      while (count-- > 0) result += ((long) data[count]) & 0xff;
     }
-    return (int)(result & 0xffffffff);
+    return (int) (result & 0xffffffff);
   }
 
   private void prepare() {
@@ -153,18 +151,33 @@ class AdbMessage {
   public String toString() {
     String tag = null;
     switch (command) {
-      case A_SYNC: tag = "SYNC"; break;
-      case A_CNXN: tag = "CNXN" ; break;
-      case A_OPEN: tag = "OPEN"; break;
-      case A_OKAY: tag = "OKAY"; break;
-      case A_CLSE: tag = "CLSE"; break;
-      case A_WRTE: tag = "WRTE"; break;
-      case A_AUTH: tag = "AUTH"; break;
-      default: tag = "????"; break;
+      case A_SYNC:
+        tag = "SYNC";
+        break;
+      case A_CNXN:
+        tag = "CNXN";
+        break;
+      case A_OPEN:
+        tag = "OPEN";
+        break;
+      case A_OKAY:
+        tag = "OKAY";
+        break;
+      case A_CLSE:
+        tag = "CLSE";
+        break;
+      case A_WRTE:
+        tag = "WRTE";
+        break;
+      case A_AUTH:
+        tag = "AUTH";
+        break;
+      default:
+        tag = "????";
+        break;
     }
-    
-    return String.format("%s %08x %08x %04x %s",
-        tag, arg0, arg1, dataLength,
+
+    return String.format("%s %08x %08x %04x %s", tag, arg0, arg1, dataLength,
         command != A_WRTE ? new String(data) : new String(data, 0, Math.min(data.length, 16)));
   }
 }

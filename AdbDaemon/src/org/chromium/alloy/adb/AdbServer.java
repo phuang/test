@@ -47,8 +47,7 @@ public class AdbServer implements IOChannel, Runnable {
     }
     assert (mChannel.socket().isBound());
     try {
-      SocketChannel smartsocket = SocketChannel.open(
-          new InetSocketAddress("127.0.0.1", 5037));
+      SocketChannel smartsocket = SocketChannel.open(new InetSocketAddress("127.0.0.1", 5037));
       String serverName = String.format("host:emulator:%d", port);
       String message = String.format("%04x%s", serverName.length(), serverName);
       ByteBuffer buffer = ByteBuffer.allocate(message.length());
@@ -56,7 +55,7 @@ public class AdbServer implements IOChannel, Runnable {
       buffer.flip();
       do {
         smartsocket.write(buffer);
-      } while(buffer.hasRemaining());
+      } while (buffer.hasRemaining());
       buffer = ByteBuffer.allocate(128);
       int result = smartsocket.read(buffer);
       buffer.flip();
@@ -75,23 +74,24 @@ public class AdbServer implements IOChannel, Runnable {
   private void loop() throws IOException {
     while (true) {
       int readyChannels = mSelector.select();
-      if (readyChannels == 0) continue;
+      if (readyChannels == 0)
+        continue;
       Set<SelectionKey> selectedKeys = mSelector.selectedKeys();
       Iterator<SelectionKey> keyIterator = selectedKeys.iterator();
-      while(keyIterator.hasNext()) {
+      while (keyIterator.hasNext()) {
         SelectionKey key = keyIterator.next();
-        IOChannel iochannel = (IOChannel)key.attachment();
+        IOChannel iochannel = (IOChannel) key.attachment();
         boolean result = false;
         if (key.isAcceptable()) {
-				  result = iochannel.onAcceptable();
-				} else if (key.isReadable()){
-				  result = iochannel.onReadable();
-				} else if (key.isWritable()) {
-				  result = iochannel.onWritable();
-				}
+          result = iochannel.onAcceptable();
+        } else if (key.isReadable()) {
+          result = iochannel.onReadable();
+        } else if (key.isWritable()) {
+          result = iochannel.onWritable();
+        }
         if (!result) {
-        	iochannel.onClose();
-        	key.cancel();
+          iochannel.onClose();
+          key.cancel();
         }
         keyIterator.remove();
       }
@@ -104,17 +104,17 @@ public class AdbServer implements IOChannel, Runnable {
 
   @Override
   public boolean onAcceptable() {
-  	try {
-  		SocketChannel channel = mChannel.accept();
-  		channel.configureBlocking(false);
-  		Transport socket = new Transport(channel);
-  		socket.enableRead(true);
-  		System.out.println("Got an incoming connection, s = " + channel);
-  		return true;
-  	} catch (IOException e) {
-  		e.printStackTrace();
-  		return false;
-  	}
+    try {
+      SocketChannel channel = mChannel.accept();
+      channel.configureBlocking(false);
+      Transport socket = new Transport(channel);
+      socket.enableRead(true);
+      System.out.println("Got an incoming connection, s = " + channel);
+      return true;
+    } catch (IOException e) {
+      e.printStackTrace();
+      return false;
+    }
   }
 
   @Override
@@ -148,13 +148,16 @@ public class AdbServer implements IOChannel, Runnable {
     }
   }
 
-	@Override
-  public boolean onReadable() { return false;}
-
-	@Override
-  public boolean onWritable() { return false; }
-
-	@Override
-  public void onClose() {
+  @Override
+  public boolean onReadable() {
+    return false;
   }
+
+  @Override
+  public boolean onWritable() {
+    return false;
+  }
+
+  @Override
+  public void onClose() {}
 }

@@ -9,7 +9,6 @@ import java.util.Iterator;
 import java.util.Map.Entry;
 import java.util.Vector;
 
-
 class ShellService extends AdbThreadSocket {
   private String mCurrentDir = "/";
   private final HashMap<String, String> mEnvs = new HashMap<String, String>();
@@ -23,7 +22,7 @@ class ShellService extends AdbThreadSocket {
 >>>>>>> master
 
   public ShellService(final String commands) throws IOException {
-  	super("AdbShell");
+    super("AdbShell");
     mEnvs.put("EXTERNAL_STORAGE", "/mnt/sdcard");
     mEnvs.put("ANDROID_DATA", "/data");
     mEnvs.put("ANDROID_ROOT", "/system");
@@ -43,7 +42,7 @@ class ShellService extends AdbThreadSocket {
     char quote = 0;
     for (int i = 0; i < chars.length; ++i) {
       char c = chars[i];
-      switch(c) {
+      switch (c) {
         case '"':
         case '\'':
           if (quote == 0) {
@@ -60,7 +59,7 @@ class ShellService extends AdbThreadSocket {
           } else if (quote == '\'') {
             sb.append('\\');
           } else if (quote == '"') {
-            char next = chars[i+1];
+            char next = chars[i + 1];
             if (next == '"' || next == '$' || next == '\\') {
               sb.append(next);
               i++;
@@ -102,8 +101,8 @@ class ShellService extends AdbThreadSocket {
               sb.append(String.format("%d", mLastResult));
             } else if (nextChar == '$') {
               sb.append("1");
-            } else if ((nextChar >= 'a' && nextChar <= 'z') ||
-                       (nextChar >= 'A' && nextChar <= 'Z')) {
+            } else if ((nextChar >= 'a' && nextChar <= 'z')
+                || (nextChar >= 'A' && nextChar <= 'Z')) {
               int begin = i + 1;
               int j = i + 1;
               char cc;
@@ -112,9 +111,8 @@ class ShellService extends AdbThreadSocket {
                 if (j == chars.length)
                   break;
                 cc = chars[j];
-              } while ((cc >= 'a' && cc <= 'z') ||
-                       (cc >='A' && cc <= 'Z') ||
-                       (cc >='0' && cc <='9') || cc == '_');
+              } while ((cc >= 'a' && cc <= 'z') || (cc >= 'A' && cc <= 'Z')
+                  || (cc >= '0' && cc <= '9') || cc == '_');
               sb.append(getEnv(new String(chars, begin, j - begin)));
               i = j - 1;
             } else {
@@ -187,11 +185,10 @@ class ShellService extends AdbThreadSocket {
 
   private void exportMain(String[] args) throws IOException {
     if (args.length == 1) {
-      Iterator<Entry<String,String>> iterator = mEnvs.entrySet().iterator();
+      Iterator<Entry<String, String>> iterator = mEnvs.entrySet().iterator();
       while (iterator.hasNext()) {
         Entry<String, String> entry = iterator.next();
-        print(String.format("export -x %s=\"%s\"\n",
-            entry.getKey(), entry.getValue()));
+        print(String.format("export -x %s=\"%s\"\n", entry.getKey(), entry.getValue()));
       }
       return;
     } else {
@@ -218,7 +215,7 @@ class ShellService extends AdbThreadSocket {
   private void lsMain(String[] args) throws IOException {
     String path = mCurrentDir;
     File directory = new File(path);
-    for (String file: directory.list()) {
+    for (String file : directory.list()) {
       print(file + "\n");
     }
   }
@@ -279,25 +276,24 @@ class ShellService extends AdbThreadSocket {
 
   private void print(final String data) throws IOException {
     ByteBuffer buffer = ByteBuffer.wrap(data.getBytes());
-  	while (buffer.hasRemaining())
-  		output().write(buffer);
+    while (buffer.hasRemaining()) output().write(buffer);
   }
 
-	@Override
-	protected void loop() {
-		try {
-	    Iterator<String[]> iterator = mCommands.iterator();
-	    while (iterator.hasNext()) {
-	      String[] args = iterator.next();
-	      if ("exec".equals(args[0])) {
-	        execute(Arrays.copyOfRange(args, 1, args.length));
-	        break;
-	      } else {
-	        execute(args);
-	      }
-	    }
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+  @Override
+  protected void loop() {
+    try {
+      Iterator<String[]> iterator = mCommands.iterator();
+      while (iterator.hasNext()) {
+        String[] args = iterator.next();
+        if ("exec".equals(args[0])) {
+          execute(Arrays.copyOfRange(args, 1, args.length));
+          break;
+        } else {
+          execute(args);
+        }
+      }
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
   }
 }

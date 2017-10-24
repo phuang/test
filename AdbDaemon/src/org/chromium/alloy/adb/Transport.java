@@ -93,15 +93,15 @@ class Transport extends IOChannel {
       socket = new TrackJDWPService();
     } else if (name.startsWith("shell:")) {
       try {
-	      socket = new ShellService(name.substring(6));
+        socket = new ShellService(name.substring(6));
       } catch (IOException e) {
-	      e.printStackTrace();
+        e.printStackTrace();
       }
     } else if (name.startsWith("sync:")) {
       try {
-	      socket = new SyncService();
+        socket = new SyncService();
       } catch (IOException e) {
-	      e.printStackTrace();
+        e.printStackTrace();
       }
     }
     return socket;
@@ -121,14 +121,9 @@ class Transport extends IOChannel {
     StringBuilder builder = new StringBuilder();
     builder.append("device::");
 
-    final String[] cnxn_props = {
-    	"ro.product.name",
-    	"ro.product.model",
-    	"ro.product.device"
-    };
+    final String[] cnxn_props = {"ro.product.name", "ro.product.model", "ro.product.device"};
 
-    for (String prop : cnxn_props)
-      builder.append(String.format("%s=%s;", prop, "alloy"));
+    for (String prop : cnxn_props) builder.append(String.format("%s=%s;", prop, "alloy"));
 
     AdbMessage cm = new AdbMessage(
         AdbMessage.A_CNXN, AdbMessage.A_VERSION, AdbMessage.MAX_PAYLOAD, builder.toString());
@@ -172,7 +167,8 @@ class Transport extends IOChannel {
   private void handleClose(AdbMessage message) {
     if (mOnline) {
       AdbSocket socket = mSocketMap.remove(message.arg1);
-      if (socket != null) socket.close();
+      if (socket != null)
+        socket.close();
     }
   }
 
@@ -197,9 +193,9 @@ class Transport extends IOChannel {
 
   @Override
   public boolean onReadable() {
-  	try {
+    try {
       if (mChannel.read(mReadBuffer) < 0)
-      	return false;
+        return false;
       mReadBuffer.flip();
       while (true) {
         AdbMessage message = null;
@@ -209,7 +205,7 @@ class Transport extends IOChannel {
           return true;
         }
         if (DEBUG)
-        	System.err.println("message = " + message);
+          System.err.println("message = " + message);
         switch (message.command) {
           case AdbMessage.A_SYNC:
             handleSync(message);
@@ -233,49 +229,50 @@ class Transport extends IOChannel {
             handleWrite(message);
             break;
           default:
-          	if (DEBUG) {
-          		System.err.println(String.format(
-          				"Unknown message: command is 0x%08x", message.command));
-          	}
-          	return false;
+            if (DEBUG) {
+              System.err.println(
+                  String.format("Unknown message: command is 0x%08x", message.command));
+            }
+            return false;
         }
       }
-  	} catch (IOException e) {
-  		e.printStackTrace();
-  		return false;
-  	}
+    } catch (IOException e) {
+      e.printStackTrace();
+      return false;
+    }
   }
 
-	@Override
-	public boolean onWritable() {
-		try {
-			synchronized (this) {
-				if (!mOutputQue.isEmpty()) {
-					ByteBuffer buffer = mOutputQue.getFirst();
-					mChannel.write(buffer);
-					if (!buffer.hasRemaining())
-						mOutputQue.removeFirst();
-				}
-				if (mOutputQue.isEmpty())
-					enableWriteLocked(false);
-			}
-			return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return false;
-		}
-	}
+  @Override
+  public boolean onWritable() {
+    try {
+      synchronized (this) {
+        if (!mOutputQue.isEmpty()) {
+          ByteBuffer buffer = mOutputQue.getFirst();
+          mChannel.write(buffer);
+          if (!buffer.hasRemaining())
+            mOutputQue.removeFirst();
+        }
+        if (mOutputQue.isEmpty())
+          enableWriteLocked(false);
+      }
+      return true;
+    } catch (IOException e) {
+      e.printStackTrace();
+      return false;
+    }
+  }
 
-	@Override
-  public boolean onAcceptable() { return false; }
+  @Override
+  public boolean onAcceptable() {
+    return false;
+  }
 
-	@Override
+  @Override
   public void onClose() {
-		Iterator<Entry<Integer, AdbSocket>> iterator = 
-				mSocketMap.entrySet().iterator();
-		while (iterator.hasNext()) {
-			iterator.next().getValue().close();
-		}
-		mSocketMap.clear();
+    Iterator<Entry<Integer, AdbSocket>> iterator = mSocketMap.entrySet().iterator();
+    while (iterator.hasNext()) {
+      iterator.next().getValue().close();
+    }
+    mSocketMap.clear();
   }
 }

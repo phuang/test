@@ -1,6 +1,5 @@
 package org.chromium.alloy.adb;
 
-
 class AdbSocket {
   private static int sNextId = 1;
   protected int mId = -1;
@@ -23,15 +22,14 @@ class AdbSocket {
   }
 
   public void connectPeer(AdbSocket peer) {
-    assert(mPeer == null);
-    assert(peer != null);
-    assert(peer.mPeer == null);
+    assert (mPeer == null);
+    assert (peer != null);
+    assert (peer.mPeer == null);
     mPeer = peer;
     peer.mPeer = this;
   }
 
-  public void ready() {
-  }
+  public void ready() {}
 
   public int enqueue(AdbMessage message) {
     mPeer.close();
@@ -45,6 +43,5 @@ class AdbSocket {
     }
   }
 
-  public void disconnect() {
-  }
+  public void disconnect() {}
 }

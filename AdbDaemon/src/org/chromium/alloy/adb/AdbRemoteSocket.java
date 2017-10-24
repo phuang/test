@@ -25,8 +25,7 @@ class AdbRemoteSocket extends AdbSocket {
 
   @Override
   public void close() {
-    AdbMessage message = new AdbMessage(AdbMessage.A_CLSE,
-        mPeer != null ? mPeer.mId : 0, mId, "");
+    AdbMessage message = new AdbMessage(AdbMessage.A_CLSE, mPeer != null ? mPeer.mId : 0, mId, "");
     mTransport.send(message);
     super.close();
   }

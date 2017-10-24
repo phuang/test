@@ -1,6 +1,5 @@
 package org.chromium.alloy.adb;
 
-
 public class Adb {
   /**
    * @param args
