@@ -37,10 +37,12 @@ CHROME_FLAGS =  \
 								--no-sandbox \
 								--user-data-dir=/tmp/penghuang-mustash \
  								--screen-config=1000x800
+
 CHROME_FLAGS +=  \
 								--show-composited-layer-borders \
-								--ui-show-composited-layer-borders=renderpass,surface,layer \
-								--show-fps-counter
+								$(NULL)
+								# --ui-show-composited-layer-borders=renderpass,surface,layer \
+								#--show-fps-counter
 
 # CHROME_FLAGS += --wait-for-debugger=ui
 # EXO_DEMO = exo_demo
@@ -76,8 +78,10 @@ exo_demo:
 deploy_chrome: chrome
 	deploy_chrome $(DEPLOY_FLAGS)
 
-deploy_chrome_so: chrome mash mus_demo
-	GN_ARGS='is_component_build=true is_chrome_branded=true' deploy_chrome $(DEPLOY_FLAGS)
+
+deploy_chrome_so: chrome
+	GN_ARGS='is_component_build=true' deploy_chrome $(DEPLOY_FLAGS)
+	# GN_ARGS='is_component_build=true is_chrome_branded=true' deploy_chrome $(DEPLOY_FLAGS)
 
 deploy_mash: mash mus_demo
 	GN_ARGS='is_component_build=true is_chrome_branded=true' deploy_chrome $(DEPLOY_FLAGS)
@@ -101,6 +105,32 @@ run_mus_ui: mash ui
 run_chrome: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS)
 
+run_chrome_ozone_x11: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS)  --ozone-platform=x11
+
+run_chrome_egl: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --use-gl=egl
+
+run_chrome_overdraw: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --show-overdraw-feedback --enable-draw-occlusion
+
+run_chrome_presentation_callback: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --enable-presentation-callback \
+		--enable-draw-occlusion
+
+FAST_INK_FLAGS = \
+	--has-internal-stylus \
+	--force-enable-stylus-tools \
+	--pen-devices=4 \
+	--ash-debug-shortcuts \
+	--use-first-display-as-internal
+
+run_chrome_with_fast_ink: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) $(FAST_INK_FLAGS)
+
+run_chrome_tracing: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --trace-to-console=GLX
+
 run_chrome_scale_2: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --force-device-scale-factor=2.0
 
@@ -115,6 +145,9 @@ run_chrome_touch: chrome
 
 run_mus_chrome: mash chrome
 	$(OUT)/chrome --mus http://www.google.com $(CHROME_FLAGS)
+
+run_mus_chrome_with_fast_ink: mash chrome
+	$(OUT)/chrome --mus http://www.google.com $(CHROME_FLAGS) $(FAST_INK_FLAGS)
 
 run_mus_chrome_scale_2: mash chrome
 	$(OUT)/chrome --mus http://www.google.com $(CHROME_FLAGS) --force-device-scale-factor=2.0
@@ -172,7 +205,10 @@ content_browsertests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
 browser_tests:
-	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+	$(NINJIA) $@ && xvfb-run $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+
+mus_browser_tests:
+	$(NINJIA) browser_tests && xvfb-run $(OUT)/browser_tests --mus --gtest_filter=$(GTEST_FILTER)
 
 interactive_ui_tests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER) --no-sandbox
@@ -207,7 +243,13 @@ mash_unittests:
 aura_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
+aura_unittests_mus:
+	$(NINJIA) aura_unittests && $(OUT)/aura_unittests --gtest_filter=$(GTEST_FILTER) --mus
+
 ui_service_unittests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+
+content_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
 cc_perftests:
@@ -229,10 +271,15 @@ wayland_subsurface_client:
 	$(NINJIA) $@ && $(OUT)/$@
 
 wayland_client_perftests:
-	$(NINJIA) $@ && $(OUT)/$@
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
 wayland_client_perftests_external_wayland:
-	$(NINJIA) wayland_client_perftests && $(OUT)/wayland_client_perftests  --run-with-external-wayland-server
+	$(NINJIA) wayland_client_perftests && $(OUT)/wayland_client_perftests  \
+		--run-with-external-wayland-server \
+		--gtest_filter=$(GTEST_FILTER)
+
+ozone_demo:
+	$(NINJIA) $@ && $(OUT)/$@
 
 ash_standalone:
 	$(NINJIA) mash mash/session ash_standalone && $(OUT)/mash --service=mash_session --window-manager=ash_standalone
@@ -261,6 +308,9 @@ args:
 
 check:
 	gn check $(OUT)
+
+check_chromium:
+	gn check out/linux_chromium
 
 clean:
 	$(NINJIA) -t clean
