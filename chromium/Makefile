@@ -15,11 +15,11 @@ NINJIA = ninja $(NINJIA_ARGS)
 
 DEVICE_IP = my_crbook
 STRIP_FLAGS = --strip-flags="--strip-debug -w -N '*blink*' -w -N '*WebCore*' -w -N '*Sk*' -w -N '*content*'"
-STRIP_FLAGS = --strip-flags="--strip-debug -w -N '*blink*' -w -N '*WebCore*' -w -N '*Sk*'"
+# STRIP_FLAGS = --strip-flags="--strip-debug -w -N '*blink*' -w -N '*WebCore*' -w -N '*Sk*'"
 # STRIP_FLAGS = --nostrip
 TARGET_FLAGS = --target-dir=/tmp/chrome --mount  --mash
 TARGET_FLAGS = --target-dir=/tmp/chrome --mount
-TARGET_FLAGS =
+# TARGET_FLAGS =
 DEPLOY_FLAGS = \
 	--build-dir=$(OUT) \
 	$(TARGET_FLAGS) \
@@ -121,12 +121,15 @@ run_chrome_presentation_callback: chrome
 FAST_INK_FLAGS = \
 	--has-internal-stylus \
 	--force-enable-stylus-tools \
-	--pen-devices=4 \
+	--pen-devices=14 \
 	--ash-debug-shortcuts \
 	--use-first-display-as-internal
 
 run_chrome_with_fast_ink: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) $(FAST_INK_FLAGS)
+
+run_chrome_with_fast_ink_hdpi: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) $(FAST_INK_FLAGS) --force-device-scale-factor=2.0 --mus
 
 run_chrome_tracing: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --trace-to-console=GLX
@@ -145,6 +148,12 @@ run_chrome_touch: chrome
 
 run_mus_chrome: mash chrome
 	$(OUT)/chrome --mus http://www.google.com $(CHROME_FLAGS)
+
+run_mus_chrome_ozone_wayland: mash chrome
+	$(OUT)/chrome --mus http://www.google.com $(CHROME_FLAGS) --ozone-platform=wayland
+
+run_mus_chrome_egl: mash chrome
+	$(OUT)/chrome --mus http://www.google.com $(CHROME_FLAGS) --use-gl=egl
 
 run_mus_chrome_with_fast_ink: mash chrome
 	$(OUT)/chrome --mus http://www.google.com $(CHROME_FLAGS) $(FAST_INK_FLAGS)
@@ -218,6 +227,9 @@ unit_tests:
 
 ash_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+
+ash_unittests_mus:
+	$(NINJIA) ash_unittests && $(OUT)/ash_unittests --mus --gtest_filter=$(GTEST_FILTER)
 
 ash_perftests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
@@ -323,3 +335,19 @@ cros_flush_usb:
 
 ssh:
 	ssh root@$(DEVICE_IP)
+
+
+rsync:
+	rsync -e ssh -r -v \
+		--exclude 'gen' \
+		--exclude 'obj' \
+		--exclude 'clang_x64' \
+		--exclude '*.lib' \
+		--exclude '*.pdb' \
+		--delete \
+		out_win/Release \
+		user@100.107.103.71:/mnt/c/Users/User/chromium/src/out_cross
+
+deploy_windows:
+	ninja -C out_win/Release chrome -j 128
+	make rsync
