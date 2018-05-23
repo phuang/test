@@ -10,16 +10,16 @@ OUT := out/mus
 # OUT = out/mus_Debug
 # OUT =out/linux_chromium
 # OUT=out_veyron_minnie/Release
-NINJIA_ARGS = -j1000 -k50 -C $(OUT)
+NINJIA_ARGS = -j 2000 -k50 -C $(OUT)
 NINJIA = ninja $(NINJIA_ARGS)
 
-DEVICE_IP = my_crbook
-STRIP_FLAGS = --strip-flags="--strip-debug -w -N '*blink*' -w -N '*WebCore*' -w -N '*Sk*' -w -N '*content*'"
+DEVICE_IP = penghuang-crbook
+STRIP_FLAGS = --strip-flags="--strip-debug -w -N '*blink*' -w -N '*WebCore*' -w -N '*content*'"
 # STRIP_FLAGS = --strip-flags="--strip-debug -w -N '*blink*' -w -N '*WebCore*' -w -N '*Sk*'"
 # STRIP_FLAGS = --nostrip
 TARGET_FLAGS = --target-dir=/tmp/chrome --mount  --mash
 TARGET_FLAGS = --target-dir=/tmp/chrome --mount
-# TARGET_FLAGS =
+TARGET_FLAGS =
 DEPLOY_FLAGS = \
 	--build-dir=$(OUT) \
 	$(TARGET_FLAGS) \
@@ -32,8 +32,6 @@ DEPLOY_FLAGS = \
 	# --nostartui \
 
 CHROME_FLAGS =  \
-								--enable-wayland-server \
-								--ash-enable-wayland-server \
 								--no-sandbox \
 								--user-data-dir=/tmp/penghuang-mustash \
  								--screen-config=1000x800
@@ -46,6 +44,8 @@ CHROME_FLAGS +=  \
 
 # CHROME_FLAGS += --wait-for-debugger=ui
 # EXO_DEMO = exo_demo
+
+CHROME_FLAGS = --user-data-dir=/tmp/penghuang-mustash --no-sandbox
 
 .PHONY: chrome content mash mus_demo $(EXO_DEMO) exo_unittests clean
 
@@ -102,8 +102,84 @@ run_mus_mash: mash content $(EXO_DEMO)
 run_mus_ui: mash ui
 	$(OUT)/mash --service=ui --no-sandbox
 
+run_chrome_pixel_diff: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) && $(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=UseSkiaRenderer
+
 run_chrome: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS)
+
+run_chrome_wayland: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --enable-wayland-server
+
+run_chrome_oopd: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --enable-features=VizDisplayCompositor
+
+run_chrome_oopd_skia: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --enable-features=VizDisplayCompositor,UseSkiaRenderer \
+		--enable-experimental-web-platform-features
+
+run_chrome_oopd_skia_ddl: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
+		--use-gl=any --disable-features=Mus \
+		--no-sandbox
+
+run_chrome_oopd_skia_ddl_oopr: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
+		--use-gl=any --disable-features=Mus --enable-oop-rasterization
+
+run_chrome_oopd_skia_ddl_swiftshader: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
+		--use-gl=swiftshader-webgl --disable-features=Mus
+
+run_chrome_oopd_oopr_skia_ddl_vk: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
+		--enable-oop-rasterization \
+		--no-sandbox \
+		$(NULL)
+
+run_chrome_oopd_oopr: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor \
+		--enable-oop-rasterization \
+		--enable-gpu-rasterization \
+		--no-sandbox \
+		$(NULL)
+
+run_chrome_oopr: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-oop-rasterization \
+		--enable-gpu-rasterization \
+		--no-sandbox \
+		$(NULL)
+
+run_chrome_oopr_with_tracing: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-oop-rasterization \
+		--enable-gpu-rasterization \
+		--no-sandbox \
+		--trace-to-console=gpu \
+		$(NULL)
+
+		# --disable-gpu-rasterization 
+run_chrome_skia_renderer: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --use-skia-renderer --trace-to-console=penghuang3
+
+run_chrome_skia_renderer_viz: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --use-skia-renderer --enable-viz
+
+run_chrome_skia_renderer_vk: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --use-skia-renderer --enable-vulkan --disable-gpu
+
+run_chrome_skia_renderer_vk_disable_gpu_compositing: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --use-skia-renderer --enable-vulkan --enable-viz --disable-gpu --disable-gpu-compositing
+
+run_chrome_skia_renderer_vk_gpu: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --use-skia-renderer --enable-vulkan --enable-viz
 
 run_chrome_ozone_x11: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS)  --ozone-platform=x11
@@ -117,6 +193,7 @@ run_chrome_overdraw: chrome
 run_chrome_presentation_callback: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --enable-presentation-callback \
 		--enable-draw-occlusion
+
 
 FAST_INK_FLAGS = \
 	--has-internal-stylus \
@@ -216,6 +293,10 @@ content_browsertests:
 browser_tests:
 	$(NINJIA) $@ && xvfb-run $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
+browser_tests_video:
+	$(NINJIA) browser_tests && xvfb-run $(OUT)/browser_tests --gtest_filter=*TestVideoDisplayPerfVP9/0 --run-manual
+
+
 mus_browser_tests:
 	$(NINJIA) browser_tests && xvfb-run $(OUT)/browser_tests --mus --gtest_filter=$(GTEST_FILTER)
 
@@ -258,6 +339,9 @@ aura_unittests:
 aura_unittests_mus:
 	$(NINJIA) aura_unittests && $(OUT)/aura_unittests --gtest_filter=$(GTEST_FILTER) --mus
 
+cc_unittests:
+	$(NINJIA) cc_unittests && $(OUT)/cc_unittests --gtest_filter=$(GTEST_FILTER) 
+
 ui_service_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
@@ -290,8 +374,8 @@ wayland_client_perftests_external_wayland:
 		--run-with-external-wayland-server \
 		--gtest_filter=$(GTEST_FILTER)
 
-ozone_demo:
-	$(NINJIA) $@ && $(OUT)/$@
+skia_demo:
+	$(NINJIA) $@ && $(OUT)/$@ --use-skia --use-ddl
 
 ash_standalone:
 	$(NINJIA) mash mash/session ash_standalone && $(OUT)/mash --service=mash_session --window-manager=ash_standalone
@@ -336,7 +420,6 @@ cros_flush_usb:
 ssh:
 	ssh root@$(DEVICE_IP)
 
-
 rsync:
 	rsync -e ssh -r -v \
 		--exclude 'gen' \
@@ -349,5 +432,9 @@ rsync:
 		user@100.107.103.71:/mnt/c/Users/User/chromium/src/out_cross
 
 deploy_windows:
-	ninja -C out_win/Release chrome -j 128
+	ninja -C out_win/Release -j 128 chrome
+	make rsync
+
+deploy_gl_tests:
+	ninja -C out_win/Release -j 128 gl_tests
 	make rsync
