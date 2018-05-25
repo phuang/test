@@ -7,6 +7,7 @@ OUT := out_cyan/Release
 OUT := out/release
 OUT := out_link/mus
 OUT := out/mus
+OUT := out/Release
 # OUT = out/mus_Debug
 # OUT =out/linux_chromium
 # OUT=out_veyron_minnie/Release
@@ -45,7 +46,15 @@ CHROME_FLAGS +=  \
 # CHROME_FLAGS += --wait-for-debugger=ui
 # EXO_DEMO = exo_demo
 
-CHROME_FLAGS = --user-data-dir=/tmp/penghuang-mustash --no-sandbox
+PAGE = file:///usr/local/google/home/penghuang/sources/phuang.github.io/backdrop_with_mask.html
+# PAGE = phuang.github.io/backdrop_with_mask.html
+PAGE = file:///usr/local/google/home/penghuang/sources/chromium/src/third_party/WebKit/LayoutTests/css3/filters/backdrop-filter-rendering.html
+CHROME_FLAGS = \
+							 --user-data-dir=/tmp/penghuang-mustash \
+							 --enable-experimental-web-platform-features \
+							 $(PAGE) \
+							 --no-sandbox
+
 
 .PHONY: chrome content mash mus_demo $(EXO_DEMO) exo_unittests clean
 
@@ -117,7 +126,7 @@ run_chrome_oopd: chrome
 
 run_chrome_oopd_skia: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --enable-features=VizDisplayCompositor,UseSkiaRenderer \
-		--enable-experimental-web-platform-features
+	$(NULL)
 
 run_chrome_oopd_skia_ddl: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
