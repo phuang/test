@@ -8,6 +8,9 @@ OUT := out/release
 OUT := out_link/mus
 OUT := out/mus
 OUT := out/Release
+# OUT := out/linux_ozone_rel
+# OUT := out_android/Release
+OUT := out_chell/Release
 # OUT = out/mus_Debug
 # OUT =out/linux_chromium
 # OUT=out_veyron_minnie/Release
@@ -20,7 +23,7 @@ STRIP_FLAGS = --strip-flags="--strip-debug -w -N '*blink*' -w -N '*WebCore*' -w 
 # STRIP_FLAGS = --nostrip
 TARGET_FLAGS = --target-dir=/tmp/chrome --mount  --mash
 TARGET_FLAGS = --target-dir=/tmp/chrome --mount
-TARGET_FLAGS =
+# TARGET_FLAGS =
 DEPLOY_FLAGS = \
 	--build-dir=$(OUT) \
 	$(TARGET_FLAGS) \
@@ -33,7 +36,6 @@ DEPLOY_FLAGS = \
 	# --nostartui \
 
 CHROME_FLAGS =  \
-								--no-sandbox \
 								--user-data-dir=/tmp/penghuang-mustash \
  								--screen-config=1000x800
 
@@ -42,18 +44,20 @@ CHROME_FLAGS +=  \
 								$(NULL)
 								# --ui-show-composited-layer-borders=renderpass,surface,layer \
 								#--show-fps-counter
-
 # CHROME_FLAGS += --wait-for-debugger=ui
 # EXO_DEMO = exo_demo
 
-PAGE = file:///usr/local/google/home/penghuang/sources/phuang.github.io/backdrop_with_mask.html
-# PAGE = phuang.github.io/backdrop_with_mask.html
-PAGE = file:///usr/local/google/home/penghuang/sources/chromium/src/third_party/WebKit/LayoutTests/css3/filters/backdrop-filter-rendering.html
+# PAGE = file:///usr/local/google/home/penghuang/sources/phuang.github.io/backdrop_with_mask.html
+PAGE = phuang.github.io/backdrop_with_mask.html
+# PAGE = file:///usr/local/google/home/penghuang/sources/chromium/src/third_party/WebKit/LayoutTests/css3/filters/backdrop-filter-rendering.html
+PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
 CHROME_FLAGS = \
 							 --user-data-dir=/tmp/penghuang-mustash \
 							 --enable-experimental-web-platform-features \
-							 $(PAGE) \
-							 --no-sandbox
+							 $(PAGE)
+# CHROME_FLAGS += --show-overdraw-feedback
+
+ADB = third_party/android_sdk/public/platform-tools/adb
 
 
 .PHONY: chrome content mash mus_demo $(EXO_DEMO) exo_unittests clean
@@ -116,10 +120,13 @@ run_chrome_pixel_diff: chrome
 		--enable-features=UseSkiaRenderer
 
 run_chrome: chrome
-	$(OUT)/chrome  $(CHROME_FLAGS)
+	$(OUT)/chrome  $(CHROME_FLAGS) --no-sandbox
+
+run_chrome_wayland_oopd: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --enable-wayland-server --enable-features=VizDisplayCompositor
 
 run_chrome_wayland: chrome
-	$(OUT)/chrome  $(CHROME_FLAGS) --enable-wayland-server
+	$(OUT)/chrome  $(CHROME_FLAGS) --enable-wayland-server --trace-to-console=penghuang
 
 run_chrome_oopd: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --enable-features=VizDisplayCompositor
@@ -134,22 +141,28 @@ run_chrome_oopd_skia_ddl: chrome
 		--use-gl=any --disable-features=Mus \
 		--no-sandbox
 
+run_chrome_oopd_skia_ddl_vk: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
+		--use-gl=any --disable-features=Mus \
+		--enable-vulkan
+
 run_chrome_oopd_skia_ddl_oopr: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
 		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
-		--use-gl=any --disable-features=Mus --enable-oop-rasterization
+		--use-gl=any --disable-features=Mus --enable-oop-rasterization --enable-gpu-rasterization
+
+run_chrome_oopd_skia_ddl_oopr_vk: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList,UiGpuRasterization \
+		--use-gl=any --disable-features=Mus --enable-oop-rasterization --enable-vulkan --enable-gpu-rasterization \
+		--trace-to-console=vulkan \
+		$(PAGE)
 
 run_chrome_oopd_skia_ddl_swiftshader: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
 		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
 		--use-gl=swiftshader-webgl --disable-features=Mus
-
-run_chrome_oopd_oopr_skia_ddl_vk: chrome
-	$(OUT)/chrome  $(CHROME_FLAGS) \
-		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
-		--enable-oop-rasterization \
-		--no-sandbox \
-		$(NULL)
 
 run_chrome_oopd_oopr: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
@@ -163,6 +176,7 @@ run_chrome_oopr: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
 		--enable-oop-rasterization \
 		--enable-gpu-rasterization \
+		--enable-oop-rasterization-ddl \
 		--no-sandbox \
 		$(NULL)
 
@@ -181,8 +195,8 @@ run_chrome_skia_renderer: chrome
 run_chrome_skia_renderer_viz: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --use-skia-renderer --enable-viz
 
-run_chrome_skia_renderer_vk: chrome
-	$(OUT)/chrome  $(CHROME_FLAGS) --use-skia-renderer --enable-vulkan --disable-gpu
+run_chrome_vulkan: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --enable-vulkan  --disable-gpu
 
 run_chrome_skia_renderer_vk_disable_gpu_compositing: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --use-skia-renderer --enable-vulkan --enable-viz --disable-gpu --disable-gpu-compositing
@@ -207,12 +221,12 @@ run_chrome_presentation_callback: chrome
 FAST_INK_FLAGS = \
 	--has-internal-stylus \
 	--force-enable-stylus-tools \
-	--pen-devices=14 \
+	--pen-devices=10 \
 	--ash-debug-shortcuts \
 	--use-first-display-as-internal
 
 run_chrome_with_fast_ink: chrome
-	$(OUT)/chrome  $(CHROME_FLAGS) $(FAST_INK_FLAGS)
+	$(OUT)/chrome  $(CHROME_FLAGS) $(FAST_INK_FLAGS) --enable-features=VizDisplayCompositorrr
 
 run_chrome_with_fast_ink_hdpi: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) $(FAST_INK_FLAGS) --force-device-scale-factor=2.0 --mus
@@ -283,6 +297,11 @@ run_mus_webgl_demo_and_use_mus_in_renderer: chrome
 run_mus_chrome_and_use_mus_in_renderer: chrome
 	$(OUT)/chrome --mash --use-mus-in-renderer https://www.google.ca
 
+vulkan_demo:
+	$(NINJIA) vulkan_demo
+
+run_vulkan_demo: vulkan_demo
+	$(OUT)/vulkan_demo --trace-to-console=vulkan
 
 exo_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
@@ -447,3 +466,19 @@ deploy_windows:
 deploy_gl_tests:
 	ninja -C out_win/Release -j 128 gl_tests
 	make rsync
+
+chrome_apk:
+	$(NINJIA) chrome_apk
+
+chrome_apk_incremental:
+	$(NINJIA) chrome_apk_incremental
+
+run_chrome_apk: chrome_apk
+	# $(OUT)/bin/chrome_apk install --non-incremental
+	$(ADB) install -r $(OUT)/apks/Chrome.apk
+
+run_chrome_apk_incremental: chrome_apk_incremental
+	$(OUT)/bin/chrome_apk install --incremental
+
+android_symbol:
+	third_party/android_platform/development/scripts/stack --output-directory=$(OUT)
