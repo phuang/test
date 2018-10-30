@@ -10,7 +10,7 @@ OUT := out/mus
 OUT := out/Release
 # OUT := out/linux_ozone_rel
 # OUT := out_android/Release
-OUT := out_chell/Release
+# OUT := out_chell/Release
 # OUT = out/mus_Debug
 # OUT =out/linux_chromium
 # OUT=out_veyron_minnie/Release
@@ -39,11 +39,6 @@ CHROME_FLAGS =  \
 								--user-data-dir=/tmp/penghuang-mustash \
  								--screen-config=1000x800
 
-CHROME_FLAGS +=  \
-								--show-composited-layer-borders \
-								$(NULL)
-								# --ui-show-composited-layer-borders=renderpass,surface,layer \
-								#--show-fps-counter
 # CHROME_FLAGS += --wait-for-debugger=ui
 # EXO_DEMO = exo_demo
 
@@ -51,22 +46,35 @@ CHROME_FLAGS +=  \
 PAGE = phuang.github.io/backdrop_with_mask.html
 # PAGE = file:///usr/local/google/home/penghuang/sources/chromium/src/third_party/WebKit/LayoutTests/css3/filters/backdrop-filter-rendering.html
 PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
+# PAGE = https://www.youtube.com/watch?v=M2ciY79mlQw
 CHROME_FLAGS = \
 							 --user-data-dir=/tmp/penghuang-mustash \
-							 --enable-experimental-web-platform-features \
-							 $(PAGE)
+							 --enable-experimental-web-platform-features
+CHROME_FLAGS +=  \
+								--show-composited-layer-borders \
+								$(NULL)
+								# --ui-show-composited-layer-borders=renderpass,surface,layer \
+								#--show-fps-counter
+
 # CHROME_FLAGS += --show-overdraw-feedback
+CHROME_FLAGS += $(PAGE)
 
 ADB = third_party/android_sdk/public/platform-tools/adb
 
 
-.PHONY: chrome content mash mus_demo $(EXO_DEMO) exo_unittests clean
+.PHONY: chrome content mash mus_demo $(EXO_DEMO) exo_unittests clean media cc
 
 all:
 	$(NINJIA)
 
 chrome_sandbox:
 	$(NINJIA) chrome_sandbox
+
+media:
+	$(NINJIA) media
+
+cc:
+	$(NINJIA) cc
 
 chrome: chrome_sandbox
 	$(NINJIA) chrome
@@ -150,13 +158,24 @@ run_chrome_oopd_skia_ddl_vk: chrome
 run_chrome_oopd_skia_ddl_oopr: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
 		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
-		--use-gl=any --disable-features=Mus --enable-oop-rasterization --enable-gpu-rasterization
+		--use-gl=any \
+		--disable-features=Mus \
+		--enable-oop-rasterization \
+		--enable-gpu-rasterization \
+		--enable-raster-to-sk-image
 
 run_chrome_oopd_skia_ddl_oopr_vk: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
 		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList,UiGpuRasterization \
-		--use-gl=any --disable-features=Mus --enable-oop-rasterization --enable-vulkan --enable-gpu-rasterization \
+		--use-gl=any \
+		--disable-features=Mus \
+		--enable-oop-rasterization \
+		--enable-vulkan \
+		--enable-gpu-rasterization \
 		--trace-to-console=vulkan \
+		--enable-raster-to-sk-image \
+		--use-raster-context-provider \
+		--force-gpu-rasterization \
 		$(PAGE)
 
 run_chrome_oopd_skia_ddl_swiftshader: chrome
@@ -169,6 +188,27 @@ run_chrome_oopd_oopr: chrome
 		--enable-features=VizDisplayCompositor \
 		--enable-oop-rasterization \
 		--enable-gpu-rasterization \
+		--use-raster-context-provider \
+		--enable-raster-to-sk-image \
+		--no-sandbox \
+		$(NULL)
+
+run_chrome_hud: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor \
+		--show-fps-counter \
+		--ui-show-fps-counter \
+		--no-sandbox \
+		$(NULL)
+
+run_chrome_oopd_oopr_hud: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor \
+		--enable-oop-rasterization \
+		--enable-gpu-rasterization \
+		--use-raster-context-provider \
+		--show-fps-counter \
+		--ui-show-fps-counter \
 		--no-sandbox \
 		$(NULL)
 
@@ -216,7 +256,6 @@ run_chrome_overdraw: chrome
 run_chrome_presentation_callback: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --enable-presentation-callback \
 		--enable-draw-occlusion
-
 
 FAST_INK_FLAGS = \
 	--has-internal-stylus \
@@ -482,3 +521,6 @@ run_chrome_apk_incremental: chrome_apk_incremental
 
 android_symbol:
 	third_party/android_platform/development/scripts/stack --output-directory=$(OUT)
+
+print_out:
+	echo $(OUT)
