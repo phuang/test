@@ -1,11 +1,11 @@
-#include <clang/AST/ASTContext.h>
+
+#include <iostream>
+#include <memory>
+
 #include <clang/Frontend/FrontendActions.h>
 #include <clang/Tooling/JSONCompilationDatabase.h>
 #include <clang/Tooling/Tooling.h>
-#include <iostream>
 #include <llvm/Support/CommandLine.h>
-#include <memory>
-#include <stdio.h>
 
 #include "browser_ast_consumer.h"
 
@@ -42,8 +42,8 @@ void ProcessFile(std::vector<std::string> command, const std::string file) {
   command = clang::tooling::getClangSyntaxOnlyAdjuster()(command, file);
   command = clang::tooling::getClangStripOutputAdjuster()(command, file);
 
-  clang::tooling::ToolInvocation inv(command, new BrowserAction(),
-                                     &file_manager);
+  auto action = std::make_unique<BrowserAction>();
+  clang::tooling::ToolInvocation inv(command, action.release(), &file_manager);
   bool result = inv.run();
 
   for (const auto &arg : command) {
