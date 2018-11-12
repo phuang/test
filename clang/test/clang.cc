@@ -36,21 +36,16 @@ public:
   bool hasCodeCompletionSupport() const override { return true; }
 };
 
-void ProcessFile(std::vector<std::string> command, const std::string file) {
+bool ProcessFile(std::vector<std::string> command, const std::string file) {
   clang::FileManager file_manager({"."});
   file_manager.Retain();
   command = clang::tooling::getClangSyntaxOnlyAdjuster()(command, file);
   command = clang::tooling::getClangStripOutputAdjuster()(command, file);
 
   auto action = std::make_unique<BrowserAction>();
-  clang::tooling::ToolInvocation inv(command, action.release(), &file_manager);
-  bool result = inv.run();
-
-  for (const auto &arg : command) {
-    std::cout << arg << " ";
-  }
-  std::cout << std::endl
-            << "result=" << result << "" << file.data() << std::endl;
+  clang::tooling::ToolInvocation invocation(command, action.release(),
+                                            &file_manager);
+  return invocation.run();
 }
 
 int main(int argc, char **argv) {
@@ -59,7 +54,7 @@ int main(int argc, char **argv) {
 
   std::string error_message;
   auto compilations = clang::tooling::CompilationDatabase::loadFromDirectory(
-      "..", error_message);
+      ".", error_message);
 
   if (!compilations) {
     std::cerr << error_message << std::endl;
@@ -69,7 +64,8 @@ int main(int argc, char **argv) {
   auto files = compilations->getAllFiles();
   for (const auto &file : files) {
     auto command = compilations->getCompileCommands(file);
-    ProcessFile(command.front().CommandLine, file);
+    if (!ProcessFile(command.front().CommandLine, file))
+      return EXIT_FAILURE;
   }
   return 0;
 }
