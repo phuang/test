@@ -47,6 +47,7 @@ PAGE = phuang.github.io/backdrop_with_mask.html
 # PAGE = file:///usr/local/google/home/penghuang/sources/chromium/src/third_party/WebKit/LayoutTests/css3/filters/backdrop-filter-rendering.html
 PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
 # PAGE = https://www.youtube.com/watch?v=M2ciY79mlQw
+# PAGE=http://webglsamples.org/aquarium/aquarium.html
 CHROME_FLAGS = \
 							 --user-data-dir=/tmp/penghuang-mustash \
 							 --enable-experimental-web-platform-features
@@ -147,6 +148,9 @@ run_chrome_oopd_skia_ddl: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
 		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
 		--use-gl=any --disable-features=Mus \
+		--enable-gpu-service-tracing \
+		--enable-gpu-service-logging \
+		--enable-gpu-debugging \
 		--no-sandbox
 
 run_chrome_oopd_skia_ddl_vk: chrome
@@ -162,7 +166,13 @@ run_chrome_oopd_skia_ddl_oopr: chrome
 		--disable-features=Mus \
 		--enable-oop-rasterization \
 		--enable-gpu-rasterization \
-		--enable-raster-to-sk-image
+		--enable-raster-to-sk-image \
+		--no-sandbox
+
+#		--enable-gpu-service-tracing \
+#		--enable-gpu-service-logging \
+#		--enable-gpu-debugging \
+
 
 run_chrome_oopd_skia_ddl_oopr_vk: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
@@ -175,8 +185,7 @@ run_chrome_oopd_skia_ddl_oopr_vk: chrome
 		--trace-to-console=vulkan \
 		--enable-raster-to-sk-image \
 		--use-raster-context-provider \
-		--force-gpu-rasterization \
-		$(PAGE)
+		--force-gpu-rasterization
 
 run_chrome_oopd_skia_ddl_swiftshader: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
@@ -189,7 +198,6 @@ run_chrome_oopd_oopr: chrome
 		--enable-oop-rasterization \
 		--enable-gpu-rasterization \
 		--use-raster-context-provider \
-		--enable-raster-to-sk-image \
 		--no-sandbox \
 		$(NULL)
 
@@ -230,19 +238,13 @@ run_chrome_oopr_with_tracing: chrome
 
 		# --disable-gpu-rasterization 
 run_chrome_skia_renderer: chrome
-	$(OUT)/chrome  $(CHROME_FLAGS) --use-skia-renderer --trace-to-console=penghuang3
-
-run_chrome_skia_renderer_viz: chrome
-	$(OUT)/chrome  $(CHROME_FLAGS) --use-skia-renderer --enable-viz
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=UseSkiaRenderer \
+		--trace-to-console=penghuang3
 
 run_chrome_vulkan: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --enable-vulkan  --disable-gpu
 
-run_chrome_skia_renderer_vk_disable_gpu_compositing: chrome
-	$(OUT)/chrome  $(CHROME_FLAGS) --use-skia-renderer --enable-vulkan --enable-viz --disable-gpu --disable-gpu-compositing
-
-run_chrome_skia_renderer_vk_gpu: chrome
-	$(OUT)/chrome  $(CHROME_FLAGS) --use-skia-renderer --enable-vulkan --enable-viz
 
 run_chrome_ozone_x11: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS)  --ozone-platform=x11
