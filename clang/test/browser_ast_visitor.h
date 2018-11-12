@@ -6,8 +6,9 @@
 
 namespace clang {
 class ASTContext;
-class SourceManager;
+class Decl;
 class FunctionDecl;
+class SourceManager;
 } // namespace clang
 
 class BrowserASTVisitor : public clang::RecursiveASTVisitor<BrowserASTVisitor> {
@@ -17,12 +18,8 @@ public:
   BrowserASTVisitor(std::string in_file,
                     const clang::SourceManager *source_manager);
 
+  bool VisitTypedefNameDecl(clang::TypedefNameDecl *d);
 #if 0
-  bool VisitTypedefNameDecl(clang::TypedefNameDecl *d) {
-    std::cout << __func__ << std::endl;
-    return true;
-  }
-
   bool VisitTagDecl(clang::TagDecl *d) {
     std::cout << __func__ << std::endl;
     return true;
@@ -56,12 +53,11 @@ public:
     std::cout << __func__ << std::endl;
     return true;
   }
+#endif
 
-  bool VisitMemberExpr(clang::MemberExpr *e) {
-    std::cout << __func__ << std::endl;
-    return true;
-  }
+  bool VisitMemberExpr(clang::MemberExpr *e);
 
+#if 0
   bool VisitDeclRefExpr(clang::DeclRefExpr *e) {
     std::cout << __func__ << std::endl;
     return true;
@@ -137,6 +133,8 @@ public:
 #endif
 
 private:
+  bool IsInFile(clang::SourceLocation location);
+
   std::string in_file_;
   const clang::SourceManager *const source_manager_;
 };
