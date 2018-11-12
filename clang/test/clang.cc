@@ -7,7 +7,7 @@
 #include <clang/Tooling/JSONCompilationDatabase.h>
 #include <clang/AST/ASTContext.h>
 
-#include "browser_ast_visitor.h"
+#include "browser_ast_consumer.h"
 
 namespace cl = llvm::cl;
 
@@ -26,23 +26,6 @@ cl::extrahelp extra(
 R"(
 Examples:
 )");
-
-class BrowserASTConsumer : public clang::ASTConsumer {
- public:
-  BrowserASTConsumer(llvm::StringRef in_file)
-      : in_file_(in_file) {}
-  ~BrowserASTConsumer() override = default;
-
-  void Initialize(clang::ASTContext& ctx) override {}
-
-  void HandleTranslationUnit(clang::ASTContext& ctx) override {
-    BrowserASTVisitor visitor(in_file_, &ctx.getSourceManager());
-    visitor.TraverseDecl(ctx.getTranslationUnitDecl());
-  }
-
- private:
-  std::string in_file_;
-};
 
 class BrowserAction : public clang::ASTFrontendAction {
  public:
