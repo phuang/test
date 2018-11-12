@@ -1,46 +1,40 @@
-#include <stdio.h>
-#include <iostream>
-#include <memory>
-#include <clang/Frontend/FrontendActions.h>
-#include <clang/Tooling/Tooling.h>
-#include <llvm/Support/CommandLine.h>
-#include <clang/Tooling/JSONCompilationDatabase.h>
 #include <clang/AST/ASTContext.h>
+#include <clang/Frontend/FrontendActions.h>
+#include <clang/Tooling/JSONCompilationDatabase.h>
+#include <clang/Tooling/Tooling.h>
+#include <iostream>
+#include <llvm/Support/CommandLine.h>
+#include <memory>
+#include <stdio.h>
 
 #include "browser_ast_consumer.h"
 
 namespace cl = llvm::cl;
 
-cl::OptionCategory test_category(
-    "test options",
-    "test related options.");
+cl::OptionCategory test_category("test options", "test related options.");
 
-cl::opt<std::string> build_path(
-    "b",
-    cl::value_desc("compile_commands.json"),
-    cl::desc("Path to the compilation database."),
-    cl::cat(test_category),
-    cl::Optional);
+cl::opt<std::string> build_path("b", cl::value_desc("compile_commands.json"),
+                                cl::desc("Path to the compilation database."),
+                                cl::cat(test_category), cl::Optional);
 
 cl::extrahelp extra(
-R"(
+    R"(
 Examples:
 )");
 
 class BrowserAction : public clang::ASTFrontendAction {
- public:
+public:
   BrowserAction() = default;
   ~BrowserAction() override = default;
 
   std::unique_ptr<clang::ASTConsumer>
-      CreateASTConsumer(clang::CompilerInstance &CI,
-                        llvm::StringRef in_file) override {
-        auto consumer = std::make_unique<BrowserASTConsumer>(in_file);
-        return consumer;
+  CreateASTConsumer(clang::CompilerInstance &CI,
+                    llvm::StringRef in_file) override {
+    auto consumer = std::make_unique<BrowserASTConsumer>(in_file);
+    return consumer;
   }
   bool hasCodeCompletionSupport() const override { return true; }
 };
-
 
 void ProcessFile(std::vector<std::string> command, const std::string file) {
   clang::FileManager file_manager({"."});
@@ -48,18 +42,18 @@ void ProcessFile(std::vector<std::string> command, const std::string file) {
   command = clang::tooling::getClangSyntaxOnlyAdjuster()(command, file);
   command = clang::tooling::getClangStripOutputAdjuster()(command, file);
 
-  clang::tooling::ToolInvocation inv(command, new BrowserAction(), &file_manager);
+  clang::tooling::ToolInvocation inv(command, new BrowserAction(),
+                                     &file_manager);
   bool result = inv.run();
 
-  for (const auto& arg: command) {
+  for (const auto &arg : command) {
     std::cout << arg << " ";
   }
-  std::cout << std::endl <<  "result=" << result
-            << "" << file.data() << std::endl;
+  std::cout << std::endl
+            << "result=" << result << "" << file.data() << std::endl;
 }
 
-
-int main(int argc, char** argv) {
+int main(int argc, char **argv) {
   cl::HideUnrelatedOptions(test_category);
   cl::ParseCommandLineOptions(argc, argv);
 
@@ -73,7 +67,7 @@ int main(int argc, char** argv) {
   }
 
   auto files = compilations->getAllFiles();
-  for (const auto& file : files) {
+  for (const auto &file : files) {
     auto command = compilations->getCompileCommands(file);
     ProcessFile(command.front().CommandLine, file);
   }

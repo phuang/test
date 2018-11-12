@@ -8,14 +8,14 @@ namespace clang {
 class ASTContext;
 class SourceManager;
 class FunctionDecl;
-}
+} // namespace clang
 
 class BrowserASTVisitor : public clang::RecursiveASTVisitor<BrowserASTVisitor> {
- public:
+public:
   typedef clang::RecursiveASTVisitor<BrowserASTVisitor> Base;
 
   BrowserASTVisitor(std::string in_file,
-                    const clang::SourceManager* source_manager);
+                    const clang::SourceManager *source_manager);
 
 #if 0
   bool VisitTypedefNameDecl(clang::TypedefNameDecl *d) {
@@ -136,9 +136,9 @@ class BrowserASTVisitor : public clang::RecursiveASTVisitor<BrowserASTVisitor> {
   }
 #endif
 
- private:
+private:
   std::string in_file_;
-  const clang::SourceManager* const source_manager_;
+  const clang::SourceManager *const source_manager_;
 };
 
-#endif  // __BROWSER_AST_VISITOZR_H_
+#endif // __BROWSER_AST_VISITOZR_H_
