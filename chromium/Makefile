@@ -43,11 +43,12 @@ CHROME_FLAGS =  \
 # EXO_DEMO = exo_demo
 
 # PAGE = file:///usr/local/google/home/penghuang/sources/phuang.github.io/backdrop_with_mask.html
-PAGE = phuang.github.io/backdrop_with_mask.html
+# PAGE = phuang.github.io/backdrop_with_mask.html
 # PAGE = file:///usr/local/google/home/penghuang/sources/chromium/src/third_party/WebKit/LayoutTests/css3/filters/backdrop-filter-rendering.html
-PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
-# PAGE = https://www.youtube.com/watch?v=M2ciY79mlQw
+# PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
+PAGE = https://www.youtube.com/watch?v=M2ciY79mlQw
 # PAGE=http://webglsamples.org/aquarium/aquarium.html
+PAGE = file:///usr/local/google/home/penghuang/sources/chromium/src/third_party/blink/web_tests/media/video-colorspace-yuv422.html
 CHROME_FLAGS = \
 							 --user-data-dir=/tmp/penghuang-mustash \
 							 --enable-experimental-web-platform-features
@@ -129,7 +130,11 @@ run_chrome_pixel_diff: chrome
 		--enable-features=UseSkiaRenderer
 
 run_chrome: chrome
-	$(OUT)/chrome  $(CHROME_FLAGS) --no-sandbox
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+	--no-sandbox \
+	--disable-oop-rasterization \
+	--enable-gpu-rasterization \
+	$(NULL)
 
 run_chrome_wayland_oopd: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --enable-wayland-server --enable-features=VizDisplayCompositor
@@ -169,6 +174,18 @@ run_chrome_oopd_skia_ddl_oopr: chrome
 		--enable-raster-to-sk-image \
 		--no-sandbox
 
+run_chrome_oopd_skia_ddl_oopr_hud: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
+		--use-gl=any \
+		--disable-features=Mus \
+		--enable-oop-rasterization \
+		--enable-gpu-rasterization \
+		--enable-raster-to-sk-image \
+		--show-fps-counter \
+		--ui-show-fps-counter \
+		--no-sandbox
+
 #		--enable-gpu-service-tracing \
 #		--enable-gpu-service-logging \
 #		--enable-gpu-debugging \
@@ -187,6 +204,21 @@ run_chrome_oopd_skia_ddl_oopr_vk: chrome
 		--use-raster-context-provider \
 		--force-gpu-rasterization
 
+run_chrome_oopd_skia_ddl_oopr_vk_hud: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList,UiGpuRasterization \
+		--use-gl=any \
+		--disable-features=Mus \
+		--enable-oop-rasterization \
+		--enable-vulkan \
+		--enable-gpu-rasterization \
+		--trace-to-console=vulkan \
+		--enable-raster-to-sk-image \
+		--use-raster-context-provider \
+		--show-fps-counter \
+		--ui-show-fps-counter \
+		--force-gpu-rasterization
+
 run_chrome_oopd_skia_ddl_swiftshader: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
 		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
@@ -199,6 +231,16 @@ run_chrome_oopd_oopr: chrome
 		--enable-gpu-rasterization \
 		--use-raster-context-provider \
 		--no-sandbox \
+		$(NULL)
+
+run_chrome_oopd_oopr_gpu_debugging: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor \
+		--enable-oop-rasterization \
+		--enable-gpu-rasterization \
+		--use-raster-context-provider \
+		--no-sandbox \
+		--enable-gpu-debugging \
 		$(NULL)
 
 run_chrome_hud: chrome
@@ -236,7 +278,7 @@ run_chrome_oopr_with_tracing: chrome
 		--trace-to-console=gpu \
 		$(NULL)
 
-		# --disable-gpu-rasterization 
+		# --disable-gpu-rasterization
 run_chrome_skia_renderer: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
 		--enable-features=UseSkiaRenderer \
@@ -356,8 +398,14 @@ display_unittests:
 components_perftests:
 	$(NINJIA) $@ && $(OUT)/$@ --mus
 
+content_browsertests_skia_ddl:
+	$(NINJIA) content_browsertests && $(OUT)/content_browsertests \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
+		--gtest_filter=$(GTEST_FILTER)
+
 content_browsertests:
-	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+	$(NINJIA) $@ && $(OUT)/$@ \
+		--gtest_filter=$(GTEST_FILTER)
 
 browser_tests:
 	$(NINJIA) $@ && xvfb-run $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
@@ -409,7 +457,7 @@ aura_unittests_mus:
 	$(NINJIA) aura_unittests && $(OUT)/aura_unittests --gtest_filter=$(GTEST_FILTER) --mus
 
 cc_unittests:
-	$(NINJIA) cc_unittests && $(OUT)/cc_unittests --gtest_filter=$(GTEST_FILTER) 
+	$(NINJIA) cc_unittests && $(OUT)/cc_unittests --gtest_filter=$(GTEST_FILTER)
 
 ui_service_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
@@ -421,6 +469,9 @@ cc_perftests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
 gpu_perftests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+
+gpu_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
 viz_unittests:
@@ -455,7 +506,19 @@ ppapi_example_compositor:
 run_ppapi_compositor: chrome ppapi_example_compositor
 	$(OUT)/chrome \
 		--register-pepper-plugins="$(OUT)/libppapi_example_compositor.so;application/x-ppapi-example-compositor" \
-		file://`pwd`/ppapi/examples/compositor/compositor.html
+		file://`pwd`/ppapi/examples/compositor/compositor.html \
+
+run_ppapi_compositor_skia_ddl_oopr: chrome ppapi_example_compositor
+	$(OUT)/chrome \
+		--register-pepper-plugins="$(OUT)/libppapi_example_compositor.so;application/x-ppapi-example-compositor" \
+		file://`pwd`/ppapi/examples/compositor/compositor.html \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
+		--use-gl=any \
+		--disable-features=Mus \
+		--enable-oop-rasterization \
+		--enable-gpu-rasterization \
+		--enable-raster-to-sk-image
+
 
 run_mus_ppapi_compositor: chrome ppapi_example_compositor mash
 	$(OUT)/chrome --mash $(CHROME_FLAGS) \

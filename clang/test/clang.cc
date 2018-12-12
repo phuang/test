@@ -22,6 +22,7 @@ cl::extrahelp extra(
 Examples:
 )");
 
+
 class BrowserAction : public clang::ASTFrontendAction {
 public:
   BrowserAction() = default;
