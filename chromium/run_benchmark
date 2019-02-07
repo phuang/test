@@ -1,0 +1,25 @@
+STORY=amazon_mobile_2018
+
+./tools/perf/run_benchmark rendering.mobile \
+        --browser=android-webview \
+        --extra-browser-args="--enable-features=VizDisplayCompositor,DefaultEnableOopRasterization" \
+        --story-filter=$STORY \
+        --chromium-output-directory=out_android/Release \
+        --pageset-repeat=3 \
+        --results-label=GL
+
+./tools/perf/run_benchmark rendering.mobile \
+        --browser=android-webview \
+        --extra-browser-args="--enable-features=VizDisplayCompositor,DefaultEnableOopRasterization,UseSkiaRenderer" \
+        --story-filter=$STORY \
+        --chromium-output-directory=out_android/Release \
+        --pageset-repeat=3 \
+        --results-label=Skia
+
+./tools/perf/run_benchmark rendering.mobile \
+        --browser=android-webview \
+        --extra-browser-args="--enable-features=VizDisplayCompositor,DefaultEnableOopRasterization,UseSkiaRendererNonDDL" \
+        --story-filter=$STORY \
+        --chromium-output-directory=out_android/Release \
+        --pageset-repeat=3 \
+        --results-label=SkiaNonDDL
