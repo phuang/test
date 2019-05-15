@@ -1,17 +1,20 @@
 import random
 
 RESULT_LIMIT = 10
-N = 40
+N = 45
 
 random.seed()
 
-for i in xrange(0, N):
-  a = 0
-  b = 0
-  while True:
-    a = random.randint(1, N)
-    b = random.randint(1, N)
-    if a + b <= RESULT_LIMIT:
-      break;
-  print "%d + %d =" % (a, b)
-  
+questions = []
+while len(questions) < N:
+  a = random.randint(1, N)
+  b = random.randint(1, N)
+  if a + b > RESULT_LIMIT:
+    continue
+  q = "%d + %d =" % (a, b)
+  if q in questions:
+    continue
+  questions.append(q)
+
+for q in questions:
+  print q
