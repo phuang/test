@@ -8,8 +8,9 @@ OUT := out/release
 OUT := out_link/mus
 OUT := out/mus
 OUT := out/Release
+# OUT := out_chromeos/Release
 # OUT := out/linux_ozone_rel
-OUT := out_android/Release
+# OUT := out_android/Release
 # OUT := out_chell/Release
 # OUT = out/mus_Debug
 # OUT =out/linux_chromium
@@ -42,29 +43,34 @@ CHROME_FLAGS =  \
 # CHROME_FLAGS += --wait-for-debugger=ui
 # EXO_DEMO = exo_demo
 
+# PAGE = https://www.google.com
 # PAGE = file:///usr/local/google/home/penghuang/sources/phuang.github.io/backdrop_with_mask.html
 # PAGE = phuang.github.io/backdrop_with_mask.html
 # PAGE = file:///usr/local/google/home/penghuang/sources/chromium/src/third_party/WebKit/LayoutTests/css3/filters/backdrop-filter-rendering.html
 PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
 # PAGE = https://www.youtube.com/watch?v=M2ciY79mlQw
-# PAGE=http://webglsamples.org/aquarium/aquarium.html
+# PAGE = http://webglsamples.org/aquarium/aquarium.html
 # PAGE = file:///usr/local/google/home/penghuang/sources/chromium/src/third_party/blink/web_tests/media/video-colorspace-yuv420.html
+# PAGE = file:///`pwd`/third_party/blink/web_tests/media/color-profile-video-seek-filter.html
+# PAGE = http://storage.googleapis.com/watk/v
+# PAGE = phuang.github.io/fuzz/fuzz-70.html
 CHROME_FLAGS = \
 							 --user-data-dir=/tmp/penghuang-mustash \
-							 --enable-experimental-web-platform-features
-CHROME_FLAGS +=  \
+							 $(MULL)
+
+# CHROME_FLAGS +=  \
 								--show-composited-layer-borders \
 								$(NULL)
 								# --ui-show-composited-layer-borders=renderpass,surface,layer \
 								#--show-fps-counter
-#CHROME_FLAGS += --enable-gpu-service-tracing --enable-gpu-service-logging --enable-gpu-debugging
+# CHROME_FLAGS += --enable-gpu-service-tracing --enable-gpu-service-logging --enable-gpu-debugging
 # CHROME_FLAGS += --show-overdraw-feedback
 CHROME_FLAGS += $(PAGE)
 # CHROME_FLAGS += --use-gl=swiftshader
 
 # CHROME_FLAGS += --use_virtualized_gl_contexts=0
 
-ADB = third_party/android_sdk/public/platform-tools/adb
+ADB = adb
 
 
 .PHONY: chrome content mash mus_demo $(EXO_DEMO) exo_unittests clean media cc
@@ -134,10 +140,12 @@ run_chrome_pixel_diff: chrome
 
 run_chrome: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
-	--no-sandbox \
-	--disable-oop-rasterization \
-	--enable-gpu-rasterization \
-	$(NULL)
+		--enable-features=VizDisplayCompositor,UiGpuRasterization \
+		--enable-oop-rasterization \
+		--enable-gpu-rasterization \
+		--force-gpu-rasterization \
+		--show-fps-counter-no \
+		--no-sandbox
 
 run_chrome_wayland_oopd: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --enable-wayland-server --enable-features=VizDisplayCompositor
@@ -149,24 +157,32 @@ run_chrome_oopd: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --enable-features=VizDisplayCompositor
 
 run_chrome_oopd_skia: chrome
-	$(OUT)/chrome  $(CHROME_FLAGS) --enable-features=VizDisplayCompositor,UseSkiaRenderer \
+	$(OUT)/chrome  $(CHROME_FLAGS) --enable-features=VizDisplayCompositor,UseSkiaRendererNonDDL \
+		--enable-threaded-texture-mailboxes \
+		--use-gl=egl \
+		--no-sandbox \
+	$(NULL)
+
+run_chrome_oopd_skia_vulkan: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) --enable-features=VizDisplayCompositor,UseSkiaRendererNonDDL \
+		--no-sandbox \
 	$(NULL)
 
 run_chrome_oopd_skia_ddl: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
-		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer \
 		--disable-features=Mus \
 		--no-sandbox
 
 run_chrome_oopd_skia_ddl_vk: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
-		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer \
 		--disable-features=Mus \
 		--enable-vulkan
 
 run_chrome_oopd_skia_ddl_oopr: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
-		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer \
 		--disable-features=Mus \
 		--enable-oop-rasterization \
 		--enable-gpu-rasterization \
@@ -175,7 +191,7 @@ run_chrome_oopd_skia_ddl_oopr: chrome
 
 run_chrome_oopd_skia_ddl_oopr_hud: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
-		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer \
 		--disable-features=Mus \
 		--enable-oop-rasterization \
 		--enable-gpu-rasterization \
@@ -191,15 +207,46 @@ run_chrome_oopd_skia_ddl_oopr_hud: chrome
 
 run_chrome_oopd_skia_ddl_oopr_vk: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
-		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList,UiGpuRasterization \
-		--disable-features=Mus \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization \
 		--enable-oop-rasterization \
 		--enable-vulkan \
 		--enable-gpu-rasterization \
-		--trace-to-console=vulkan \
 		--enable-raster-to-sk-image \
-		--use-raster-context-provider \
-		--force-gpu-rasterization
+		--force-gpu-rasterization \
+		--trace-to-console=foo \
+		--disable-perfetto \
+		--no-sandbox \
+		# --enable-oop-rasterization-ddl
+		# --use-raster-context-provider \
+
+run_chrome_oopd_skia_ddl_oopr_vk_no_vulkan_surface: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization \
+		--enable-oop-rasterization \
+		--enable-vulkan \
+		--enable-gpu-rasterization \
+		--enable-raster-to-sk-image \
+		--force-gpu-rasterization \
+		--disable-vulkan-surface \
+		--show-fps-counter-no \
+		--use-gl=swiftshader \
+		--disable-gpu-sandbox \
+	  --no-sandbox
+		# --use-gl=swiftshader \
+
+run_chrome_vk_angle: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization \
+		--enable-oop-rasterization \
+		--enable-vulkan \
+		--enable-gpu-rasterization \
+		--enable-raster-to-sk-image-no \
+		--force-gpu-rasterization \
+		--show-fps-counter-no \
+		--use-gl=angle \
+		--use-angle=vulkan \
+		--disable-gpu-sandbox \
+	  --no-sandbox
 
 run_chrome_oopd_skia_ddl_oopr_vk_hud: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
@@ -399,9 +446,29 @@ content_browsertests_skia_ddl:
 		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UseSkiaDeferredDisplayList \
 		--gtest_filter=$(GTEST_FILTER)
 
+
+content_browsertests_vk:
+	$(NINJIA) content_browsertests && $(OUT)/content_browsertests \
+		--enable-gpu \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization \
+		--use-gl=any \
+		--enable-oop-rasterization \
+		--enable-vulkan \
+		--enable-gpu-rasterization \
+		--enable-raster-to-sk-image \
+		--force-gpu-rasterization \
+		--disable-gpu-process-crash-limit \
+		--gtest_filter=AuraWindowVideoCaptureDeviceBrowserTest.* \
+		--gtest_repeat=10 \
+		--gtest_break_on_failure \
+		--no-sandbox
+
 content_browsertests:
 	$(NINJIA) $@ && $(OUT)/$@ \
 		--gtest_filter=$(GTEST_FILTER)
+
+content_shell:
+	$(NINJIA) $@ && $(OUT)/$@
 
 browser_tests:
 	$(NINJIA) $@ && xvfb-run $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
@@ -571,8 +638,52 @@ chrome_apk:
 	$(OUT)/bin/$@ install --non-incremental
 	$(OUT)/bin/$@ launch  --args="--enable-features=VizDisplayCompositor,UseSkiaRenderer,DefaultEnableOopRasterization --enable-raster-to-sk-image"
 
+run_system_webview_shell_apk_with_monochrome:
+	$(NINJIA) monochrome_apk system_webview_shell_apk
+	$(OUT)/bin/monochrome_apk install --non-incremental
+	$(OUT)/bin/system_webview_shell_apk install --non-incremental
+	$(OUT)/bin/system_webview_shell_apk launch
+
 monochrome_apk:
 	$(NINJIA) $@
+	$(OUT)/bin/$@ install --non-incremental
+
+run_monochrome_apk:
+	$(OUT)/bin/monochrome_apk launch --args=" \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization \
+		--enable-oop-rasterization \
+		--enable-gpu-rasterization \
+		--force-gpu-rasterization \
+		--disable-software-compositing-fallback \
+		--enable-raster-to-sk-image \
+		$(PAGE)
+
+run_monochrome_apk_vk:
+	$(OUT)/bin/monochrome_apk launch --args=" \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization \
+		--enable-oop-rasterization \
+		--enable-vulkan \
+		--enable-gpu-rasterization \
+		--enable-raster-to-sk-image \
+		--force-gpu-rasterization \
+		--disable-software-compositing-fallback \
+		$(PAGE)
+
+trichrome_webview_apk:
+	$(NINJIA) $@
+	$(OUT)/bin/$@ install --non-incremental
+
+trichrome_chrome_google_apk:
+	$(NINJIA) $@
+	$(OUT)/bin/$@ install --non-incremental
+
+trichrome_webview_google_apk:
+	$(NINJIA) $@
+	$(OUT)/bin/$@ install --non-incremental
+
+trichrome_library_google_apk:
+	$(NINJIA) $@
+	$(OUT)/bin/$@ install --non-incremental
 
 chrome_public_apk:
 	$(NINJIA) $@
@@ -580,13 +691,20 @@ chrome_public_apk:
 	$(OUT)/bin/$@ launch
 
 system_webview_apk:
-	$(NINJIA) system_webview_apk
+	$(NINJIA) $@
 	$(OUT)/bin/$@ install --non-incremental
 
-system_webview_shell_apk: system_webview_apk
+system_webview_shell_apk:
 	$(NINJIA) system_webview_shell_apk
 	$(OUT)/bin/$@ install --non-incremental
-	$(OUT)/bin/$@ launch
+
+run_system_webview_shell_apk:
+	$(OUT)/bin/system_webview_shell_apk launch
+
+webview_instrumentation_apk:
+	$(NINJIA) $@
+	$(OUT)/bin/$@ install --non-incremental
+	$(OUT)/bin/$@ launch --args="--enable-features=UseSkiaRendererNonDDL --webview-enable-shared-image --show-fps-counter"
 
 adb_shell:
 	$(ADB) shell
@@ -600,3 +718,22 @@ android_symbol:
 
 print_out:
 	echo $(OUT)
+
+set_webview_flags:
+	build/android/adb_system_webview_command_line \
+		--enable-features=UseSkiaRenderer
+
+vulkan_tests:
+	$(NINJIA) $@
+	$(OUT)/$@
+
+vulkan_tests_apk:
+	$(NINJIA) $@
+	$(OUT)/$@
+
+gl_tests:
+	$(NINJIA) $@
+	$(OUT)/$@  --gtest_filter=$(GTEST_FILTER)
+
+adb_switch_vk:
+	adb root && adb shell su 0 setenforce 0 && adb shell setprop debug.hwui.renderer skiavk && adb shell stop && adb shell start

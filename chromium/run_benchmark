@@ -1,32 +1,22 @@
-STORY=amazon_mobile_2018
+OUT=out/Release 
+BROWSER=release
+STORY=amazon_2018
 REPEAT=3
-
-LABEL=GL
-FLAGS=--enable-features=VizDisplayCompositor,DefaultEnableOopRasterization
-./tools/perf/run_benchmark rendering.mobile \
-        --browser=android-webview \
-        --extra-browser-args="$FLAGS" \
-        --story-filter=$STORY \
-        --chromium-output-directory=out_android/Release \
-        --pageset-repeat=$REPEAT \
-        --results-label=$LABEL
 
 LABEL=Skia
 FLAGS=--enable-features=VizDisplayCompositor,DefaultEnableOopRasterization,UseSkiaRenderer
-./tools/perf/run_benchmark rendering.mobile \
-        --browser=android-webview \
+echo ./tools/perf/run_benchmark rendering.desktop \
+        --browser=$BROWSER \
         --extra-browser-args="$FLAGS" \
         --story-filter=$STORY \
-        --chromium-output-directory=out_android/Release \
+        --chromium-output-directory=$OUT \
         --pageset-repeat=$REPEAT \
         --results-label=$LABEL
 
-LABEL=SkiaNonDLL
-FLAGS=--enable-features=VizDisplayCompositor,DefaultEnableOopRasterization,UseSkiaRendererNonDLL
-./tools/perf/run_benchmark rendering.mobile \
-        --browser=android-webview \
+./tools/perf/run_benchmark rendering.desktop \
+        --browser=$BROWSER \
         --extra-browser-args="$FLAGS" \
         --story-filter=$STORY \
-        --chromium-output-directory=out_android/Release \
+        --chromium-output-directory=$OUT \
         --pageset-repeat=$REPEAT \
         --results-label=$LABEL
