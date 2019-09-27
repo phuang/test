@@ -11,7 +11,7 @@ OUT := out/Release
 # OUT := out/Profiling
 # OUT := out_chromeos/Release
 # OUT := out/linux_ozone_rel
-OUT := out_android/Release
+# OUT := out_android/Release
 # OUT := out_chell/Release
 # OUT = out/mus_Debug
 # OUT =out/linux_chromium
@@ -765,7 +765,7 @@ trichrome_library_google_apk:
 chrome_public_apk:
 	$(NINJIA) $@
 	$(OUT)/bin/$@ install --non-incremental
-	$(OUT)/bin/$@ launch --args="--enable-features=UseSkiaRenderer,VizDisplayCompositor,DefaultEnableOopRasterization --disable-features=AndroidSurfaceControl --enable-oop-rasterization --enable-gpu-rasterization --force-gpu-rasterization"
+	$(OUT)/bin/$@ launch --args="--enable-features=UseSkiaRenderer,VizDisplayCompositor,DefaultEnableOopRasterization --disable-features=AndroidSurfaceControl --enable-oop-rasterization --enable-gpu-rasterization --force-gpu-rasterization --use-vulkan=native"
 
 system_webview_apk:
 	$(NINJIA) $@
