@@ -8,6 +8,7 @@ OUT := out/release
 OUT := out_link/mus
 OUT := out/mus
 OUT := out/Release
+OUT := out/Default
 # OUT := out/Profiling
 # OUT := out_chromeos/Release
 # OUT := out/linux_ozone_rel
@@ -61,7 +62,9 @@ PAGE = https://www.google.com
 # PAGE = https://codepen.io/sol0mka/pen/mICGv
 # PAGE = third_party/blink/web_tests/media/alpha-video-playback.html
 PAGE = http://webglsamples.org/aquarium/aquarium.html
-# PAGE = https://mrdoob.com/projects/chromeexperiments/ball-pool/
+PAGE = https://mrdoob.com/projects/chromeexperiments/ball-pool/
+PAGE = http://webglsamples.org/field/field.html
+PAGE = file:///home/penghuang/sources/chromium/src/content/test/data/gpu/pixel_canvas_display_linear-rgb.html
 
 CHROME_FLAGS = \
 							 --user-data-dir=/tmp/penghuang-mustash \
@@ -251,11 +254,21 @@ run_chrome_vk_no_gpu_rasterization: chrome
 run_chrome_vk: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
 		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization,Vulkan \
+		--enable-gpu-debugging \
+		--force-color-profile=srgb \
+		--ensure-forced-color-profile \
+		--use-vulkan=native \
+		--disable-software-compositing-fallback \
+		--enable-gpu-benchmarking \
+		--enable-unsafe-webgpu \
+		--force-gpu-rasterization \
 		--enable-oop-rasterization \
 		--enable-gpu-rasterization \
-		--force-gpu-rasterization \
-		--enable-unsafe-webgpu \
-		--no-sandbox
+		--test-type=gpu \
+		--enable-experimental-web-platform-features \
+		--no-sandbox \
+		$(NULL)
+
 
 run_chrome_vk_ooor: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
