@@ -14,6 +14,7 @@ A CreateA() {
   return A();
 }
 
+// Test program
 int main() {
   A a = CreateA();
   return 0;
