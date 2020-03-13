@@ -8,7 +8,7 @@ OUT := out/release
 OUT := out_link/mus
 OUT := out/mus
 OUT := out/Release
-OUT := out/Default
+# OUT := out/Default
 # OUT := out/Profiling
 # OUT := out_chromeos/Release
 # OUT := out/linux_ozone_rel
@@ -17,8 +17,8 @@ OUT := out/Default
 # OUT = out/mus_Debug
 # OUT =out/linux_chromium
 # OUT=out_veyron_minnie/Release
-NINJIA_ARGS = -j 3000 -k50 -C $(OUT)
-NINJIA = ninja $(NINJIA_ARGS)
+NINJIA_ARGS = -C $(OUT)
+NINJIA = autoninja $(NINJIA_ARGS)
 
 DEVICE_IP = penghuang-crbook
 STRIP_FLAGS = --strip-flags="--strip-debug -w -N '*blink*' -w -N '*WebCore*' -w -N '*content*'"
@@ -50,7 +50,7 @@ PAGE = https://www.google.com
 # PAGE = file:///usr/local/google/home/penghuang/sources/phuang.github.io/backdrop_with_mask.html
 # PAGE = phuang.github.io/backdrop_with_mask.html
 # PAGE = file:///usr/local/google/home/penghuang/sources/chromium/src/third_party/WebKit/LayoutTests/css3/filters/backdrop-filter-rendering.html
-# PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
+PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
 # PAGE = https://youtu.be/1roy4o4tqQM?t=60
 # PAGE = https://www.youtube.com/watch?v=4pkhEyRoidk
 # PAGE = https://www.youtube.com/watch?v=M2ciY79mlQw
@@ -62,9 +62,9 @@ PAGE = https://www.google.com
 # PAGE = https://codepen.io/sol0mka/pen/mICGv
 # PAGE = third_party/blink/web_tests/media/alpha-video-playback.html
 PAGE = http://webglsamples.org/aquarium/aquarium.html
-PAGE = https://mrdoob.com/projects/chromeexperiments/ball-pool/
-PAGE = http://webglsamples.org/field/field.html
-PAGE = file:///home/penghuang/sources/chromium/src/content/test/data/gpu/pixel_canvas_display_linear-rgb.html
+# PAGE = https://mrdoob.com/projects/chromeexperiments/ball-pool/
+# PAGE = http://webglsamples.org/field/field.html
+# PAGE = file:///home/penghuang/sources/chromium/src/content/test/data/gpu/pixel_canvas_display_linear-rgb.html
 
 CHROME_FLAGS = \
 							 --user-data-dir=/tmp/penghuang-mustash \
@@ -83,7 +83,7 @@ CHROME_FLAGS += $(PAGE)
 
 # CHROME_FLAGS += --use_virtualized_gl_contexts=0
 CHROME_FLAGS += --disable-partial-raster
-ADB = adb
+ADB = third_party/android_sdk/public/platform-tools/adb
 
 
 .PHONY: chrome content mash mus_demo $(EXO_DEMO) exo_unittests clean media cc
@@ -173,12 +173,6 @@ run_chrome_passthrough: chrome
 	  --no-sandbox
 
 
-run_chrome_wayland_oopd: chrome
-	$(OUT)/chrome  $(CHROME_FLAGS) --enable-wayland-server --enable-features=VizDisplayCompositor
-
-run_chrome_wayland: chrome
-	$(OUT)/chrome  $(CHROME_FLAGS) --enable-wayland-server --trace-to-console=penghuang
-
 run_chrome_oopd: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --enable-features=VizDisplayCompositor
 
@@ -237,10 +231,19 @@ run_chrome_skia: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
 		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization,UiOopRasterization \
 		--enable-oop-rasterization \
-		--enable-oop-rasterization-ddl \
 		--enable-gpu-rasterization \
 		--force-gpu-rasterization \
 		--no-sandbox
+
+run_chrome_skia_wayland: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization,UiOopRasterization,Vulkan \
+		--enable-oop-rasterization \
+		--enable-gpu-rasterization \
+		--force-gpu-rasterization \
+		--ozone-platform=wayland \
+		--no-sandbox
+
 
 run_chrome_vk_no_gpu_rasterization: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
@@ -254,12 +257,10 @@ run_chrome_vk_no_gpu_rasterization: chrome
 run_chrome_vk: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
 		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization,Vulkan \
-		--enable-gpu-debugging \
 		--force-color-profile=srgb \
 		--ensure-forced-color-profile \
 		--use-vulkan=native \
 		--disable-software-compositing-fallback \
-		--enable-gpu-benchmarking \
 		--enable-unsafe-webgpu \
 		--force-gpu-rasterization \
 		--enable-oop-rasterization \
@@ -267,8 +268,10 @@ run_chrome_vk: chrome
 		--test-type=gpu \
 		--enable-experimental-web-platform-features \
 		--no-sandbox \
+		# --enable-gpu-debugging \
+	  	# --use-cmd-decoder=validating \
+		# --enable-gpu-benchmarking \
 		$(NULL)
-
 
 run_chrome_vk_ooor: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
@@ -332,16 +335,16 @@ run_chrome_vk_no_vulkan_surface: chrome
 
 run_chrome_vk_angle: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
-		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization,Vulkan \
 		--enable-oop-rasterization \
-		--use-vulkan=native \
 		--enable-gpu-rasterization \
 		--force-gpu-rasterization \
 		--show-fps-counter-no \
-		--use-gl=angle \
 		--use-angle=vulkan \
 		--disable-gpu-sandbox \
-	  --no-sandbox
+		--vulkan=native \
+	  	$(NULL)
+	# --no-sandbox
 
 run_chrome_oopd_skia_ddl_oopr_vk_hud: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
@@ -519,6 +522,7 @@ run_mus_chrome_and_use_mus_in_renderer: chrome
 
 vulkan_demo:
 	$(NINJIA) vulkan_demo
+	$(OUT)/vulkan_demo --ozone-platform=wayland
 
 run_vulkan_demo: vulkan_demo
 	$(OUT)/vulkan_demo --trace-to-console=vulkan
@@ -550,10 +554,10 @@ content_browsertests_vk:
 		--enable-gpu-rasterization \
 		--force-gpu-rasterization \
 		--disable-gpu-process-crash-limit \
-		--gtest_filter=AuraWindowVideoCaptureDeviceBrowserTest.* \
-		--gtest_repeat=10 \
+		--gtest_filter=$(GTEST_FILTER) \
+		--gtest_repeat=1 \
 		--gtest_break_on_failure \
-		--no-sandbox
+		# --no-sandbox
 
 content_browsertests:
 	$(NINJIA) $@ && $(OUT)/$@ \
@@ -778,7 +782,16 @@ trichrome_library_google_apk:
 chrome_public_apk:
 	$(NINJIA) $@
 	$(OUT)/bin/$@ install --non-incremental
-	$(OUT)/bin/$@ launch --args="--enable-features=UseSkiaRenderer,VizDisplayCompositor,DefaultEnableOopRasterization --disable-features=AndroidSurfaceControl --enable-oop-rasterization --enable-gpu-rasterization --force-gpu-rasterization --use-vulkan=native"
+
+run_chrome_public_apk_gl: chrome_public_apk
+	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=VizDisplayCompositor,DefaultEnableOopRasterization --disable-features=UseSkiaRenderer --enable-oop-rasterization --enable-gpu-rasterization --force-gpu-rasterization --enable-low-end-device-mode-no"
+
+
+run_chrome_public_apk_skia: chrome_public_apk
+	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=UseSkiaRenderer --enable-low-end-device-mode-no"
+
+run_chrome_public_apk_vk: chrome_public_apk
+	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=UseSkiaRenderer,VizDisplayCompositor,DefaultEnableOopRasterization,Vulkan,DisableSurfaceControlForWebview-no --enable-oop-rasterization --enable-gpu-rasterization --force-gpu-rasterization --enable-low-end-device-mode-no"
 
 system_webview_apk:
 	$(NINJIA) $@
@@ -800,6 +813,7 @@ adb_shell:
 	$(ADB) shell
 
 adb_logcat:
+	$(ADB) logcat -c 
 	$(ADB) logcat \
  		chromium:E *:S
 
