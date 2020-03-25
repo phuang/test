@@ -1,22 +1,9 @@
 WEBGL_DEMO = http://www.yuichiroharai.com/wgl/
 GTEST_FILTER := *
-OUT := out/brand
-OUT := out/mus_Debug
-OUT := out/link
-OUT := out_cyan/Release
-OUT := out/release
-OUT := out_link/mus
-OUT := out/mus
+
 OUT := out/Release
-# OUT := out/Default
-# OUT := out/Profiling
-# OUT := out_chromeos/Release
-# OUT := out/linux_ozone_rel
 # OUT := out_android/Release
-# OUT := out_chell/Release
-# OUT = out/mus_Debug
-# OUT =out/linux_chromium
-# OUT=out_veyron_minnie/Release
+
 NINJIA_ARGS = -C $(OUT)
 NINJIA = autoninja $(NINJIA_ARGS)
 
