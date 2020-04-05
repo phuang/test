@@ -2,7 +2,11 @@ WEBGL_DEMO = http://www.yuichiroharai.com/wgl/
 GTEST_FILTER := *
 
 OUT := out/Release
+# OUT := out_wayland/Release
 # OUT := out_android/Release
+# OUT := out_android_x86/Release
+# OUT := out_win/Release
+# OUT := out_win/ReleaseStatic
 
 NINJIA_ARGS = -C $(OUT)
 NINJIA = autoninja $(NINJIA_ARGS)
@@ -48,7 +52,7 @@ PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
 # PAGE = phuang.github.io/fuzz/fuzz-70.html
 # PAGE = https://codepen.io/sol0mka/pen/mICGv
 # PAGE = third_party/blink/web_tests/media/alpha-video-playback.html
-PAGE = http://webglsamples.org/aquarium/aquarium.html
+# PAGE = http://webglsamples.org/aquarium/aquarium.html
 # PAGE = https://mrdoob.com/projects/chromeexperiments/ball-pool/
 # PAGE = http://webglsamples.org/field/field.html
 # PAGE = file:///home/penghuang/sources/chromium/src/content/test/data/gpu/pixel_canvas_display_linear-rgb.html
@@ -775,7 +779,10 @@ run_chrome_public_apk_gl: chrome_public_apk
 
 
 run_chrome_public_apk_skia: chrome_public_apk
-	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=UseSkiaRenderer --enable-low-end-device-mode-no"
+	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=useskiarenderer"
+  
+run_chrome_public_apk_skia_vk: chrome_public_apk
+	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=useskiarenderer,Vulkan"
 
 run_chrome_public_apk_vk: chrome_public_apk
 	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=UseSkiaRenderer,VizDisplayCompositor,DefaultEnableOopRasterization,Vulkan,DisableSurfaceControlForWebview-no --enable-oop-rasterization --enable-gpu-rasterization --force-gpu-rasterization --enable-low-end-device-mode-no"
@@ -802,7 +809,10 @@ adb_shell:
 adb_logcat:
 	$(ADB) logcat -c 
 	$(ADB) logcat \
- 		chromium:E *:S
+ 		chromium:V *:S
+adb_logcat_all:
+	$(ADB) logcat -c 
+	$(ADB) logcat
 
 android_symbol:
 	third_party/android_platform/development/scripts/stack --output-directory=$(OUT)
@@ -817,11 +827,11 @@ set_webview_flags:
 
 vulkan_tests:
 	$(NINJIA) $@
-	$(OUT)/$@
+	$(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
 vulkan_tests_apk:
 	$(NINJIA) $@
-	$(OUT)/$@
+	$(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
 gl_tests:
 	$(NINJIA) $@
