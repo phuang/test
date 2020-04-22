@@ -772,6 +772,16 @@ private:
     vkBindBufferMemory(device_, *buffer, *memory, 0);
   }
 
+  void CreateTextureImage() {
+    int texWidth, texHeight, texChannels;
+    stbi_uc* pixels = stbi_load("textures/texture.jpg", &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+    VkDeviceSize imageSize = texWidth * texHeight * 4;
+
+    if (!pixels) {
+        throw std::runtime_error("failed to load texture image!");
+    }
+  }
+
   void CreateVertexBuffer() {
     auto buffer_size = sizeof(kVertices[0]) * kVertices.size();
     CreateBuffer(buffer_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
