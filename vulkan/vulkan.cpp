@@ -73,11 +73,11 @@ public:
   }
 
 private:
-  GLFWwindow *window;
+  GLFWwindow *window_;
 
-  VkInstance instance;
-  VkDebugUtilsMessengerEXT callback;
-  VkSurfaceKHR surface;
+  VkInstance instance_;
+  VkDebugUtilsMessengerEXT callback_;
+  VkSurfaceKHR surface_;
 
   VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
   VkDevice device;
@@ -111,9 +111,9 @@ private:
 
     glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
 
-    window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-    glfwSetWindowUserPointer(window, this);
-    glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+    window_ = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+    glfwSetWindowUserPointer(window_, this);
+    glfwSetFramebufferSizeCallback(window_, framebufferResizeCallback);
   }
 
   static void framebufferResizeCallback(GLFWwindow *window, int width,
@@ -140,7 +140,7 @@ private:
   }
 
   void mainLoop() {
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window_)) {
       glfwPollEvents();
       drawFrame();
     }
@@ -182,13 +182,13 @@ private:
     vkDestroyDevice(device, nullptr);
 
     if (enableValidationLayers) {
-      DestroyDebugUtilsMessengerEXT(instance, callback, nullptr);
+      DestroyDebugUtilsMessengerEXT(instance_, callback_, nullptr);
     }
 
-    vkDestroySurfaceKHR(instance, surface, nullptr);
-    vkDestroyInstance(instance, nullptr);
+    vkDestroySurfaceKHR(instance_, surface_, nullptr);
+    vkDestroyInstance(instance_, nullptr);
 
-    glfwDestroyWindow(window);
+    glfwDestroyWindow(window_);
 
     glfwTerminate();
   }
@@ -196,7 +196,7 @@ private:
   void recreateSwapChain() {
     int width = 0, height = 0;
     while (width == 0 || height == 0) {
-      glfwGetFramebufferSize(window, &width, &height);
+      glfwGetFramebufferSize(window_, &width, &height);
       glfwWaitEvents();
     }
 
@@ -224,7 +224,7 @@ private:
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.pEngineName = "No Engine";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_0;
+    appInfo.apiVersion = VK_API_VERSION_1_2;
 
     VkInstanceCreateInfo createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -242,7 +242,7 @@ private:
       createInfo.enabledLayerCount = 0;
     }
 
-    if (vkCreateInstance(&createInfo, nullptr, &instance) != VK_SUCCESS) {
+    if (vkCreateInstance(&createInfo, nullptr, &instance_) != VK_SUCCESS) {
       throw std::runtime_error("failed to create instance!");
     }
   }
@@ -262,14 +262,14 @@ private:
                              VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
     createInfo.pfnUserCallback = debugCallback;
 
-    if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr,
-                                     &callback) != VK_SUCCESS) {
+    if (CreateDebugUtilsMessengerEXT(instance_, &createInfo, nullptr,
+                                     &callback_) != VK_SUCCESS) {
       throw std::runtime_error("failed to set up debug callback!");
     }
   }
 
   void createSurface() {
-    if (glfwCreateWindowSurface(instance, window, nullptr, &surface) !=
+    if (glfwCreateWindowSurface(instance_, window_, nullptr, &surface_) !=
         VK_SUCCESS) {
       throw std::runtime_error("failed to create window surface!");
     }
@@ -277,14 +277,14 @@ private:
 
   void pickPhysicalDevice() {
     uint32_t deviceCount = 0;
-    vkEnumeratePhysicalDevices(instance, &deviceCount, nullptr);
+    vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
 
     if (deviceCount == 0) {
       throw std::runtime_error("failed to find GPUs with Vulkan support!");
     }
 
     std::vector<VkPhysicalDevice> devices(deviceCount);
-    vkEnumeratePhysicalDevices(instance, &deviceCount, devices.data());
+    vkEnumeratePhysicalDevices(instance_, &deviceCount, devices.data());
 
     for (const auto &device : devices) {
       if (isDeviceSuitable(device)) {
@@ -365,7 +365,7 @@ private:
 
     VkSwapchainCreateInfoKHR createInfo = {};
     createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
-    createInfo.surface = surface;
+    createInfo.surface = surface_;
 
     createInfo.minImageCount = imageCount;
     createInfo.imageFormat = surfaceFormat.format;
@@ -827,7 +827,7 @@ private:
       return capabilities.currentExtent;
     } else {
       int width, height;
-      glfwGetFramebufferSize(window, &width, &height);
+      glfwGetFramebufferSize(window_, &width, &height);
 
       VkExtent2D actualExtent = {static_cast<uint32_t>(width),
                                  static_cast<uint32_t>(height)};
@@ -846,27 +846,27 @@ private:
   SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) {
     SwapChainSupportDetails details;
 
-    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface,
+    vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface_,
                                               &details.capabilities);
 
     uint32_t formatCount;
-    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount,
+    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface_, &formatCount,
                                          nullptr);
 
     if (formatCount != 0) {
       details.formats.resize(formatCount);
-      vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface, &formatCount,
+      vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface_, &formatCount,
                                            details.formats.data());
     }
 
     uint32_t presentModeCount;
-    vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface,
+    vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface_,
                                               &presentModeCount, nullptr);
 
     if (presentModeCount != 0) {
       details.presentModes.resize(presentModeCount);
       vkGetPhysicalDeviceSurfacePresentModesKHR(
-          device, surface, &presentModeCount, details.presentModes.data());
+          device, surface_, &presentModeCount, details.presentModes.data());
     }
 
     return details;
@@ -925,7 +925,7 @@ private:
       }
 
       VkBool32 presentSupport = false;
-      vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface, &presentSupport);
+      vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface_, &presentSupport);
 
       if (queueFamily.queueCount > 0 && presentSupport) {
         indices.presentFamily = i;

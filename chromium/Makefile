@@ -2,7 +2,7 @@ WEBGL_DEMO = http://www.yuichiroharai.com/wgl/
 GTEST_FILTER := *
 
 OUT := out/Release
-# OUT := out_wayland/Release
+OUT := out_wayland/Release
 # OUT := out_android/Release
 # OUT := out_android_x86/Release
 # OUT := out_win/Release
@@ -627,6 +627,9 @@ gpu_unittests:
 viz_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
+gfx_unittests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+
 wayland_rects_client:
 	$(NINJIA) $@ && $(OUT)/$@ --num-rects=10  --show-fps-counter  --size=256x256
 
@@ -779,7 +782,7 @@ run_chrome_public_apk_gl: chrome_public_apk
 
 
 run_chrome_public_apk_skia: chrome_public_apk
-	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=useskiarenderer"
+	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=useskiarenderer --disable-oop-rasterization-no"
   
 run_chrome_public_apk_skia_vk: chrome_public_apk
 	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=useskiarenderer,Vulkan"
@@ -828,6 +831,11 @@ set_webview_flags:
 vulkan_tests:
 	$(NINJIA) $@
 	$(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+
+
+vulkan_tests_wayland:
+	$(NINJIA) vulkan_tests
+	$(OUT)/vulkan_tests --gtest_filter=$(GTEST_FILTER) --ozone-platform=wayland
 
 vulkan_tests_apk:
 	$(NINJIA) $@
