@@ -79,7 +79,7 @@ private:
   VkDebugUtilsMessengerEXT callback_;
   VkSurfaceKHR surface_;
 
-  VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+  VkPhysicalDevice physicalDevice_ = VK_NULL_HANDLE;
   VkDevice device;
 
   VkQueue graphicsQueue;
@@ -90,10 +90,10 @@ private:
   VkFormat swapChainImageFormat;
   VkExtent2D swapChainExtent;
   std::vector<VkImageView> swapChainImageViews;
-  std::vector<VkFramebuffer> swapChainFramebuffers;
+  std::vector<VkFramebuffer> swapChainFramebuffers_;
 
-  VkRenderPass renderPass;
-  VkPipelineLayout pipelineLayout;
+  VkRenderPass renderPass_;
+  VkPipelineLayout pipelineLayout_;
   VkPipeline graphicsPipeline;
 
   VkCommandPool commandPool;
@@ -149,7 +149,7 @@ private:
   }
 
   void cleanupSwapChain() {
-    for (auto framebuffer : swapChainFramebuffers) {
+    for (auto framebuffer : swapChainFramebuffers_) {
       vkDestroyFramebuffer(device, framebuffer, nullptr);
     }
 
@@ -158,8 +158,8 @@ private:
                          commandBuffers.data());
 
     vkDestroyPipeline(device, graphicsPipeline, nullptr);
-    vkDestroyPipelineLayout(device, pipelineLayout, nullptr);
-    vkDestroyRenderPass(device, renderPass, nullptr);
+    vkDestroyPipelineLayout(device, pipelineLayout_, nullptr);
+    vkDestroyRenderPass(device, renderPass_, nullptr);
 
     for (auto imageView : swapChainImageViews) {
       vkDestroyImageView(device, imageView, nullptr);
@@ -288,18 +288,18 @@ private:
 
     for (const auto &device : devices) {
       if (isDeviceSuitable(device)) {
-        physicalDevice = device;
+        physicalDevice_ = device;
         break;
       }
     }
 
-    if (physicalDevice == VK_NULL_HANDLE) {
+    if (physicalDevice_ == VK_NULL_HANDLE) {
       throw std::runtime_error("failed to find a suitable GPU!");
     }
   }
 
   void createLogicalDevice() {
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+    QueueFamilyIndices indices = findQueueFamilies(physicalDevice_);
 
     std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
     std::set<int> uniqueQueueFamilies = {indices.graphicsFamily,
@@ -338,7 +338,7 @@ private:
       createInfo.enabledLayerCount = 0;
     }
 
-    if (vkCreateDevice(physicalDevice, &createInfo, nullptr, &device) !=
+    if (vkCreateDevice(physicalDevice_, &createInfo, nullptr, &device) !=
         VK_SUCCESS) {
       throw std::runtime_error("failed to create logical device!");
     }
@@ -349,7 +349,7 @@ private:
 
   void createSwapChain() {
     SwapChainSupportDetails swapChainSupport =
-        querySwapChainSupport(physicalDevice);
+        querySwapChainSupport(physicalDevice_);
 
     VkSurfaceFormatKHR surfaceFormat =
         chooseSwapSurfaceFormat(swapChainSupport.formats);
@@ -374,7 +374,7 @@ private:
     createInfo.imageArrayLayers = 1;
     createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+    QueueFamilyIndices indices = findQueueFamilies(physicalDevice_);
     uint32_t queueFamilyIndices[] = {(uint32_t)indices.graphicsFamily,
                                      (uint32_t)indices.presentFamily};
 
@@ -469,7 +469,7 @@ private:
     renderPassInfo.dependencyCount = 1;
     renderPassInfo.pDependencies = &dependency;
 
-    if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass) !=
+    if (vkCreateRenderPass(device, &renderPassInfo, nullptr, &renderPass_) !=
         VK_SUCCESS) {
       throw std::runtime_error("failed to create render pass!");
     }
@@ -571,7 +571,7 @@ private:
     pipelineLayoutInfo.pushConstantRangeCount = 0;
 
     if (vkCreatePipelineLayout(device, &pipelineLayoutInfo, nullptr,
-                               &pipelineLayout) != VK_SUCCESS) {
+                               &pipelineLayout_) != VK_SUCCESS) {
       throw std::runtime_error("failed to create pipeline layout!");
     }
 
@@ -585,8 +585,8 @@ private:
     pipelineInfo.pRasterizationState = &rasterizer;
     pipelineInfo.pMultisampleState = &multisampling;
     pipelineInfo.pColorBlendState = &colorBlending;
-    pipelineInfo.layout = pipelineLayout;
-    pipelineInfo.renderPass = renderPass;
+    pipelineInfo.layout = pipelineLayout_;
+    pipelineInfo.renderPass = renderPass_;
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
@@ -600,14 +600,14 @@ private:
   }
 
   void createFramebuffers() {
-    swapChainFramebuffers.resize(swapChainImageViews.size());
+    swapChainFramebuffers_.resize(swapChainImageViews.size());
 
     for (size_t i = 0; i < swapChainImageViews.size(); i++) {
       VkImageView attachments[] = {swapChainImageViews[i]};
 
       VkFramebufferCreateInfo framebufferInfo = {};
       framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-      framebufferInfo.renderPass = renderPass;
+      framebufferInfo.renderPass = renderPass_;
       framebufferInfo.attachmentCount = 1;
       framebufferInfo.pAttachments = attachments;
       framebufferInfo.width = swapChainExtent.width;
@@ -615,14 +615,14 @@ private:
       framebufferInfo.layers = 1;
 
       if (vkCreateFramebuffer(device, &framebufferInfo, nullptr,
-                              &swapChainFramebuffers[i]) != VK_SUCCESS) {
+                              &swapChainFramebuffers_[i]) != VK_SUCCESS) {
         throw std::runtime_error("failed to create framebuffer!");
       }
     }
   }
 
   void createCommandPool() {
-    QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice);
+    QueueFamilyIndices queueFamilyIndices = findQueueFamilies(physicalDevice_);
 
     VkCommandPoolCreateInfo poolInfo = {};
     poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
@@ -635,7 +635,7 @@ private:
   }
 
   void createCommandBuffers() {
-    commandBuffers.resize(swapChainFramebuffers.size());
+    commandBuffers.resize(swapChainFramebuffers_.size());
 
     VkCommandBufferAllocateInfo allocInfo = {};
     allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
@@ -659,8 +659,8 @@ private:
 
       VkRenderPassBeginInfo renderPassInfo = {};
       renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-      renderPassInfo.renderPass = renderPass;
-      renderPassInfo.framebuffer = swapChainFramebuffers[i];
+      renderPassInfo.renderPass = renderPass_;
+      renderPassInfo.framebuffer = swapChainFramebuffers_[i];
       renderPassInfo.renderArea.offset = {0, 0};
       renderPassInfo.renderArea.extent = swapChainExtent;
 
