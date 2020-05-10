@@ -2,11 +2,11 @@ WEBGL_DEMO = http://www.yuichiroharai.com/wgl/
 GTEST_FILTER := *
 
 OUT := out/Release
-OUT := out_wayland/Release
+# OUT := out_official/Release
+# OUT := out_wayland/Release
 # OUT := out_android/Release
 # OUT := out_android_x86/Release
 # OUT := out_win/Release
-# OUT := out_win/ReleaseStatic
 
 NINJIA_ARGS = -C $(OUT)
 NINJIA = autoninja $(NINJIA_ARGS)
@@ -56,6 +56,7 @@ PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
 # PAGE = https://mrdoob.com/projects/chromeexperiments/ball-pool/
 # PAGE = http://webglsamples.org/field/field.html
 # PAGE = file:///home/penghuang/sources/chromium/src/content/test/data/gpu/pixel_canvas_display_linear-rgb.html
+PAGE = file:///home/penghuang/Downloads/a.pdf
 
 CHROME_FLAGS = \
 							 --user-data-dir=/tmp/penghuang-mustash \
@@ -259,8 +260,8 @@ run_chrome_vk: chrome
 		--test-type=gpu \
 		--enable-experimental-web-platform-features \
 		--no-sandbox \
+	  # --use-cmd-decoder=validating \
 		# --enable-gpu-debugging \
-	  	# --use-cmd-decoder=validating \
 		# --enable-gpu-benchmarking \
 		$(NULL)
 
@@ -277,12 +278,11 @@ run_chrome_vk_ooor: chrome
 
 run_chrome_vk_with_angle: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
-		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization,Vulkan \
 		--enable-oop-rasterization \
 		--use-vulkan=native \
 		--enable-gpu-rasterization \
 		--force-gpu-rasterization \
-		--disable-perfetto --trace-to-console=foo \
 		--use-gl=angle --use-angle=vulkan \
 		--no-sandbox
 
