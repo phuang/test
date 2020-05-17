@@ -41,7 +41,7 @@ PAGE = https://www.google.com
 # PAGE = file:///usr/local/google/home/penghuang/sources/phuang.github.io/backdrop_with_mask.html
 # PAGE = phuang.github.io/backdrop_with_mask.html
 # PAGE = file:///usr/local/google/home/penghuang/sources/chromium/src/third_party/WebKit/LayoutTests/css3/filters/backdrop-filter-rendering.html
-PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
+# PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
 # PAGE = https://youtu.be/1roy4o4tqQM?t=60
 # PAGE = https://www.youtube.com/watch?v=4pkhEyRoidk
 # PAGE = https://www.youtube.com/watch?v=M2ciY79mlQw
@@ -54,9 +54,11 @@ PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
 # PAGE = third_party/blink/web_tests/media/alpha-video-playback.html
 # PAGE = http://webglsamples.org/aquarium/aquarium.html
 # PAGE = https://mrdoob.com/projects/chromeexperiments/ball-pool/
-# PAGE = http://webglsamples.org/field/field.html
+PAGE = http://webglsamples.org/field/field.html
 # PAGE = file:///home/penghuang/sources/chromium/src/content/test/data/gpu/pixel_canvas_display_linear-rgb.html
-PAGE = file:///home/penghuang/Downloads/a.pdf
+# PAGE = file:///home/penghuang/Downloads/a.pdf
+# PAGE = https://pixijs.io/examples/\#/text/text.js
+PAGE = https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Animating_textures_in_WebGL
 
 CHROME_FLAGS = \
 							 --user-data-dir=/tmp/penghuang-mustash \
@@ -259,7 +261,7 @@ run_chrome_vk: chrome
 		--enable-gpu-rasterization \
 		--test-type=gpu \
 		--enable-experimental-web-platform-features \
-		--no-sandbox \
+		# --no-sandbox \
 	  # --use-cmd-decoder=validating \
 		# --enable-gpu-debugging \
 		# --enable-gpu-benchmarking \
@@ -288,12 +290,11 @@ run_chrome_vk_with_angle: chrome
 
 run_chrome_swiftshader_vk: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
-		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization,UiOopRasterization \
+		--enable-features=VizDisplayCompositor,UseSkiaRenderer,UiGpuRasterization,UiOopRasterization,Vulkan \
 		--enable-oop-rasterization \
 		--use-vulkan=swiftshader \
 		--enable-gpu-rasterization \
 		--force-gpu-rasterization \
-		--disable-perfetto --trace-to-console=foo \
 		--no-sandbox
 
 

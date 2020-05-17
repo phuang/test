@@ -50,7 +50,7 @@ const bool kEnableValidationLayers = true;
 #endif
 
 VkResult CreateDebugUtilsMessengerEXT(
-    VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT *pCreateInfo,
+    VkInstance instance, const vk::DebugUtilsMessengerCreateInfoEXT *pCreateInfo,
     const VkAllocationCallbacks *pAllocator,
     VkDebugUtilsMessengerEXT *pDebugMessenger) {
   auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(
@@ -400,29 +400,31 @@ private:
     instance_ = std::move(instance);
   }
 
-  void PopulateDebugMessengerCreateInfo(
-      VkDebugUtilsMessengerCreateInfoEXT &create_info) {
-    create_info = {};
-    create_info.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-    create_info.messageSeverity =
+  vk::DebugUtilsMessengerCreateInfoEXT PopulateDebugMessengerCreateInfo() {
+    constexpr auto kMessageSeverity =
         VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
         VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
         VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-    create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-                              VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-                              VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-    create_info.pfnUserCallback = DebugCallback;
+    constexpr auto kMessageType =
+        VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
+        VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
+
+    return vk::DebugUtilsMessengerCreateInfoEXT(
+        vk::DebugUtilsMessengerCreateFlagsEXT(), kMessageSeverity, kMessageType,
+        DebugCallback);
   }
 
   void SetupDebugMessenger() {
     if (!kEnableValidationLayers)
       return;
 
-    VkDebugUtilsMessengerCreateInfoEXT create_info;
-    PopulateDebugMessengerCreateInfo(create_info);
+    auto create_info = PopulateDebugMessengerCreateInfo();
 
-    if (CreateDebugUtilsMessengerEXT(instance_.get(), &create_info, nullptr,
-                                     &debug_messenger_) != VK_SUCCESS) {
+    if (CreateDebugUtilsMessengerEXT(
+            instance_.get(),
+            create_info,
+            nullptr, &debug_messenger_) != VK_SUCCESS) {
       throw std::runtime_error("failed to set up debug messenger!");
     }
   }
@@ -1550,8 +1552,9 @@ private:
 
     if (presentModeCount != 0) {
       details.present_modes.resize(presentModeCount);
-      vkGetPhysicalDeviceSurfacePresentModesKHR(
-          device, surface_.get(), &presentModeCount, details.present_modes.data());
+      vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface_.get(),
+                                                &presentModeCount,
+                                                details.present_modes.data());
     }
 
     return details;

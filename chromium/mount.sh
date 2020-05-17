@@ -10,6 +10,7 @@ DIRS="
   components/viz
   content/browser/gpu
   third_party/skia
+  third_party/vulkan_headers
   ui/base
   ui/gfx
   ui/gl
