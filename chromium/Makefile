@@ -7,9 +7,9 @@ OUT := out/Release
 # OUT := out_android/Release
 # OUT := out_android_x86/Release
 # OUT := out_win/Release
-
-NINJIA_ARGS = -C $(OUT)
-NINJIA = autoninja $(NINJIA_ARGS)
+# GOMA_DISABLED=true
+NINJIA_ARGS = -C $(OUT) -j 400
+NINJIA = ninja $(NINJIA_ARGS)
 
 DEVICE_IP = penghuang-crbook
 STRIP_FLAGS = --strip-flags="--strip-debug -w -N '*blink*' -w -N '*WebCore*' -w -N '*content*'"
@@ -33,6 +33,8 @@ CHROME_FLAGS =  \
 								--user-data-dir=/tmp/penghuang-mustash \
  								--screen-config=1000x800
 
+GTEST_FLAGS = --test-launcher-jobs=50
+
 # CHROME_FLAGS += --wait-for-debugger=ui
 # EXO_DEMO = exo_demo
 
@@ -41,7 +43,7 @@ PAGE = https://www.google.com
 # PAGE = file:///usr/local/google/home/penghuang/sources/phuang.github.io/backdrop_with_mask.html
 # PAGE = phuang.github.io/backdrop_with_mask.html
 # PAGE = file:///usr/local/google/home/penghuang/sources/chromium/src/third_party/WebKit/LayoutTests/css3/filters/backdrop-filter-rendering.html
-# PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
+PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
 # PAGE = https://youtu.be/1roy4o4tqQM?t=60
 # PAGE = https://www.youtube.com/watch?v=4pkhEyRoidk
 # PAGE = https://www.youtube.com/watch?v=M2ciY79mlQw
@@ -58,7 +60,9 @@ PAGE = http://webglsamples.org/field/field.html
 # PAGE = file:///home/penghuang/sources/chromium/src/content/test/data/gpu/pixel_canvas_display_linear-rgb.html
 # PAGE = file:///home/penghuang/Downloads/a.pdf
 # PAGE = https://pixijs.io/examples/\#/text/text.js
-PAGE = https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Animating_textures_in_WebGL
+# PAGE = https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Animating_textures_in_WebGL
+# PAGE = https://developer.mozilla.org/en-US/docs/Web/API/Screen_Capture_API/Using_Screen_Capture
+# PAGE = content/test/data/gpu/pixel_background_image.html
 
 CHROME_FLAGS = \
 							 --user-data-dir=/tmp/penghuang-mustash \
@@ -261,6 +265,7 @@ run_chrome_vk: chrome
 		--enable-gpu-rasterization \
 		--test-type=gpu \
 		--enable-experimental-web-platform-features \
+		--disable-gpu-sandbox \
 		# --no-sandbox \
 	  # --use-cmd-decoder=validating \
 		# --enable-gpu-debugging \
@@ -608,7 +613,7 @@ aura_unittests_mus:
 	$(NINJIA) aura_unittests && $(OUT)/aura_unittests --gtest_filter=$(GTEST_FILTER) --mus
 
 cc_unittests:
-	$(NINJIA) cc_unittests && $(OUT)/cc_unittests --gtest_filter=$(GTEST_FILTER) --single-process-tests-no
+	$(NINJIA) cc_unittests && $(OUT)/cc_unittests --gtest_filter=$(GTEST_FILTER) --single-process-tests-no $(GTEST_FLAGS)
 
 ui_service_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
@@ -623,10 +628,10 @@ gpu_perftests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
 
 gpu_unittests:
-	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER) $(GTEST_FLAGS)
 
 viz_unittests:
-	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER) $(GTEST_FLAGS)
 
 gfx_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
@@ -789,7 +794,7 @@ run_chrome_public_apk_skia_vk: chrome_public_apk
 	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=useskiarenderer,Vulkan"
 
 run_chrome_public_apk_vk: chrome_public_apk
-	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=UseSkiaRenderer,VizDisplayCompositor,DefaultEnableOopRasterization,Vulkan,DisableSurfaceControlForWebview-no --enable-oop-rasterization --enable-gpu-rasterization --force-gpu-rasterization --enable-low-end-device-mode-no"
+	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=UseSkiaRenderer,VizDisplayCompositor,DefaultEnableOopRasterization,Vulkan,DisableSurfaceControlForWebview-no --enable-oop-rasterization --enable-gpu-rasterization --force-gpu-rasterization --enable-low-end-device-mode-no --disable-gpu-sandbox"
 
 system_webview_apk:
 	$(NINJIA) $@
@@ -848,3 +853,7 @@ gl_tests:
 
 adb_switch_vk:
 	adb root && adb shell su 0 setenforce 0 && adb shell setprop debug.hwui.renderer skiavk && adb shell stop && adb shell start
+
+goma:
+	goma_ctl ensure_stop
+	goma_ctl ensure_start

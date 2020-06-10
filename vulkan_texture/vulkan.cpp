@@ -74,10 +74,10 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance,
 
 struct QueueFamilyIndices {
   std::optional<uint32_t> graphics_family;
-  std::optional<uint32_t> present_qamily;
+  std::optional<uint32_t> present_family;
 
   bool IsComplete() {
-    return graphics_family.has_value() && present_qamily.has_value();
+    return graphics_family.has_value() && present_family.has_value();
   }
 };
 
@@ -466,7 +466,7 @@ private:
 
     std::vector<VkDeviceQueueCreateInfo> queue_create_infos;
     std::set<uint32_t> unique_queue_families = {indices.graphics_family.value(),
-                                                indices.present_qamily.value()};
+                                                indices.present_family.value()};
 
     float queuePriority = 1.0f;
     for (uint32_t queue_family : unique_queue_families) {
@@ -509,7 +509,7 @@ private:
 
     vkGetDeviceQueue(device_, indices.graphics_family.value(), 0,
                      &graphics_queue_);
-    vkGetDeviceQueue(device_, indices.present_qamily.value(), 0,
+    vkGetDeviceQueue(device_, indices.present_family.value(), 0,
                      &present_queue_);
   }
 
@@ -551,9 +551,9 @@ private:
 
     QueueFamilyIndices indices = FindQueueFamilies(physical_device_);
     uint32_t queue_family_indices[] = {indices.graphics_family.value(),
-                                       indices.present_qamily.value()};
+                                       indices.present_family.value()};
 
-    if (indices.graphics_family != indices.present_qamily) {
+    if (indices.graphics_family != indices.present_family) {
       create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
       create_info.queueFamilyIndexCount = 2;
       create_info.pQueueFamilyIndices = queue_family_indices;
@@ -1620,7 +1620,7 @@ private:
                                            &presentSupport);
 
       if (presentSupport) {
-        indices.present_qamily = i;
+        indices.present_family = i;
       }
 
       if (indices.IsComplete()) {
