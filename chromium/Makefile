@@ -8,7 +8,8 @@ OUT := out/Release
 # OUT := out_android_x86/Release
 # OUT := out_win/Release
 # GOMA_DISABLED=true
-NINJIA_ARGS = -C $(OUT) -j 400
+J := 400
+NINJIA_ARGS = -C $(OUT) -j $(J)
 NINJIA = ninja $(NINJIA_ARGS)
 
 DEVICE_IP = penghuang-crbook
