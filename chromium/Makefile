@@ -1,14 +1,15 @@
-WEBGL_DEMO = http://www.yuichiroharai.com/wgl/
 GTEST_FILTER := *
 
-OUT := out/Release
+# build output dir
+# OUT := out/Release
 # OUT := out_official/Release
 # OUT := out_wayland/Release
-# OUT := out_android/Release
+OUT := out_android/Release
 # OUT := out_android_x86/Release
 # OUT := out_win/Release
 # GOMA_DISABLED=true
-J := 400
+
+J := 200
 NINJIA_ARGS = -C $(OUT) -j $(J)
 NINJIA = ninja $(NINJIA_ARGS)
 
@@ -30,15 +31,15 @@ DEPLOY_FLAGS = \
 	# --debug \
 	# --nostartui \
 
-CHROME_FLAGS =  \
-								--user-data-dir=/tmp/penghuang-mustash \
- 								--screen-config=1000x800
-
-GTEST_FLAGS = --test-launcher-jobs=50
+# Flags for unittests
+GTEST_FLAGS = --test-launcher-jobs=50 --single-process-tests-no
 
 # CHROME_FLAGS += --wait-for-debugger=ui
 # EXO_DEMO = exo_demo
 
+WEBGL_DEMO = http://www.yuichiroharai.com/wgl/
+
+# Pages
 PAGE = https://www.google.com
 # PAGE = https://www.facebook.com
 # PAGE = file:///usr/local/google/home/penghuang/sources/phuang.github.io/backdrop_with_mask.html
@@ -66,15 +67,10 @@ PAGE = http://webglsamples.org/field/field.html
 # PAGE = content/test/data/gpu/pixel_background_image.html
 
 CHROME_FLAGS = \
-							 --user-data-dir=/tmp/penghuang-mustash \
-							 --enable-logging \
-							 $(MULL)
+	--user-data-dir=/tmp/$(USER)-chromium \
+	--enable-logging \
+	$(MULL)
 
-# CHROME_FLAGS +=  \
-								--show-composited-layer-borders \
-								$(NULL)
-								# --ui-show-composited-layer-borders=renderpass,surface,layer \
-								#--show-fps-counter
 # CHROME_FLAGS += --enable-gpu-service-tracing --enable-gpu-service-logging --enable-gpu-debugging
 # CHROME_FLAGS += --show-overdraw-feedback
 CHROME_FLAGS += $(PAGE)
@@ -82,6 +78,7 @@ CHROME_FLAGS += $(PAGE)
 
 # CHROME_FLAGS += --use_virtualized_gl_contexts=0
 CHROME_FLAGS += --disable-partial-raster
+
 ADB = third_party/android_sdk/public/platform-tools/adb
 
 
@@ -614,7 +611,7 @@ aura_unittests_mus:
 	$(NINJIA) aura_unittests && $(OUT)/aura_unittests --gtest_filter=$(GTEST_FILTER) --mus
 
 cc_unittests:
-	$(NINJIA) cc_unittests && $(OUT)/cc_unittests --gtest_filter=$(GTEST_FILTER) --single-process-tests-no $(GTEST_FLAGS)
+	$(NINJIA) cc_unittests && $(OUT)/cc_unittests --gtest_filter=$(GTEST_FILTER) $(GTEST_FLAGS)
 
 ui_service_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER)
@@ -784,9 +781,13 @@ chrome_public_apk:
 	$(NINJIA) $@
 	$(OUT)/bin/$@ install --non-incremental
 
+run_chrome_public_apk: chrome_public_apk
+	$(OUT)/bin/chrome_public_apk launch \
+		--args="--enable-features=DefaultPassthroughComamndDecoder"
+ 
 run_chrome_public_apk_gl: chrome_public_apk
-	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=VizDisplayCompositor,DefaultEnableOopRasterization --disable-features=UseSkiaRenderer --enable-oop-rasterization --enable-gpu-rasterization --force-gpu-rasterization --enable-low-end-device-mode-no"
-
+	$(OUT)/bin/chrome_public_apk launch \
+		--args="--enable-features=DefaultPassthroughCommandDecoder --enable-low-end-device-mode-no"
 
 run_chrome_public_apk_skia: chrome_public_apk
 	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=useskiarenderer --disable-oop-rasterization-no"
@@ -819,7 +820,7 @@ adb_shell:
 adb_logcat:
 	$(ADB) logcat -c 
 	$(ADB) logcat \
- 		chromium:V *:S
+		chromium:V ANGLE:V *:S
 adb_logcat_all:
 	$(ADB) logcat -c 
 	$(ADB) logcat
