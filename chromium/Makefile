@@ -783,8 +783,12 @@ chrome_public_apk:
 
 run_chrome_public_apk: chrome_public_apk
 	$(OUT)/bin/chrome_public_apk launch \
-		--args="--enable-features=DefaultPassthroughComamndDecoder"
+		--args=""
  
+run_chrome_public_apk_angle: chrome_public_apk
+	$(OUT)/bin/chrome_public_apk launch \
+		--args="--enable-features=DefaultPassthroughCommandDecoder --disable-features=Vulkan"
+
 run_chrome_public_apk_gl: chrome_public_apk
 	$(OUT)/bin/chrome_public_apk launch \
 		--args="--enable-features=DefaultPassthroughCommandDecoder --enable-low-end-device-mode-no"
