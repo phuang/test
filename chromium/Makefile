@@ -789,6 +789,14 @@ run_chrome_public_apk_angle: chrome_public_apk
 	$(OUT)/bin/chrome_public_apk launch \
 		--args="--enable-features=DefaultPassthroughCommandDecoder --disable-features=Vulkan"
 
+run_chrome_public_apk_vulkan: chrome_public_apk
+	$(OUT)/bin/chrome_public_apk launch \
+		--args="--enable-features=Vulkan"
+
+run_chrome_public_apk_vulkan_with_black-list: chrome_public_apk
+	$(OUT)/bin/chrome_public_apk launch \
+		--args="--enable-features=Vulkan<FakeStudy --force-fieldtrials=FakeStudy/FakeGroup --force-fieldtrial-params=FakeStudy.FakeGroup:BlockListByDevice/generic_x86_64"
+
 run_chrome_public_apk_gl: chrome_public_apk
 	$(OUT)/bin/chrome_public_apk launch \
 		--args="--enable-features=DefaultPassthroughCommandDecoder --enable-low-end-device-mode-no"
@@ -824,7 +832,7 @@ adb_shell:
 adb_logcat:
 	$(ADB) logcat -c 
 	$(ADB) logcat \
-		chromium:V ANGLE:V *:S
+		chromium:V ANGLE:V DEBUG:V *:S
 adb_logcat_all:
 	$(ADB) logcat -c 
 	$(ADB) logcat
