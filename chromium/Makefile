@@ -1,10 +1,11 @@
 GTEST_FILTER := *
 
 # build output dir
-# OUT := out/Release
+OUT := out/Release
+# OUT := out_cros/Release
 # OUT := out_official/Release
 # OUT := out_wayland/Release
-OUT := out_android/Release
+# OUT := out_android/Release
 # OUT := out_android_x86/Release
 # OUT := out_win/Release
 # GOMA_DISABLED=true
@@ -32,7 +33,7 @@ DEPLOY_FLAGS = \
 	# --nostartui \
 
 # Flags for unittests
-GTEST_FLAGS = --test-launcher-jobs=50 --single-process-tests-no
+GTEST_FLAGS = --test-launcher-jobs=50 --single-process-tests-no --use-gpu-in-tests-no
 
 # CHROME_FLAGS += --wait-for-debugger=ui
 # EXO_DEMO = exo_demo
@@ -154,6 +155,14 @@ run_chrome: chrome
 		--enable-gpu-rasterization \
 		--force-gpu-rasterization \
 		--show-fps-counter-no \
+		--no-sandbox
+
+run_chrome_swangle: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features= \
+		--show-fps-counter-no \
+		--use-gl=angle \
+		--use-angle=swiftshader \
 		--no-sandbox
 
 run_chrome_passthrough: chrome
@@ -777,38 +786,38 @@ trichrome_library_google_apk:
 	$(NINJIA) $@
 	$(OUT)/bin/$@ install --non-incremental
 
-chrome_public_apk:
+chrome_apk:
 	$(NINJIA) $@
 	$(OUT)/bin/$@ install --non-incremental
 
-run_chrome_public_apk: chrome_public_apk
-	$(OUT)/bin/chrome_public_apk launch \
+run_chrome_apk: chrome_apk
+	$(OUT)/bin/chrome_apk launch \
 		--args=""
  
-run_chrome_public_apk_angle: chrome_public_apk
-	$(OUT)/bin/chrome_public_apk launch \
-		--args="--enable-features=DefaultPassthroughCommandDecoder --disable-features=Vulkan"
+run_chrome_apk_angle: chrome_apk
+	$(OUT)/bin/chrome_apk launch \
+		--args="--enable-features=DefaultPassthroughCommandDecoder --disable-features=VulkanNo,UseSkiaRendererNo"
 
-run_chrome_public_apk_vulkan: chrome_public_apk
-	$(OUT)/bin/chrome_public_apk launch \
+run_chrome_apk_vulkan: chrome_apk
+	$(OUT)/bin/chrome_apk launch \
 		--args="--enable-features=Vulkan"
 
-run_chrome_public_apk_vulkan_with_black-list: chrome_public_apk
-	$(OUT)/bin/chrome_public_apk launch \
+run_chrome_apk_vulkan_with_black-list: chrome_apk
+	$(OUT)/bin/chrome_apk launch \
 		--args="--enable-features=Vulkan<FakeStudy --force-fieldtrials=FakeStudy/FakeGroup --force-fieldtrial-params=FakeStudy.FakeGroup:BlockListByDevice/generic_x86_64"
 
-run_chrome_public_apk_gl: chrome_public_apk
-	$(OUT)/bin/chrome_public_apk launch \
+run_chrome_apk_gl: chrome_apk
+	$(OUT)/bin/chrome_apk launch \
 		--args="--enable-features=DefaultPassthroughCommandDecoder --enable-low-end-device-mode-no"
 
-run_chrome_public_apk_skia: chrome_public_apk
-	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=useskiarenderer --disable-oop-rasterization-no"
+run_chrome_apk_noskia: chrome_apk
+	$(OUT)/bin/chrome_apk launch --args="--disable-features=UseSkiaRenderer --disable-oop-rasterization-no"
   
-run_chrome_public_apk_skia_vk: chrome_public_apk
-	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=useskiarenderer,Vulkan"
+run_chrome_apk_skia_vk: chrome_apk
+	$(OUT)/bin/chrome_apk launch --args="--enable-features=useskiarenderer,Vulkan"
 
-run_chrome_public_apk_vk: chrome_public_apk
-	$(OUT)/bin/chrome_public_apk launch --args="--enable-features=UseSkiaRenderer,VizDisplayCompositor,DefaultEnableOopRasterization,Vulkan,DisableSurfaceControlForWebview-no --enable-oop-rasterization --enable-gpu-rasterization --force-gpu-rasterization --enable-low-end-device-mode-no --disable-gpu-sandbox"
+run_chrome_apk_vk: chrome_apk
+	$(OUT)/bin/chrome_apk launch --args="--enable-features=UseSkiaRenderer,VizDisplayCompositor,DefaultEnableOopRasterization,Vulkan,DisableSurfaceControlForWebview-no --enable-oop-rasterization --enable-gpu-rasterization --force-gpu-rasterization --enable-low-end-device-mode-no --disable-gpu-sandbox"
 
 system_webview_apk:
 	$(NINJIA) $@
