@@ -7,10 +7,10 @@ OUT := out/Release
 # OUT := out_wayland/Release
 # OUT := out_android/Release
 # OUT := out_android_x86/Release
-# OUT := out_win/Release
+OUT := out_win/Release
 # GOMA_DISABLED=true
 
-J := 200
+J := 3000
 NINJIA_ARGS = -C $(OUT) -j $(J)
 NINJIA = ninja $(NINJIA_ARGS)
 
@@ -42,11 +42,12 @@ WEBGL_DEMO = http://www.yuichiroharai.com/wgl/
 
 # Pages
 PAGE = https://www.google.com
+PAGE = https://solidot.org 
 # PAGE = https://www.facebook.com
 # PAGE = file:///usr/local/google/home/penghuang/sources/phuang.github.io/backdrop_with_mask.html
 # PAGE = phuang.github.io/backdrop_with_mask.html
 # PAGE = file:///usr/local/google/home/penghuang/sources/chromium/src/third_party/WebKit/LayoutTests/css3/filters/backdrop-filter-rendering.html
-PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
+# PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
 # PAGE = https://youtu.be/1roy4o4tqQM?t=60
 # PAGE = https://www.youtube.com/watch?v=4pkhEyRoidk
 # PAGE = https://www.youtube.com/watch?v=M2ciY79mlQw
@@ -57,15 +58,24 @@ PAGE = https://webkit.org/blog-files/3d-transforms/poster-circle.html
 # PAGE = phuang.github.io/fuzz/fuzz-70.html
 # PAGE = https://codepen.io/sol0mka/pen/mICGv
 # PAGE = third_party/blink/web_tests/media/alpha-video-playback.html
-# PAGE = http://webglsamples.org/aquarium/aquarium.html
+PAGE = http://webglsamples.org/aquarium/aquarium.html
 # PAGE = https://mrdoob.com/projects/chromeexperiments/ball-pool/
-PAGE = http://webglsamples.org/field/field.html
+# PAGE = http://webglsamples.org/field/field.html
 # PAGE = file:///home/penghuang/sources/chromium/src/content/test/data/gpu/pixel_canvas_display_linear-rgb.html
 # PAGE = file:///home/penghuang/Downloads/a.pdf
 # PAGE = https://pixijs.io/examples/\#/text/text.js
 # PAGE = https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Tutorial/Animating_textures_in_WebGL
 # PAGE = https://developer.mozilla.org/en-US/docs/Web/API/Screen_Capture_API/Using_Screen_Capture
 # PAGE = content/test/data/gpu/pixel_background_image.html
+# PAGE = https://www.w3schools.com/html/html5_canvas.asp
+# PAGE = https://delphic.me.uk/tutorials/webgl-text
+# PAGE = https://mdn.github.io/webgl-examples/tutorial/sample8/
+# PAGE = https://phuang.github.io/canvas.html
+# PAGE = https://phuang.github.io/canvas2.html
+PAGE = https://www.therecord.com/?redirect=true
+
+
+FEATURES := CanvasOopRasterization
 
 CHROME_FLAGS = \
 	--user-data-dir=/tmp/$(USER)-chromium \
@@ -97,7 +107,7 @@ media:
 cc:
 	$(NINJIA) cc
 
-chrome: chrome_sandbox
+chrome:
 	$(NINJIA) chrome
 
 test_chrome: chrome_sandbox
@@ -159,10 +169,15 @@ run_chrome: chrome
 
 run_chrome_swangle: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
-		--enable-features= \
-		--show-fps-counter-no \
-		--use-gl=angle \
+		--enable-features=$(FEATURES) \
 		--use-angle=swiftshader \
+		--no-sandbox
+
+run_chrome_swangle_vk: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=Vulkan,VulkanFromANGLE,$(FEATURES) \
+		--use-angle=swiftshader \
+		--show-composited-layer-borders \
 		--no-sandbox
 
 run_chrome_passthrough: chrome
@@ -177,6 +192,14 @@ run_chrome_passthrough: chrome
 	  --use-cmd-decoder=passthrough \
 	  --no-sandbox
 
+run_chrome_raw_draw: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=Vulkan,VulkanFromANGLE,CanvasOopRasterization,RawDraw \
+		--use-angle=swiftshader \
+		--force-device-scale-factor=1 \
+		--enable-gpu-benchmarking \
+		--show-composited-layer-borders \
+		--no-sandbox
 
 run_chrome_oopd: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) --enable-features=VizDisplayCompositor
@@ -725,7 +748,7 @@ rsync:
 		--exclude '*.pdb' \
 		--delete \
 		out_win/Release \
-		user@100.107.103.71:/mnt/c/Users/User/chromium/src/out_cross
+		penghuang@penghuang-win.c.googlers.com:/cygdrive/c/chrome
 
 deploy_windows:
 	ninja -C out_win/Release -j 128 chrome
@@ -738,8 +761,10 @@ deploy_gl_tests:
 chrome_apk:
 	$(NINJIA) $@
 	$(OUT)/bin/$@ install --non-incremental
-	$(OUT)/bin/$@ launch  --args="--enable-features=VizDisplayCompositor,UseSkiaRendererNo,DefaultEnableOopRasterization"
-	adb logcat
+
+chrome_public_apk:
+	$(NINJIA) $@
+	$(OUT)/bin/$@ install --non-incremental
 
 run_system_webview_shell_apk_with_monochrome:
 	$(NINJIA) monochrome_apk system_webview_shell_apk
@@ -747,7 +772,7 @@ run_system_webview_shell_apk_with_monochrome:
 	$(OUT)/bin/system_webview_shell_apk install --non-incremental
 	$(OUT)/bin/system_webview_shell_apk launch
 
-monochrome_apk:
+monochrome_64:
 	$(NINJIA) $@
 	$(OUT)/bin/$@ install --non-incremental
 
