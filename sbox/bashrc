@@ -1,0 +1,2 @@
+export PS1="\033[01;31m\u@SBOX:\033[01;34m\w\033[01;00m$"
+alias ll='ls -l'
