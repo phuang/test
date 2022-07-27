@@ -239,20 +239,12 @@ void VulkanDemo::CreateInstance() {
   vk::ApplicationInfo application_info("VulkanDemo", VK_MAKE_VERSION(1, 0, 0),
                                        "No Engine", VK_MAKE_VERSION(1, 0, 0),
                                        VK_API_VERSION_1_2);
-
-  vk::InstanceCreateInfo create_info({}, &application_info);
-
   auto extensions = GetRequiredExtensions();
-  create_info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-  create_info.ppEnabledExtensionNames = extensions.data();
-
-  if (kEnableValidationLayers) {
-    create_info.enabledLayerCount =
-        static_cast<uint32_t>(kValidationLayers.size());
-    create_info.ppEnabledLayerNames = kValidationLayers.data();
-  } else {
-    create_info.enabledLayerCount = 0;
-  }
+  vk::InstanceCreateInfo create_info(
+      {}, &application_info,
+      kEnableValidationLayers ? kValidationLayers.size() : 0,
+      kEnableValidationLayers ? kValidationLayers.data() : nullptr,
+      extensions.size(), extensions.data());
 
   instance_ = vk::createInstance(create_info);
   VULKAN_HPP_DEFAULT_DISPATCHER.init(instance_);
