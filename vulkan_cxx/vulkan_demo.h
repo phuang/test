@@ -73,12 +73,12 @@ class VulkanDemo {
                     VkDeviceMemory* memory);
   void CreateImage(uint32_t width,
                    uint32_t height,
-                   VkFormat format,
-                   VkImageTiling tiling,
-                   VkImageUsageFlags usage,
-                   VkMemoryPropertyFlags properties,
-                   VkImage& image,
-                   VkDeviceMemory& imageMemory);
+                   vk::Format format,
+                   vk::ImageTiling tiling,
+                   vk::ImageUsageFlags usage,
+                   vk::MemoryPropertyFlags properties,
+                   vk::Image& image,
+                   vk::DeviceMemory& imageMemory);
   void CreateTextureImage();
   vk::ImageView CreateImageView(vk::Image image, vk::Format format);
   void CreateTextureImageView();
@@ -148,9 +148,9 @@ class VulkanDemo {
   VkCommandPool command_pool_ = VK_NULL_HANDLE;
   std::vector<VkCommandBuffer> command_buffers_;
 
-  VkImage texture_image_ = VK_NULL_HANDLE;
+  vk::Image texture_image_;
   vk::ImageView texture_image_view_;
-  VkDeviceMemory texture_image_memory_;
+  vk::DeviceMemory texture_image_memory_;
 
   VkBuffer vertex_buffer_ = VK_NULL_HANDLE;
   VkDeviceMemory vertex_buffer_memory_ = VK_NULL_HANDLE;
