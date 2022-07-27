@@ -691,10 +691,11 @@ void VulkanDemo::CreateTextureImage() {
   vkUnmapMemory(device_, stagingBufferMemory);
   stbi_image_free(pixels);
 
-  CreateImage(
-      texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL,
-      VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
-      VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, texture_image_, texture_image_memory_);
+  CreateImage(texWidth, texHeight, VK_FORMAT_R8G8B8A8_SRGB,
+              VK_IMAGE_TILING_OPTIMAL,
+              VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+              VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, texture_image_,
+              texture_image_memory_);
 
   transitionImageLayout(texture_image_, VK_FORMAT_R8G8B8A8_SRGB,
                         VK_IMAGE_LAYOUT_UNDEFINED,
@@ -722,7 +723,8 @@ vk::ImageView VulkanDemo::CreateImageView(vk::Image image, vk::Format format) {
 }
 
 void VulkanDemo::CreateTextureImageView() {
-  texture_image_view_ = CreateImageView(texture_image_, vk::Format::eR8G8B8A8Srgb);
+  texture_image_view_ =
+      CreateImageView(texture_image_, vk::Format::eR8G8B8A8Srgb);
 }
 
 void VulkanDemo::createTextureSampler() {
