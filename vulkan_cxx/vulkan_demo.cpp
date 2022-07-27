@@ -94,6 +94,8 @@ std::vector<char> ReadFile(const std::string& filename) {
 
 }  // namespace
 
+VULKAN_HPP_DEFAULT_DISPATCH_LOADER_DYNAMIC_STORAGE;
+
 void VulkanDemo::run() {
   InitWindow();
   InitVulkan();
@@ -112,6 +114,10 @@ void VulkanDemo::InitWindow() {
 }
 
 void VulkanDemo::InitVulkan() {
+  PFN_vkGetInstanceProcAddr vkGetInstanceProcAddr =
+      dl_.getProcAddress<PFN_vkGetInstanceProcAddr>("vkGetInstanceProcAddr");
+  VULKAN_HPP_DEFAULT_DISPATCHER.init(vkGetInstanceProcAddr);
+
   CreateInstance();
   SetupDebugCallback();
   CreateSurface();
@@ -191,11 +197,12 @@ void VulkanDemo::Cleanup() {
   vkDestroyDevice(device_, nullptr);
 
   if (kEnableValidationLayers) {
-    DestroyDebugUtilsMessengerEXT(instance_, callback_, nullptr);
+    instance_.destroyDebugUtilsMessengerEXT(callback_);
   }
 
   vkDestroySurfaceKHR(instance_, surface_, nullptr);
-  vkDestroyInstance(instance_, nullptr);
+  instance_.destroy();
+  // vkDestroyInstance(instance_, nullptr);
 
   glfwDestroyWindow(window_);
 
@@ -229,53 +236,43 @@ void VulkanDemo::CreateInstance() {
     throw std::runtime_error("validation layers requested, but not available!");
   }
 
-  VkApplicationInfo appInfo = {};
-  appInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-  appInfo.pApplicationName = "Hello Triangle";
-  appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-  appInfo.pEngineName = "No Engine";
-  appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-  appInfo.apiVersion = VK_API_VERSION_1_2;
+  vk::ApplicationInfo application_info("VulkanDemo", VK_MAKE_VERSION(1, 0, 0),
+                                       "No Engine", VK_MAKE_VERSION(1, 0, 0),
+                                       VK_API_VERSION_1_2);
 
-  VkInstanceCreateInfo createInfo = {};
-  createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-  createInfo.pApplicationInfo = &appInfo;
+  vk::InstanceCreateInfo create_info({}, &application_info);
 
   auto extensions = GetRequiredExtensions();
-  createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
-  createInfo.ppEnabledExtensionNames = extensions.data();
+  create_info.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+  create_info.ppEnabledExtensionNames = extensions.data();
 
   if (kEnableValidationLayers) {
-    createInfo.enabledLayerCount =
+    create_info.enabledLayerCount =
         static_cast<uint32_t>(kValidationLayers.size());
-    createInfo.ppEnabledLayerNames = kValidationLayers.data();
+    create_info.ppEnabledLayerNames = kValidationLayers.data();
   } else {
-    createInfo.enabledLayerCount = 0;
+    create_info.enabledLayerCount = 0;
   }
 
-  if (vkCreateInstance(&createInfo, nullptr, &instance_) != VK_SUCCESS) {
-    throw std::runtime_error("failed to create instance!");
-  }
+  instance_ = vk::createInstance(create_info);
+  VULKAN_HPP_DEFAULT_DISPATCHER.init(instance_);
 }
 
 void VulkanDemo::SetupDebugCallback() {
   if (!kEnableValidationLayers)
     return;
 
-  VkDebugUtilsMessengerCreateInfoEXT createInfo = {};
-  createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-  createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
-                               VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
-                               VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT;
-  createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
-                           VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
-                           VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-  createInfo.pfnUserCallback = DebugCallback;
-
-  if (CreateDebugUtilsMessengerEXT(instance_, &createInfo, nullptr,
-                                   &callback_) != VK_SUCCESS) {
-    throw std::runtime_error("failed to set up debug callback!");
-  }
+  vk::DebugUtilsMessageSeverityFlagsEXT serviceFlags(
+      vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
+      vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
+      vk::DebugUtilsMessageSeverityFlagBitsEXT::eError);
+  vk::DebugUtilsMessageTypeFlagsEXT messageTypeFlags(
+      vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
+      vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
+      vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance);
+  vk::DebugUtilsMessengerCreateInfoEXT create_info(
+      {}, serviceFlags, messageTypeFlags, DebugCallback, nullptr);
+  callback_ = instance_.createDebugUtilsMessengerEXT(create_info);
 }
 
 void VulkanDemo::CreateSurface() {
