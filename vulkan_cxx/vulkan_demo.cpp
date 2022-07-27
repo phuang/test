@@ -676,10 +676,9 @@ void VulkanDemo::CreateTextureImage() {
                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                &stagingBuffer, &stagingBufferMemory);
-  void* data;
-  vkMapMemory(device_, stagingBufferMemory, 0, imageSize, 0, &data);
+  void* data = device_.mapMemory(stagingBufferMemory, 0, imageSize);
   memcpy(data, pixels, static_cast<size_t>(imageSize));
-  vkUnmapMemory(device_, stagingBufferMemory);
+  device_.unmapMemory(stagingBufferMemory);
   stbi_image_free(pixels);
 
   CreateImage(texWidth, texHeight,
@@ -758,10 +757,9 @@ void VulkanDemo::CreateVertexBuffer() {
                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                &vertex_buffer_, &vertex_buffer_memory_);
-  void* data;
-  vkMapMemory(device_, vertex_buffer_memory_, 0, buffer_size, 0, &data);
+  void* data = device_.mapMemory(vertex_buffer_memory_, 0, buffer_size);
   memcpy(data, kVertices.data(), buffer_size);
-  vkUnmapMemory(device_, vertex_buffer_memory_);
+  device_.unmapMemory(vertex_buffer_memory_);
 }
 
 void VulkanDemo::CreateIndexBuffer() {
@@ -770,10 +768,10 @@ void VulkanDemo::CreateIndexBuffer() {
                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                &index_buffer_, &index_buffer_memory_);
-  void* data;
-  vkMapMemory(device_, index_buffer_memory_, 0, buffer_size, 0, &data);
+  void* data = 
+  device_.mapMemory(index_buffer_memory_, 0, buffer_size);
   memcpy(data, kIndices.data(), buffer_size);
-  vkUnmapMemory(device_, index_buffer_memory_);
+  device_.unmapMemory(index_buffer_memory_);
 }
 
 void VulkanDemo::CreateUniformBuffers() {
@@ -961,11 +959,9 @@ void VulkanDemo::UpdateUniformBuffer(uint32_t current_image) {
       glm::radians(45.0f),
       swap_chain_extent_.width / (float)swap_chain_extent_.height, 0.1f, 10.0f);
   ubo.proj[1][1] *= -1;
-  void* data;
-  vkMapMemory(device_, uniform_buffers_memory_[current_image], 0, sizeof(ubo),
-              0, &data);
+  void* data = device_.mapMemory(uniform_buffers_memory_[current_image], 0, sizeof(ubo));
   memcpy(data, &ubo, sizeof(ubo));
-  vkUnmapMemory(device_, uniform_buffers_memory_[current_image]);
+  device_.unmapMemory(uniform_buffers_memory_[current_image]);
 }
 
 void VulkanDemo::DrawFrame() {
@@ -1267,8 +1263,7 @@ void VulkanDemo::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
   submitInfo.pCommandBuffers = &commandBuffer;
 
   vkQueueSubmit(graphics_queue_, 1, &submitInfo, VK_NULL_HANDLE);
-  vkQueueWaitIdle(graphics_queue_);
-
+  graphics_queue_.waitIdle();
   vkFreeCommandBuffers(device_, command_pool_, 1, &commandBuffer);
 }
 
