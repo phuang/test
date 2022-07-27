@@ -74,7 +74,7 @@ DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
   return VK_FALSE;
 }
 
-std::vector<char> ReadFile(const std::string& filename) {
+std::vector<uint32_t> ReadFile(const std::string& filename) {
   std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
   if (!file.is_open()) {
@@ -82,10 +82,10 @@ std::vector<char> ReadFile(const std::string& filename) {
   }
 
   size_t file_size = (size_t)file.tellg();
-  std::vector<char> buffer(file_size);
+  std::vector<uint32_t> buffer((file_size + 3) / 4);
 
   file.seekg(0);
-  file.read(buffer.data(), file_size);
+  file.read((char*)buffer.data(), file_size);
 
   file.close();
 
@@ -234,15 +234,19 @@ void VulkanDemo::CreateInstance() {
     throw std::runtime_error("validation layers requested, but not available!");
   }
 
-  vk::ApplicationInfo application_info("VulkanDemo", VK_MAKE_VERSION(1, 0, 0),
-                                       "No Engine", VK_MAKE_VERSION(1, 0, 0),
-                                       VK_API_VERSION_1_2);
+  vk::ApplicationInfo application_info;
+  application_info.setPApplicationName("VulkanDemo")
+      .setApplicationVersion(VK_MAKE_VERSION(1, 0, 0))
+      .setPEngineName("No Engine")
+      .setEngineVersion(VK_MAKE_VERSION(1, 0, 0))
+      .setApiVersion(VK_API_VERSION_1_2);
+
   auto extensions = GetRequiredExtensions();
-  vk::InstanceCreateInfo create_info(
-      {}, &application_info,
-      kEnableValidationLayers ? kValidationLayers.size() : 0,
-      kEnableValidationLayers ? kValidationLayers.data() : nullptr,
-      extensions.size(), extensions.data());
+  vk::InstanceCreateInfo create_info;
+  create_info.setPApplicationInfo(&application_info)
+      .setPEnabledExtensionNames(extensions);
+  if (kEnableValidationLayers)
+    create_info.setPEnabledLayerNames(kValidationLayers);
 
   instance_ = vk::createInstance(create_info);
   VULKAN_HPP_DEFAULT_DISPATCHER.init(instance_);
@@ -331,40 +335,38 @@ void VulkanDemo::CreateSwapChain() {
       ChooseSwapPresentMode(swapChainSupport.present_modes);
   vk::Extent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
 
-  uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
+  uint32_t image_count = swapChainSupport.capabilities.minImageCount + 1;
   if (swapChainSupport.capabilities.maxImageCount > 0 &&
-      imageCount > swapChainSupport.capabilities.maxImageCount) {
-    imageCount = swapChainSupport.capabilities.maxImageCount;
+      image_count > swapChainSupport.capabilities.maxImageCount) {
+    image_count = swapChainSupport.capabilities.maxImageCount;
   }
 
-  vk::SwapchainCreateInfoKHR createInfo;
-  createInfo.surface = surface_;
-
-  createInfo.minImageCount = imageCount;
-  createInfo.imageFormat = surfaceFormat.format;
-  createInfo.imageColorSpace = surfaceFormat.colorSpace;
-  createInfo.imageExtent = extent;
-  createInfo.imageArrayLayers = 1;
-  createInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
+  vk::SwapchainCreateInfoKHR create_info;
+  create_info.setSurface(surface_)
+      .setMinImageCount(image_count)
+      .setImageFormat(surfaceFormat.format)
+      .setImageColorSpace(surfaceFormat.colorSpace)
+      .setImageExtent(extent)
+      .setImageArrayLayers(1)
+      .setImageUsage(vk::ImageUsageFlagBits::eColorAttachment);
 
   QueueFamilyIndices indices = FindQueueFamilies(physical_device_);
-  uint32_t queueFamilyIndices[] = {(uint32_t)indices.graphics_family,
-                                   (uint32_t)indices.present_family};
+  std::array<uint32_t, 2> queueFamilyIndices = {
+      (uint32_t)indices.graphics_family, (uint32_t)indices.present_family};
 
   if (indices.graphics_family != indices.present_family) {
-    createInfo.imageSharingMode = vk::SharingMode::eConcurrent;
-    createInfo.queueFamilyIndexCount = 2;
-    createInfo.pQueueFamilyIndices = queueFamilyIndices;
+    create_info.setImageSharingMode(vk::SharingMode::eConcurrent)
+        .setQueueFamilyIndices(queueFamilyIndices);
   } else {
-    createInfo.imageSharingMode = vk::SharingMode::eExclusive;
+    create_info.setImageSharingMode(vk::SharingMode::eExclusive);
   }
 
-  createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
-  createInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
-  createInfo.presentMode = presentMode;
-  createInfo.clipped = VK_TRUE;
+  create_info.setPreTransform(swapChainSupport.capabilities.currentTransform)
+      .setCompositeAlpha(vk::CompositeAlphaFlagBitsKHR::eOpaque)
+      .setPresentMode(presentMode)
+      .setClipped(true);
 
-  swap_chain_ = device_.createSwapchainKHR(createInfo);
+  swap_chain_ = device_.createSwapchainKHR(create_info);
   swap_chain_images_ = device_.getSwapchainImagesKHR(swap_chain_);
   swap_chain_image_format_ = surfaceFormat.format;
   swap_chain_extent_ = extent;
@@ -1024,17 +1026,10 @@ void VulkanDemo::DrawFrame() {
   current_frame_ = (current_frame_ + 1) % MAX_FRAMES_IN_FLIGHT;
 }
 
-VkShaderModule VulkanDemo::CreateShaderModule(const std::vector<char>& code) {
-  VkShaderModuleCreateInfo create_info = {};
-  create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-  create_info.codeSize = code.size();
-  create_info.pCode = reinterpret_cast<const uint32_t*>(code.data());
-
-  VkShaderModule shader_module;
-  if (vkCreateShaderModule(device_, &create_info, nullptr, &shader_module) !=
-      VK_SUCCESS) {
-    throw std::runtime_error("failed to create shader module!");
-  }
+vk::ShaderModule VulkanDemo::CreateShaderModule(
+    const std::vector<uint32_t>& code) {
+  vk::ShaderModuleCreateInfo create_info({}, code);
+  vk::ShaderModule shader_module = device_.createShaderModule(create_info);
 
   return shader_module;
 }

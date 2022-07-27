@@ -93,7 +93,7 @@ class VulkanDemo {
   void CreateSyncObjects();
   void UpdateUniformBuffer(uint32_t current_image);
   void DrawFrame();
-  VkShaderModule CreateShaderModule(const std::vector<char>& code);
+  vk::ShaderModule CreateShaderModule(const std::vector<uint32_t>& code);
   vk::SurfaceFormatKHR ChooseSwapSurfaceFormat(
       const std::vector<vk::SurfaceFormatKHR>& available_formats);
   vk::PresentModeKHR ChooseSwapPresentMode(
@@ -133,7 +133,7 @@ class VulkanDemo {
   vk::Queue graphics_queue_;
   vk::Queue present_queue_;
 
-  VkSwapchainKHR swap_chain_ = VK_NULL_HANDLE;
+  vk::SwapchainKHR swap_chain_ = VK_NULL_HANDLE;
   std::vector<vk::Image> swap_chain_images_;
   vk::Format swap_chain_image_format_;
   vk::Extent2D swap_chain_extent_;
