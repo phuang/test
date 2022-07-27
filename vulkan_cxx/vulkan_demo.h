@@ -148,9 +148,9 @@ class VulkanDemo {
   VkCommandPool command_pool_ = VK_NULL_HANDLE;
   std::vector<VkCommandBuffer> command_buffers_;
 
-  VkImage textureImage = VK_NULL_HANDLE;
-  VkImageView textureImageView = VK_NULL_HANDLE;
-  VkDeviceMemory textureImageMemory = VK_NULL_HANDLE;
+  VkImage texture_image_ = VK_NULL_HANDLE;
+  vk::ImageView texture_image_view_;
+  VkDeviceMemory texture_image_memory_;
 
   VkBuffer vertex_buffer_ = VK_NULL_HANDLE;
   VkDeviceMemory vertex_buffer_memory_ = VK_NULL_HANDLE;
