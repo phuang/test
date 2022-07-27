@@ -327,9 +327,9 @@ void VulkanDemo::CreateSwapChain() {
 
   vk::SurfaceFormatKHR surfaceFormat =
       ChooseSwapSurfaceFormat(swapChainSupport.formats);
-  VkPresentModeKHR presentMode =
+  vk::PresentModeKHR presentMode =
       ChooseSwapPresentMode(swapChainSupport.present_modes);
-  VkExtent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
+  vk::Extent2D extent = ChooseSwapExtent(swapChainSupport.capabilities);
 
   uint32_t imageCount = swapChainSupport.capabilities.minImageCount + 1;
   if (swapChainSupport.capabilities.maxImageCount > 0 &&
@@ -337,8 +337,7 @@ void VulkanDemo::CreateSwapChain() {
     imageCount = swapChainSupport.capabilities.maxImageCount;
   }
 
-  VkSwapchainCreateInfoKHR createInfo = {};
-  createInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+  vk::SwapchainCreateInfoKHR createInfo;
   createInfo.surface = surface_;
 
   createInfo.minImageCount = imageCount;
@@ -346,35 +345,27 @@ void VulkanDemo::CreateSwapChain() {
   createInfo.imageColorSpace = surfaceFormat.colorSpace;
   createInfo.imageExtent = extent;
   createInfo.imageArrayLayers = 1;
-  createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+  createInfo.imageUsage = vk::ImageUsageFlagBits::eColorAttachment;
 
   QueueFamilyIndices indices = FindQueueFamilies(physical_device_);
   uint32_t queueFamilyIndices[] = {(uint32_t)indices.graphics_family,
                                    (uint32_t)indices.present_family};
 
   if (indices.graphics_family != indices.present_family) {
-    createInfo.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
+    createInfo.imageSharingMode = vk::SharingMode::eConcurrent;
     createInfo.queueFamilyIndexCount = 2;
     createInfo.pQueueFamilyIndices = queueFamilyIndices;
   } else {
-    createInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    createInfo.imageSharingMode = vk::SharingMode::eExclusive;
   }
 
   createInfo.preTransform = swapChainSupport.capabilities.currentTransform;
-  createInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+  createInfo.compositeAlpha = vk::CompositeAlphaFlagBitsKHR::eOpaque;
   createInfo.presentMode = presentMode;
   createInfo.clipped = VK_TRUE;
 
-  if (vkCreateSwapchainKHR(device_, &createInfo, nullptr, &swap_chain_) !=
-      VK_SUCCESS) {
-    throw std::runtime_error("failed to create swap chain!");
-  }
-
-  vkGetSwapchainImagesKHR(device_, swap_chain_, &imageCount, nullptr);
-  swap_chain_images_.resize(imageCount);
-  vkGetSwapchainImagesKHR(device_, swap_chain_, &imageCount,
-                          swap_chain_images_.data());
-
+  swap_chain_ = device_.createSwapchainKHR(createInfo);
+  swap_chain_images_ = device_.getSwapchainImagesKHR(swap_chain_);
   swap_chain_image_format_ = surfaceFormat.format;
   swap_chain_extent_ = extent;
 }
@@ -383,14 +374,14 @@ void VulkanDemo::CreateImageViews() {
   swap_chain_image_views_.resize(swap_chain_images_.size());
 
   for (size_t i = 0; i < swap_chain_images_.size(); i++) {
-    swap_chain_image_views_[i] =
-        CreateImageView(swap_chain_images_[i], swap_chain_image_format_);
+    swap_chain_image_views_[i] = CreateImageView(
+        swap_chain_images_[i], swap_chain_image_format_);
   }
 }
 
 void VulkanDemo::CreateRenderPass() {
   VkAttachmentDescription color_attachment = {};
-  color_attachment.format = swap_chain_image_format_;
+  color_attachment.format = static_cast<VkFormat>(swap_chain_image_format_);
   color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
   color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
   color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
@@ -505,7 +496,7 @@ void VulkanDemo::CreateGraphicsPipeline() {
 
   VkRect2D scissor = {};
   scissor.offset = {0, 0};
-  scissor.extent = swap_chain_extent_;
+  scissor.extent = (VkExtent2D)swap_chain_extent_;
 
   VkPipelineViewportStateCreateInfo viewport_state = {};
   viewport_state.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
@@ -716,29 +707,23 @@ void VulkanDemo::CreateTextureImage() {
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
-VkImageView VulkanDemo::CreateImageView(VkImage image, VkFormat format) {
-  VkImageViewCreateInfo viewInfo{};
-  viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+vk::ImageView VulkanDemo::CreateImageView(vk::Image image, vk::Format format) {
+  vk::ImageViewCreateInfo viewInfo;
   viewInfo.image = image;
-  viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+  viewInfo.viewType = vk::ImageViewType::e2D;
   viewInfo.format = format;
-  viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+  viewInfo.subresourceRange.aspectMask = vk::ImageAspectFlagBits::eColor;
   viewInfo.subresourceRange.baseMipLevel = 0;
   viewInfo.subresourceRange.levelCount = 1;
   viewInfo.subresourceRange.baseArrayLayer = 0;
   viewInfo.subresourceRange.layerCount = 1;
 
-  VkImageView imageView;
-  if (vkCreateImageView(device_, &viewInfo, nullptr, &imageView) !=
-      VK_SUCCESS) {
-    throw std::runtime_error("failed to create texture image view!");
-  }
-
-  return imageView;
+  return device_.createImageView(viewInfo);
 }
 
 void VulkanDemo::CreateTextureImageView() {
-  textureImageView = CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB);
+  textureImageView = CreateImageView(textureImage, 
+  vk::Format::eR8G8B8A8Srgb);
 }
 
 void VulkanDemo::createTextureSampler() {
@@ -908,7 +893,7 @@ void VulkanDemo::CreateCommandBuffers() {
     render_pass_info.renderPass = render_pass_;
     render_pass_info.framebuffer = swap_chain_framebuffers_[i];
     render_pass_info.renderArea.offset = {0, 0};
-    render_pass_info.renderArea.extent = swap_chain_extent_;
+    render_pass_info.renderArea.extent = (VkExtent2D)swap_chain_extent_;
 
     VkClearValue clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
     render_pass_info.clearValueCount = 1;
@@ -1092,14 +1077,14 @@ vk::SurfaceFormatKHR VulkanDemo::ChooseSwapSurfaceFormat(
   return available_formats[0];
 }
 
-VkPresentModeKHR VulkanDemo::ChooseSwapPresentMode(
-    const std::vector<VkPresentModeKHR> available_present_modes) {
-  VkPresentModeKHR best_mode = VK_PRESENT_MODE_FIFO_KHR;
+vk::PresentModeKHR VulkanDemo::ChooseSwapPresentMode(
+    const std::vector<vk::PresentModeKHR> available_present_modes) {
+  vk::PresentModeKHR best_mode = vk::PresentModeKHR::eFifo;
 
   for (const auto& available_present_mode : available_present_modes) {
-    if (available_present_mode == VK_PRESENT_MODE_MAILBOX_KHR) {
+    if (available_present_mode == vk::PresentModeKHR::eMailbox) {
       return available_present_mode;
-    } else if (available_present_mode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+    } else if (available_present_mode == vk::PresentModeKHR::eImmediate) {
       best_mode = available_present_mode;
     }
   }
@@ -1107,8 +1092,8 @@ VkPresentModeKHR VulkanDemo::ChooseSwapPresentMode(
   return best_mode;
 }
 
-VkExtent2D VulkanDemo::ChooseSwapExtent(
-    const VkSurfaceCapabilitiesKHR& capabilities) {
+vk::Extent2D VulkanDemo::ChooseSwapExtent(
+    const vk::SurfaceCapabilitiesKHR& capabilities) {
   if (capabilities.currentExtent.width !=
       std::numeric_limits<uint32_t>::max()) {
     return capabilities.currentExtent;
@@ -1116,8 +1101,8 @@ VkExtent2D VulkanDemo::ChooseSwapExtent(
     int width, height;
     glfwGetFramebufferSize(window_, &width, &height);
 
-    VkExtent2D actual_extent = {static_cast<uint32_t>(width),
-                                static_cast<uint32_t>(height)};
+    vk::Extent2D actual_extent = {static_cast<uint32_t>(width),
+                                  static_cast<uint32_t>(height)};
 
     actual_extent.width = std::max(
         capabilities.minImageExtent.width,
@@ -1132,24 +1117,9 @@ VkExtent2D VulkanDemo::ChooseSwapExtent(
 
 SwapChainSupportDetails VulkanDemo::QuerySwapChainSupport(
     vk::PhysicalDevice device) {
-  SwapChainSupportDetails details;
-
-  vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface_,
-                                            &details.capabilities);
-
-  details.formats = device.getSurfaceFormatsKHR(surface_);
-
-  uint32_t present_mode_count;
-  vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface_,
-                                            &present_mode_count, nullptr);
-
-  if (present_mode_count != 0) {
-    details.present_modes.resize(present_mode_count);
-    vkGetPhysicalDeviceSurfacePresentModesKHR(
-        device, surface_, &present_mode_count, details.present_modes.data());
-  }
-
-  return details;
+  return {device.getSurfaceCapabilitiesKHR(surface_),
+          device.getSurfaceFormatsKHR(surface_),
+          device.getSurfacePresentModesKHR(surface_)};
 }
 
 bool VulkanDemo::IsDeviceSuitable(vk::PhysicalDevice device) {

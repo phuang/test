@@ -31,9 +31,9 @@ struct QueueFamilyIndices {
 };
 
 struct SwapChainSupportDetails {
-  VkSurfaceCapabilitiesKHR capabilities;
+  vk::SurfaceCapabilitiesKHR capabilities;
   std::vector<vk::SurfaceFormatKHR> formats;
-  std::vector<VkPresentModeKHR> present_modes;
+  std::vector<vk::PresentModeKHR> present_modes;
 };
 
 struct UniformBufferObject {
@@ -80,7 +80,7 @@ class VulkanDemo {
                    VkImage& image,
                    VkDeviceMemory& imageMemory);
   void CreateTextureImage();
-  VkImageView CreateImageView(VkImage image, VkFormat format);
+  vk::ImageView CreateImageView(vk::Image image, vk::Format format);
   void CreateTextureImageView();
   void createTextureSampler();
   void CreateVertexBuffer();
@@ -96,9 +96,9 @@ class VulkanDemo {
   VkShaderModule CreateShaderModule(const std::vector<char>& code);
   vk::SurfaceFormatKHR ChooseSwapSurfaceFormat(
       const std::vector<vk::SurfaceFormatKHR>& available_formats);
-  VkPresentModeKHR ChooseSwapPresentMode(
-      const std::vector<VkPresentModeKHR> available_present_modes);
-  VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
+  vk::PresentModeKHR ChooseSwapPresentMode(
+      const std::vector<vk::PresentModeKHR> available_present_modes);
+  vk::Extent2D ChooseSwapExtent(const vk::SurfaceCapabilitiesKHR& capabilities);
   SwapChainSupportDetails QuerySwapChainSupport(vk::PhysicalDevice device);
   bool IsDeviceSuitable(vk::PhysicalDevice device);
   bool CheckDeviceExtensionSupport(vk::PhysicalDevice device);
@@ -134,9 +134,9 @@ class VulkanDemo {
   vk::Queue present_queue_;
 
   VkSwapchainKHR swap_chain_ = VK_NULL_HANDLE;
-  std::vector<VkImage> swap_chain_images_;
+  std::vector<vk::Image> swap_chain_images_;
   vk::Format swap_chain_image_format_;
-  VkExtent2D swap_chain_extent_;
+  vk::Extent2D swap_chain_extent_;
   std::vector<VkImageView> swap_chain_image_views_;
   std::vector<VkFramebuffer> swap_chain_framebuffers_;
 
