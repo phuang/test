@@ -649,12 +649,13 @@ void VulkanDemo::CreateImage(uint32_t width,
 
   image = device_.createImage(imageInfo);
 
-  vk::MemoryRequirements requirements = device_.getImageMemoryRequirements(image);
+  vk::MemoryRequirements requirements =
+      device_.getImageMemoryRequirements(image);
 
   vk::MemoryAllocateInfo allocInfo;
   allocInfo.allocationSize = requirements.size;
-  allocInfo.memoryTypeIndex =
-      FindMemoryType(requirements.memoryTypeBits, (VkMemoryPropertyFlags)properties);
+  allocInfo.memoryTypeIndex = FindMemoryType(requirements.memoryTypeBits,
+                                             (VkMemoryPropertyFlags)properties);
 
   imageMemory = device_.allocateMemory(allocInfo);
   device_.bindImageMemory(image, imageMemory, 0);
@@ -681,13 +682,11 @@ void VulkanDemo::CreateTextureImage() {
   device_.unmapMemory(stagingBufferMemory);
   stbi_image_free(pixels);
 
-  CreateImage(texWidth, texHeight,
-  vk::Format::eR8G8B8A8Srgb,
-  vk::ImageTiling::eOptimal,
-  vk::ImageUsageFlagBits::eTransferDst |
-  vk::ImageUsageFlagBits::eSampled,
-  vk::MemoryPropertyFlagBits::eDeviceLocal,texture_image_,
-              texture_image_memory_);
+  CreateImage(
+      texWidth, texHeight, vk::Format::eR8G8B8A8Srgb, vk::ImageTiling::eOptimal,
+      vk::ImageUsageFlagBits::eTransferDst | vk::ImageUsageFlagBits::eSampled,
+      vk::MemoryPropertyFlagBits::eDeviceLocal, texture_image_,
+      texture_image_memory_);
 
   transitionImageLayout(texture_image_, VK_FORMAT_R8G8B8A8_SRGB,
                         VK_IMAGE_LAYOUT_UNDEFINED,
@@ -768,8 +767,7 @@ void VulkanDemo::CreateIndexBuffer() {
                VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
                    VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
                &index_buffer_, &index_buffer_memory_);
-  void* data = 
-  device_.mapMemory(index_buffer_memory_, 0, buffer_size);
+  void* data = device_.mapMemory(index_buffer_memory_, 0, buffer_size);
   memcpy(data, kIndices.data(), buffer_size);
   device_.unmapMemory(index_buffer_memory_);
 }
@@ -789,21 +787,11 @@ void VulkanDemo::CreateUniformBuffers() {
 }
 
 void VulkanDemo::CreateDescriptorPool() {
-  VkDescriptorPoolSize poolSize{};
-  poolSize.type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  poolSize.descriptorCount = static_cast<uint32_t>(swap_chain_images_.size());
-
-  VkDescriptorPoolCreateInfo poolInfo{};
-  poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-  poolInfo.poolSizeCount = 1;
-  poolInfo.pPoolSizes = &poolSize;
-
-  poolInfo.maxSets = static_cast<uint32_t>(swap_chain_images_.size());
-
-  if (vkCreateDescriptorPool(device_, &poolInfo, nullptr, &descriptor_pool_) !=
-      VK_SUCCESS) {
-    throw std::runtime_error("failed to create descriptor pool!");
-  }
+  vk::DescriptorPoolSize pool_size(vk::DescriptorType::eUniformBuffer,
+                                   swap_chain_images_.size());
+  vk::DescriptorPoolCreateInfo pool_info({}, swap_chain_images_.size(), 1,
+                                         &pool_size);
+  descriptor_pool_ = device_.createDescriptorPool(pool_info);
 }
 
 void VulkanDemo::CreateDescriptorSets() {
@@ -959,7 +947,8 @@ void VulkanDemo::UpdateUniformBuffer(uint32_t current_image) {
       glm::radians(45.0f),
       swap_chain_extent_.width / (float)swap_chain_extent_.height, 0.1f, 10.0f);
   ubo.proj[1][1] *= -1;
-  void* data = device_.mapMemory(uniform_buffers_memory_[current_image], 0, sizeof(ubo));
+  void* data =
+      device_.mapMemory(uniform_buffers_memory_[current_image], 0, sizeof(ubo));
   memcpy(data, &ubo, sizeof(ubo));
   device_.unmapMemory(uniform_buffers_memory_[current_image]);
 }
