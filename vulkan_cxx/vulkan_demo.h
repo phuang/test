@@ -80,7 +80,7 @@ class VulkanDemo {
                    VkImage& image,
                    VkDeviceMemory& imageMemory);
   void CreateTextureImage();
-  VkImageView createImageView(VkImage image, VkFormat format);
+  VkImageView CreateImageView(VkImage image, VkFormat format);
   void CreateTextureImageView();
   void createTextureSampler();
   void CreateVertexBuffer();
@@ -99,10 +99,10 @@ class VulkanDemo {
   VkPresentModeKHR ChooseSwapPresentMode(
       const std::vector<VkPresentModeKHR> available_present_modes);
   VkExtent2D ChooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
-  SwapChainSupportDetails QuerySwapChainSupport(VkPhysicalDevice device);
-  bool IsDeviceSuitable(VkPhysicalDevice device);
-  bool CheckDeviceExtensionSupport(VkPhysicalDevice device);
-  QueueFamilyIndices FindQueueFamilies(VkPhysicalDevice device);
+  SwapChainSupportDetails QuerySwapChainSupport(vk::PhysicalDevice device);
+  bool IsDeviceSuitable(vk::PhysicalDevice device);
+  bool CheckDeviceExtensionSupport(vk::PhysicalDevice device);
+  QueueFamilyIndices FindQueueFamilies(vk::PhysicalDevice device);
   std::vector<const char*> GetRequiredExtensions();
   bool CheckValidationLayerSupport();
   uint32_t FindMemoryType(uint32_t type_filter,
@@ -124,15 +124,14 @@ class VulkanDemo {
 
   vk::DynamicLoader dl_;
   vk::Instance instance_;
-  // VkInstance instance_ = VK_NULL_HANDLE;
   vk::DebugUtilsMessengerEXT callback_;
-  VkSurfaceKHR surface_ = VK_NULL_HANDLE;
+  vk::SurfaceKHR surface_;
 
-  VkPhysicalDevice physical_device_ = VK_NULL_HANDLE;
-  VkDevice device_ = VK_NULL_HANDLE;
+  vk::PhysicalDevice physical_device_;
+  vk::Device device_;
 
-  VkQueue graphics_queue_ = VK_NULL_HANDLE;
-  VkQueue present_queue_ = VK_NULL_HANDLE;
+  vk::Queue graphics_queue_;
+  vk::Queue present_queue_;
 
   VkSwapchainKHR swap_chain_ = VK_NULL_HANDLE;
   std::vector<VkImage> swap_chain_images_;

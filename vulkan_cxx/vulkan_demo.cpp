@@ -147,62 +147,60 @@ void VulkanDemo::MainLoop() {
     DrawFrame();
   }
 
-  vkDeviceWaitIdle(device_);
+  device_.waitIdle();
 }
 
 void VulkanDemo::CleanupSwapChain() {
   for (auto framebuffer : swap_chain_framebuffers_) {
-    vkDestroyFramebuffer(device_, framebuffer, nullptr);
+    device_.destroyFramebuffer(framebuffer);
   }
 
   vkFreeCommandBuffers(device_, command_pool_,
                        static_cast<uint32_t>(command_buffers_.size()),
                        command_buffers_.data());
 
-  vkDestroyPipeline(device_, graphics_pipeline_, nullptr);
-  vkDestroyPipelineLayout(device_, pipeline_layout_, nullptr);
-  vkDestroyRenderPass(device_, render_pass_, nullptr);
+  device_.destroyPipeline(graphics_pipeline_);
+  device_.destroyPipelineLayout(pipeline_layout_);
+  device_.destroyRenderPass(render_pass_);
 
-  for (auto image_view : swap_chain_image_views_) {
-    vkDestroyImageView(device_, image_view, nullptr);
-  }
+  for (auto image_view : swap_chain_image_views_)
+    device_.destroyImageView(image_view);
 
-  vkDestroySwapchainKHR(device_, swap_chain_, nullptr);
+  device_.destroySwapchainKHR(swap_chain_);
 
   for (size_t i = 0; i < swap_chain_images_.size(); i++) {
-    vkDestroyBuffer(device_, uniform_buffers_[i], nullptr);
-    vkFreeMemory(device_, uniform_buffers_memory_[i], nullptr);
+    device_.destroyBuffer(uniform_buffers_[i]);
+    device_.freeMemory(uniform_buffers_memory_[i]);
   }
 
-  vkDestroyDescriptorPool(device_, descriptor_pool_, nullptr);
+  device_.destroyDescriptorPool(descriptor_pool_);
 }
 
 void VulkanDemo::Cleanup() {
   CleanupSwapChain();
 
-  vkDestroyBuffer(device_, vertex_buffer_, nullptr);
-  vkFreeMemory(device_, vertex_buffer_memory_, nullptr);
-  vkDestroyBuffer(device_, index_buffer_, nullptr);
-  vkFreeMemory(device_, index_buffer_memory_, nullptr);
-  vkDestroyDescriptorSetLayout(device_, descriptor_set_layout_, nullptr);
+  device_.destroyBuffer(vertex_buffer_);
+  device_.freeMemory(vertex_buffer_memory_);
+  device_.destroyBuffer(index_buffer_);
+  device_.freeMemory(index_buffer_memory_);
+  device_.destroyDescriptorSetLayout(descriptor_set_layout_);
 
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-    vkDestroySemaphore(device_, render_finished_semaphores_[i], nullptr);
-    vkDestroySemaphore(device_, image_available_semaphores_[i], nullptr);
-    vkDestroyFence(device_, in_flight_fences_[i], nullptr);
+    device_.destroySemaphore(render_finished_semaphores_[i]);
+    device_.destroySemaphore(image_available_semaphores_[i]);
+    device_.destroyFence(in_flight_fences_[i]);
   }
 
-  vkDestroyCommandPool(device_, command_pool_, nullptr);
+  device_.destroyCommandPool(command_pool_);
 
-  vkDestroyDevice(device_, nullptr);
+  device_.destroy();
 
   if (kEnableValidationLayers) {
     instance_.destroyDebugUtilsMessengerEXT(callback_);
   }
 
-  vkDestroySurfaceKHR(instance_, surface_, nullptr);
+  instance_.destroySurfaceKHR(surface_);
   instance_.destroy();
-  // vkDestroyInstance(instance_, nullptr);
 
   glfwDestroyWindow(window_);
 
@@ -254,36 +252,34 @@ void VulkanDemo::SetupDebugCallback() {
   if (!kEnableValidationLayers)
     return;
 
-  vk::DebugUtilsMessageSeverityFlagsEXT serviceFlags(
+  constexpr vk::DebugUtilsMessageSeverityFlagsEXT kServiceFlags = 
       vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
       vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
-      vk::DebugUtilsMessageSeverityFlagBitsEXT::eError);
-  vk::DebugUtilsMessageTypeFlagsEXT messageTypeFlags(
+      vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
+  constexpr vk::DebugUtilsMessageTypeFlagsEXT kMessageTypeFlags =
       vk::DebugUtilsMessageTypeFlagBitsEXT::eGeneral |
       vk::DebugUtilsMessageTypeFlagBitsEXT::eValidation |
-      vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance);
+      vk::DebugUtilsMessageTypeFlagBitsEXT::ePerformance;
   vk::DebugUtilsMessengerCreateInfoEXT create_info(
-      {}, serviceFlags, messageTypeFlags, DebugCallback, nullptr);
+      {}, kServiceFlags, kMessageTypeFlags, DebugCallback, nullptr);
   callback_ = instance_.createDebugUtilsMessengerEXT(create_info);
 }
 
 void VulkanDemo::CreateSurface() {
-  if (glfwCreateWindowSurface(instance_, window_, nullptr, &surface_) !=
+  VkSurfaceKHR surface = VK_NULL_HANDLE;
+  if (glfwCreateWindowSurface(instance_, window_, nullptr, &surface) !=
       VK_SUCCESS) {
     throw std::runtime_error("failed to create window surface!");
   }
+  surface_ = surface;
 }
 
 void VulkanDemo::PickPhysicalDevice() {
-  uint32_t deviceCount = 0;
-  vkEnumeratePhysicalDevices(instance_, &deviceCount, nullptr);
+  auto devices = instance_.enumeratePhysicalDevices();
 
-  if (deviceCount == 0) {
+  if (devices.empty()) {
     throw std::runtime_error("failed to find GPUs with Vulkan support!");
   }
-
-  std::vector<VkPhysicalDevice> devices(deviceCount);
-  vkEnumeratePhysicalDevices(instance_, &deviceCount, devices.data());
 
   for (const auto& device : devices) {
     if (IsDeviceSuitable(device)) {
@@ -292,7 +288,7 @@ void VulkanDemo::PickPhysicalDevice() {
     }
   }
 
-  if (physical_device_ == VK_NULL_HANDLE) {
+  if (!physical_device_) {
     throw std::runtime_error("failed to find a suitable GPU!");
   }
 }
@@ -300,50 +296,29 @@ void VulkanDemo::PickPhysicalDevice() {
 void VulkanDemo::CreateLogicalDevice() {
   QueueFamilyIndices indices = FindQueueFamilies(physical_device_);
 
-  std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
+  std::vector<vk::DeviceQueueCreateInfo> queueCreateInfos;
   std::set<int> uniqueQueueFamilies = {indices.graphics_family,
                                        indices.present_family};
 
   float queuePriority = 1.0f;
   for (int queueFamily : uniqueQueueFamilies) {
-    VkDeviceQueueCreateInfo queueCreateInfo = {};
-    queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
-    queueCreateInfo.queueFamilyIndex = queueFamily;
-    queueCreateInfo.queueCount = 1;
-    queueCreateInfo.pQueuePriorities = &queuePriority;
+    vk::DeviceQueueCreateInfo queueCreateInfo({}, queueFamily, 1,
+                                              &queuePriority);
     queueCreateInfos.push_back(queueCreateInfo);
   }
 
-  VkPhysicalDeviceFeatures deviceFeatures = {};
+  vk::PhysicalDeviceFeatures deviceFeatures;
 
-  VkDeviceCreateInfo createInfo = {};
-  createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+  vk::DeviceCreateInfo create_info(
+      {}, queueCreateInfos.size(), queueCreateInfos.data(),
+      kEnableValidationLayers ? kValidationLayers.size() : 0,
+      kEnableValidationLayers ? kValidationLayers.data() : nullptr,
+      kDeviceExtensions.size(), kDeviceExtensions.data(), &deviceFeatures);
 
-  createInfo.queueCreateInfoCount =
-      static_cast<uint32_t>(queueCreateInfos.size());
-  createInfo.pQueueCreateInfos = queueCreateInfos.data();
+  device_ = physical_device_.createDevice(create_info);
 
-  createInfo.pEnabledFeatures = &deviceFeatures;
-
-  createInfo.enabledExtensionCount =
-      static_cast<uint32_t>(kDeviceExtensions.size());
-  createInfo.ppEnabledExtensionNames = kDeviceExtensions.data();
-
-  if (kEnableValidationLayers) {
-    createInfo.enabledLayerCount =
-        static_cast<uint32_t>(kValidationLayers.size());
-    createInfo.ppEnabledLayerNames = kValidationLayers.data();
-  } else {
-    createInfo.enabledLayerCount = 0;
-  }
-
-  if (vkCreateDevice(physical_device_, &createInfo, nullptr, &device_) !=
-      VK_SUCCESS) {
-    throw std::runtime_error("failed to create logical device!");
-  }
-
-  vkGetDeviceQueue(device_, indices.graphics_family, 0, &graphics_queue_);
-  vkGetDeviceQueue(device_, indices.present_family, 0, &present_queue_);
+  graphics_queue_ = device_.getQueue(indices.graphics_family, 0);
+  present_queue_ = device_.getQueue(indices.present_family, 0);
 }
 
 void VulkanDemo::CreateSwapChain() {
@@ -409,7 +384,7 @@ void VulkanDemo::CreateImageViews() {
 
   for (size_t i = 0; i < swap_chain_images_.size(); i++) {
     swap_chain_image_views_[i] =
-        createImageView(swap_chain_images_[i], swap_chain_image_format_);
+        CreateImageView(swap_chain_images_[i], swap_chain_image_format_);
   }
 }
 
@@ -741,7 +716,7 @@ void VulkanDemo::CreateTextureImage() {
                         VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
 }
 
-VkImageView VulkanDemo::createImageView(VkImage image, VkFormat format) {
+VkImageView VulkanDemo::CreateImageView(VkImage image, VkFormat format) {
   VkImageViewCreateInfo viewInfo{};
   viewInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
   viewInfo.image = image;
@@ -763,7 +738,7 @@ VkImageView VulkanDemo::createImageView(VkImage image, VkFormat format) {
 }
 
 void VulkanDemo::CreateTextureImageView() {
-  textureImageView = createImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB);
+  textureImageView = CreateImageView(textureImage, VK_FORMAT_R8G8B8A8_SRGB);
 }
 
 void VulkanDemo::createTextureSampler() {
@@ -1154,7 +1129,7 @@ VkExtent2D VulkanDemo::ChooseSwapExtent(
 }
 
 SwapChainSupportDetails VulkanDemo::QuerySwapChainSupport(
-    VkPhysicalDevice device) {
+    vk::PhysicalDevice device) {
   SwapChainSupportDetails details;
 
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface_,
@@ -1183,7 +1158,7 @@ SwapChainSupportDetails VulkanDemo::QuerySwapChainSupport(
   return details;
 }
 
-bool VulkanDemo::IsDeviceSuitable(VkPhysicalDevice device) {
+bool VulkanDemo::IsDeviceSuitable(vk::PhysicalDevice device) {
   QueueFamilyIndices indices = FindQueueFamilies(device);
 
   bool extensions_supported = CheckDeviceExtensionSupport(device);
@@ -1198,7 +1173,7 @@ bool VulkanDemo::IsDeviceSuitable(VkPhysicalDevice device) {
   return indices.is_complete() && extensions_supported && swap_chain_adequate;
 }
 
-bool VulkanDemo::CheckDeviceExtensionSupport(VkPhysicalDevice device) {
+bool VulkanDemo::CheckDeviceExtensionSupport(vk::PhysicalDevice device) {
   uint32_t extension_count;
   vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count,
                                        nullptr);
@@ -1217,7 +1192,7 @@ bool VulkanDemo::CheckDeviceExtensionSupport(VkPhysicalDevice device) {
   return required_extensions.empty();
 }
 
-QueueFamilyIndices VulkanDemo::FindQueueFamilies(VkPhysicalDevice device) {
+QueueFamilyIndices VulkanDemo::FindQueueFamilies(vk::PhysicalDevice device) {
   QueueFamilyIndices indices;
 
   uint32_t queue_family_count = 0;
