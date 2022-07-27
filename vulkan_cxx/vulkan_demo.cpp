@@ -252,7 +252,7 @@ void VulkanDemo::SetupDebugCallback() {
   if (!kEnableValidationLayers)
     return;
 
-  constexpr vk::DebugUtilsMessageSeverityFlagsEXT kServiceFlags = 
+  constexpr vk::DebugUtilsMessageSeverityFlagsEXT kServiceFlags =
       vk::DebugUtilsMessageSeverityFlagBitsEXT::eVerbose |
       vk::DebugUtilsMessageSeverityFlagBitsEXT::eWarning |
       vk::DebugUtilsMessageSeverityFlagBitsEXT::eError;
@@ -325,7 +325,7 @@ void VulkanDemo::CreateSwapChain() {
   SwapChainSupportDetails swapChainSupport =
       QuerySwapChainSupport(physical_device_);
 
-  VkSurfaceFormatKHR surfaceFormat =
+  vk::SurfaceFormatKHR surfaceFormat =
       ChooseSwapSurfaceFormat(swapChainSupport.formats);
   VkPresentModeKHR presentMode =
       ChooseSwapPresentMode(swapChainSupport.present_modes);
@@ -579,8 +579,8 @@ void VulkanDemo::CreateGraphicsPipeline() {
     throw std::runtime_error("failed to create graphics pipeline!");
   }
 
-  vkDestroyShaderModule(device_, frag_shader_module, nullptr);
-  vkDestroyShaderModule(device_, vert_shader_module, nullptr);
+  device_.destroyShaderModule(frag_shader_module);
+  device_.destroyShaderModule(vert_shader_module);
 }
 
 void VulkanDemo::CreateFramebuffers() {
@@ -990,6 +990,8 @@ void VulkanDemo::UpdateUniformBuffer(uint32_t current_image) {
 }
 
 void VulkanDemo::DrawFrame() {
+  // device_.waitForFences(1, &in_flight_fences_[current_frame_], VK_TRUE,
+  //                       std::numeric_limits<uint64_t>::max());
   vkWaitForFences(device_, 1, &in_flight_fences_[current_frame_], VK_TRUE,
                   std::numeric_limits<uint64_t>::max());
 
@@ -1073,16 +1075,16 @@ VkShaderModule VulkanDemo::CreateShaderModule(const std::vector<char>& code) {
   return shader_module;
 }
 
-VkSurfaceFormatKHR VulkanDemo::ChooseSwapSurfaceFormat(
-    const std::vector<VkSurfaceFormatKHR>& available_formats) {
+vk::SurfaceFormatKHR VulkanDemo::ChooseSwapSurfaceFormat(
+    const std::vector<vk::SurfaceFormatKHR>& available_formats) {
   if (available_formats.size() == 1 &&
-      available_formats[0].format == VK_FORMAT_UNDEFINED) {
-    return {VK_FORMAT_B8G8R8A8_UNORM, VK_COLOR_SPACE_SRGB_NONLINEAR_KHR};
+      available_formats[0].format == vk::Format::eUndefined) {
+    return {vk::Format::eB8G8R8A8Unorm, vk::ColorSpaceKHR::eSrgbNonlinear};
   }
 
   for (const auto& available_format : available_formats) {
-    if (available_format.format == VK_FORMAT_B8G8R8A8_UNORM &&
-        available_format.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+    if (available_format.format == vk::Format::eB8G8R8A8Unorm &&
+        available_format.colorSpace == vk::ColorSpaceKHR::eSrgbNonlinear) {
       return available_format;
     }
   }
@@ -1135,15 +1137,7 @@ SwapChainSupportDetails VulkanDemo::QuerySwapChainSupport(
   vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, surface_,
                                             &details.capabilities);
 
-  uint32_t format_count;
-  vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface_, &format_count,
-                                       nullptr);
-
-  if (format_count != 0) {
-    details.formats.resize(format_count);
-    vkGetPhysicalDeviceSurfaceFormatsKHR(device, surface_, &format_count,
-                                         details.formats.data());
-  }
+  details.formats = device.getSurfaceFormatsKHR(surface_);
 
   uint32_t present_mode_count;
   vkGetPhysicalDeviceSurfacePresentModesKHR(device, surface_,
