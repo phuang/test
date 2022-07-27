@@ -787,10 +787,10 @@ void VulkanDemo::CreateUniformBuffers() {
 }
 
 void VulkanDemo::CreateDescriptorPool() {
-  vk::DescriptorPoolSize pool_size(vk::DescriptorType::eUniformBuffer,
-                                   swap_chain_images_.size());
-  vk::DescriptorPoolCreateInfo pool_info({}, swap_chain_images_.size(), 1,
-                                         &pool_size);
+  std::array<vk::DescriptorPoolSize, 1> pool_size{vk::DescriptorPoolSize{
+      vk::DescriptorType::eUniformBuffer, (uint32_t)swap_chain_images_.size()}};
+  vk::DescriptorPoolCreateInfo pool_info({}, swap_chain_images_.size(),
+                                         pool_size);
   descriptor_pool_ = device_.createDescriptorPool(pool_info);
 }
 
