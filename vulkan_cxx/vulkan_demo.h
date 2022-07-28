@@ -108,7 +108,7 @@ class VulkanDemo {
   uint32_t FindMemoryType(uint32_t type_filter,
                           VkMemoryPropertyFlags properties);
   VkCommandBuffer beginSingleTimeCommands();
-  void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+  void endSingleTimeCommands(vk::CommandBuffer commandBuffer);
   void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
   void transitionImageLayout(VkImage image,
                              VkFormat format,

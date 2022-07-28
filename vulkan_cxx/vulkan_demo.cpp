@@ -600,8 +600,8 @@ void VulkanDemo::CreateBuffer(size_t buffer_size,
   vk::MemoryAllocateInfo alloc_info;
 
   alloc_info.setAllocationSize(mem_requirements.size)
-      .setMemoryTypeIndex(
-          FindMemoryType(mem_requirements.memoryTypeBits, (VkMemoryPropertyFlags)properties));
+      .setMemoryTypeIndex(FindMemoryType(mem_requirements.memoryTypeBits,
+                                         (VkMemoryPropertyFlags)properties));
   *memory = device_.allocateMemory(alloc_info);
   device_.bindBufferMemory(*buffer, *memory, 0);
 }
@@ -655,7 +655,8 @@ void VulkanDemo::CreateTextureImage() {
   vk::Buffer stagingBuffer;
   vk::DeviceMemory stagingBufferMemory;
   CreateBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc,
-               vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+               vk::MemoryPropertyFlagBits::eHostVisible |
+                   vk::MemoryPropertyFlagBits::eHostCoherent,
                &stagingBuffer, &stagingBufferMemory);
   void* data = device_.mapMemory(stagingBufferMemory, 0, imageSize);
   memcpy(data, pixels, static_cast<size_t>(imageSize));
@@ -733,7 +734,8 @@ void VulkanDemo::createTextureSampler() {
 void VulkanDemo::CreateVertexBuffer() {
   auto buffer_size = sizeof(kVertices[0]) * kVertices.size();
   CreateBuffer(buffer_size, vk::BufferUsageFlagBits::eVertexBuffer,
-               vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+               vk::MemoryPropertyFlagBits::eHostVisible |
+                   vk::MemoryPropertyFlagBits::eHostCoherent,
                &vertex_buffer_, &vertex_buffer_memory_);
   void* data = device_.mapMemory(vertex_buffer_memory_, 0, buffer_size);
   memcpy(data, kVertices.data(), buffer_size);
@@ -743,7 +745,8 @@ void VulkanDemo::CreateVertexBuffer() {
 void VulkanDemo::CreateIndexBuffer() {
   auto buffer_size = sizeof(kIndices[0]) * kIndices.size();
   CreateBuffer(buffer_size, vk::BufferUsageFlagBits::eIndexBuffer,
-  vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+               vk::MemoryPropertyFlagBits::eHostVisible |
+                   vk::MemoryPropertyFlagBits::eHostCoherent,
                &index_buffer_, &index_buffer_memory_);
   void* data = device_.mapMemory(index_buffer_memory_, 0, buffer_size);
   memcpy(data, kIndices.data(), buffer_size);
@@ -758,7 +761,8 @@ void VulkanDemo::CreateUniformBuffers() {
 
   for (size_t i = 0; i < swap_chain_images_.size(); i++) {
     CreateBuffer(buffer_size, vk::BufferUsageFlagBits::eUniformBuffer,
-                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
+                 vk::MemoryPropertyFlagBits::eHostVisible |
+                     vk::MemoryPropertyFlagBits::eHostCoherent,
                  &uniform_buffers_[i], &uniform_buffers_memory_[i]);
   }
 }
@@ -1195,35 +1199,26 @@ uint32_t VulkanDemo::FindMemoryType(uint32_t type_filter,
 }
 
 VkCommandBuffer VulkanDemo::beginSingleTimeCommands() {
-  VkCommandBufferAllocateInfo allocInfo{};
-  allocInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-  allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  allocInfo.commandPool = command_pool_;
-  allocInfo.commandBufferCount = 1;
+  vk::CommandBufferAllocateInfo alloc_info(command_pool_,
+                                           vk::CommandBufferLevel::ePrimary, 1);
+  auto command_buffer = device_.allocateCommandBuffers(alloc_info)[0];
 
-  VkCommandBuffer commandBuffer;
-  vkAllocateCommandBuffers(device_, &allocInfo, &commandBuffer);
+  vk::CommandBufferBeginInfo begin_info(
+      vk::CommandBufferUsageFlagBits::eOneTimeSubmit);
+  command_buffer.begin(begin_info);
 
-  VkCommandBufferBeginInfo beginInfo{};
-  beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-  beginInfo.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
-
-  vkBeginCommandBuffer(commandBuffer, &beginInfo);
-
-  return commandBuffer;
+  return command_buffer;
 }
 
-void VulkanDemo::endSingleTimeCommands(VkCommandBuffer commandBuffer) {
-  vkEndCommandBuffer(commandBuffer);
-
-  VkSubmitInfo submitInfo{};
-  submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
-  submitInfo.commandBufferCount = 1;
-  submitInfo.pCommandBuffers = &commandBuffer;
-
-  vkQueueSubmit(graphics_queue_, 1, &submitInfo, VK_NULL_HANDLE);
+void VulkanDemo::endSingleTimeCommands(vk::CommandBuffer command_buffer) {
+  command_buffer.end();
+  
+  vk::SubmitInfo submit_info;
+  submit_info.setCommandBuffers(command_buffer);
+  graphics_queue_.submit(submit_info);
   graphics_queue_.waitIdle();
-  vkFreeCommandBuffers(device_, command_pool_, 1, &commandBuffer);
+  
+  device_.freeCommandBuffers(command_pool_, command_buffer);
 }
 
 void VulkanDemo::copyBuffer(VkBuffer srcBuffer,
@@ -1253,8 +1248,6 @@ void VulkanDemo::transitionImageLayout(VkImage image,
   barrier.subresourceRange.levelCount = 1;
   barrier.subresourceRange.baseArrayLayer = 0;
   barrier.subresourceRange.layerCount = 1;
-  barrier.srcAccessMask = 0;  // TODO
-  barrier.dstAccessMask = 0;  // TODO
 
   VkPipelineStageFlags sourceStage;
   VkPipelineStageFlags destinationStage;
