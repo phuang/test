@@ -110,12 +110,12 @@ class VulkanDemo {
   VkCommandBuffer beginSingleTimeCommands();
   void endSingleTimeCommands(vk::CommandBuffer commandBuffer);
   void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
-  void transitionImageLayout(VkImage image,
-                             VkFormat format,
-                             VkImageLayout oldLayout,
-                             VkImageLayout newLayout);
-  void copyBufferToImage(VkBuffer buffer,
-                         VkImage image,
+  void transitionImageLayout(vk::Image image,
+                             vk::Format format,
+                             vk::ImageLayout oldLayout,
+                             vk::ImageLayout newLayout);
+  void copyBufferToImage(vk::Buffer buffer,
+                         vk::Image image,
                          uint32_t width,
                          uint32_t height);
 

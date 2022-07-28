@@ -669,15 +669,15 @@ void VulkanDemo::CreateTextureImage() {
       vk::MemoryPropertyFlagBits::eDeviceLocal, texture_image_,
       texture_image_memory_);
 
-  transitionImageLayout(texture_image_, VK_FORMAT_R8G8B8A8_SRGB,
-                        VK_IMAGE_LAYOUT_UNDEFINED,
-                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+  transitionImageLayout(texture_image_, vk::Format::eR8G8B8A8Srgb,
+                        vk::ImageLayout::eUndefined,
+                        vk::ImageLayout::eTransferDstOptimal);
   copyBufferToImage(stagingBuffer, texture_image_,
                     static_cast<uint32_t>(texWidth),
                     static_cast<uint32_t>(texHeight));
-  transitionImageLayout(texture_image_, VK_FORMAT_R8G8B8A8_SRGB,
-                        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
-                        VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+  transitionImageLayout(texture_image_, vk::Format::eR8G8B8A8Srgb,
+                        vk::ImageLayout::eTransferDstOptimal,
+                        vk::ImageLayout::eShaderReadOnlyOptimal);
 }
 
 vk::ImageView VulkanDemo::CreateImageView(vk::Image image, vk::Format format) {
@@ -1212,87 +1212,75 @@ VkCommandBuffer VulkanDemo::beginSingleTimeCommands() {
 
 void VulkanDemo::endSingleTimeCommands(vk::CommandBuffer command_buffer) {
   command_buffer.end();
-  
+
   vk::SubmitInfo submit_info;
   submit_info.setCommandBuffers(command_buffer);
   graphics_queue_.submit(submit_info);
   graphics_queue_.waitIdle();
-  
+
   device_.freeCommandBuffers(command_pool_, command_buffer);
 }
 
-void VulkanDemo::copyBuffer(VkBuffer srcBuffer,
-                            VkBuffer dstBuffer,
+void VulkanDemo::copyBuffer(VkBuffer src_buffer,
+                            VkBuffer dst_buffer,
                             VkDeviceSize size) {
-  VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+  vk::CommandBuffer command_buffer = beginSingleTimeCommands();
 
-  VkBufferCopy copyRegion{};
-  copyRegion.size = size;
-  vkCmdCopyBuffer(commandBuffer, srcBuffer, dstBuffer, 1, &copyRegion);
-
-  endSingleTimeCommands(commandBuffer);
+  vk::BufferCopy copy_region(0, 0, size);
+  command_buffer.copyBuffer(src_buffer, dst_buffer, copy_region);
+  endSingleTimeCommands(command_buffer);
 }
 
-void VulkanDemo::transitionImageLayout(VkImage image,
-                                       VkFormat format,
-                                       VkImageLayout oldLayout,
-                                       VkImageLayout newLayout) {
-  VkCommandBuffer commandBuffer = beginSingleTimeCommands();
-  VkImageMemoryBarrier barrier{};
-  barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
-  barrier.oldLayout = oldLayout;
-  barrier.newLayout = newLayout;
-  barrier.image = image;
-  barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-  barrier.subresourceRange.baseMipLevel = 0;
-  barrier.subresourceRange.levelCount = 1;
-  barrier.subresourceRange.baseArrayLayer = 0;
-  barrier.subresourceRange.layerCount = 1;
+void VulkanDemo::transitionImageLayout(vk::Image image,
+                                       vk::Format format,
+                                       vk::ImageLayout oldLayout,
+                                       vk::ImageLayout newLayout) {
+  vk::CommandBuffer commandBuffer = beginSingleTimeCommands();
+  vk::ImageMemoryBarrier barrier;
 
-  VkPipelineStageFlags sourceStage;
-  VkPipelineStageFlags destinationStage;
-  if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED &&
-      newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
-    barrier.srcAccessMask = 0;
-    barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+  barrier.setOldLayout(oldLayout)
+      .setNewLayout(newLayout)
+      .setImage(image)
+      .setSubresourceRange({vk::ImageAspectFlagBits::eColor, 0, 1, 0, 1});
 
-    sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
-    destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-  } else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL &&
-             newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
-    barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
-    barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
-
-    sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
-    destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+  vk::PipelineStageFlags sourceStage;
+  vk::PipelineStageFlags destinationStage;
+  if (oldLayout == vk::ImageLayout::eUndefined &&
+      newLayout == vk::ImageLayout::eTransferDstOptimal) {
+    barrier.setSrcAccessMask({});
+    barrier.setDstAccessMask(vk::AccessFlagBits::eTransferWrite);
+    sourceStage = vk::PipelineStageFlagBits::eTopOfPipe;
+    destinationStage = vk::PipelineStageFlagBits::eTransfer;
+  } else if (oldLayout == vk::ImageLayout::eTransferDstOptimal &&
+             newLayout == vk::ImageLayout::eShaderReadOnlyOptimal) {
+    barrier.setSrcAccessMask(vk::AccessFlagBits::eTransferWrite);
+    barrier.setDstAccessMask(vk::AccessFlagBits::eShaderRead);
+    sourceStage = vk::PipelineStageFlagBits::eTransfer;
+    destinationStage = vk::PipelineStageFlagBits::eFragmentShader;
   } else {
     throw std::invalid_argument("unsupported layout transition!");
   }
 
-  vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0,
-                       nullptr, 0, nullptr, 1, &barrier);
+  commandBuffer.pipelineBarrier(sourceStage, destinationStage, {}, {}, {},
+                                barrier);
   endSingleTimeCommands(commandBuffer);
 }
 
-void VulkanDemo::copyBufferToImage(VkBuffer buffer,
-                                   VkImage image,
+void VulkanDemo::copyBufferToImage(vk::Buffer buffer,
+                                   vk::Image image,
                                    uint32_t width,
                                    uint32_t height) {
-  VkCommandBuffer commandBuffer = beginSingleTimeCommands();
-  VkBufferImageCopy region{};
-  region.bufferOffset = 0;
-  region.bufferRowLength = 0;
-  region.bufferImageHeight = 0;
+  vk::CommandBuffer commandBuffer = beginSingleTimeCommands();
+  vk::BufferImageCopy region;
+  region.setBufferOffset(0)
+      .setBufferRowLength(0)
+      .setBufferImageHeight(0)
+      .setImageSubresource({vk::ImageAspectFlagBits::eColor, 0, 0, 1})
+      .setImageOffset({0, 0, 0})
+      .setImageExtent({width, height, 1});
+  commandBuffer.copyBufferToImage(buffer, image,
+                                  vk::ImageLayout::eTransferDstOptimal, region);
 
-  region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
-  region.imageSubresource.mipLevel = 0;
-  region.imageSubresource.baseArrayLayer = 0;
-  region.imageSubresource.layerCount = 1;
-
-  region.imageOffset = {0, 0, 0};
-  region.imageExtent = {width, height, 1};
-  vkCmdCopyBufferToImage(commandBuffer, buffer, image,
-                         VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
   endSingleTimeCommands(commandBuffer);
 }
 
