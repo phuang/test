@@ -146,7 +146,7 @@ class VulkanDemo {
   VkPipeline graphics_pipeline_ = VK_NULL_HANDLE;
 
   VkCommandPool command_pool_ = VK_NULL_HANDLE;
-  std::vector<VkCommandBuffer> command_buffers_;
+  std::vector<vk::CommandBuffer> command_buffers_;
 
   vk::Image texture_image_;
   vk::ImageView texture_image_view_;
@@ -164,9 +164,9 @@ class VulkanDemo {
   vk::DescriptorPool descriptor_pool_;
   std::vector<VkDescriptorSet> descriptor_sets_;
 
-  std::vector<VkSemaphore> image_available_semaphores_;
-  std::vector<VkSemaphore> render_finished_semaphores_;
-  std::vector<VkFence> in_flight_fences_;
+  std::vector<vk::Semaphore> image_available_semaphores_;
+  std::vector<vk::Semaphore> render_finished_semaphores_;
+  std::vector<vk::Fence> in_flight_fences_;
   size_t current_frame_ = 0;
 
   bool framebuffer_resized_ = false;

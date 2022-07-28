@@ -155,10 +155,7 @@ void VulkanDemo::CleanupSwapChain() {
     device_.destroyFramebuffer(framebuffer);
   }
 
-  vkFreeCommandBuffers(device_, command_pool_,
-                       static_cast<uint32_t>(command_buffers_.size()),
-                       command_buffers_.data());
-
+  device_.freeCommandBuffers(command_pool_, command_buffers_);
   device_.destroyPipeline(graphics_pipeline_);
   device_.destroyPipelineLayout(pipeline_layout_);
   device_.destroyRenderPass(render_pass_);
@@ -827,18 +824,10 @@ void VulkanDemo::CreateCommandPool() {
 }
 
 void VulkanDemo::CreateCommandBuffers() {
-  command_buffers_.resize(swap_chain_framebuffers_.size());
-
-  VkCommandBufferAllocateInfo alloc_info = {};
-  alloc_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
-  alloc_info.commandPool = command_pool_;
-  alloc_info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
-  alloc_info.commandBufferCount = (uint32_t)command_buffers_.size();
-
-  if (vkAllocateCommandBuffers(device_, &alloc_info, command_buffers_.data()) !=
-      VK_SUCCESS) {
-    throw std::runtime_error("failed to allocate command buffers!");
-  }
+  vk::CommandBufferAllocateInfo alloc_info(command_pool_,
+                                           vk::CommandBufferLevel::ePrimary,
+                                           swap_chain_framebuffers_.size());
+  command_buffers_ = device_.allocateCommandBuffers(alloc_info);
 
   for (size_t i = 0; i < command_buffers_.size(); i++) {
     VkCommandBufferBeginInfo begin_info = {};
@@ -886,27 +875,14 @@ void VulkanDemo::CreateCommandBuffers() {
 }
 
 void VulkanDemo::CreateSyncObjects() {
-  image_available_semaphores_.resize(MAX_FRAMES_IN_FLIGHT);
-  render_finished_semaphores_.resize(MAX_FRAMES_IN_FLIGHT);
-  in_flight_fences_.resize(MAX_FRAMES_IN_FLIGHT);
-
-  VkSemaphoreCreateInfo semaphoreInfo = {};
-  semaphoreInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
-
-  VkFenceCreateInfo fence_info = {};
-  fence_info.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
-  fence_info.flags = VK_FENCE_CREATE_SIGNALED_BIT;
-
+  vk::SemaphoreCreateInfo semaphore_info;
+  vk::FenceCreateInfo fence_info(vk::FenceCreateFlagBits::eSignaled);
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
-    if (vkCreateSemaphore(device_, &semaphoreInfo, nullptr,
-                          &image_available_semaphores_[i]) != VK_SUCCESS ||
-        vkCreateSemaphore(device_, &semaphoreInfo, nullptr,
-                          &render_finished_semaphores_[i]) != VK_SUCCESS ||
-        vkCreateFence(device_, &fence_info, nullptr, &in_flight_fences_[i]) !=
-            VK_SUCCESS) {
-      throw std::runtime_error(
-          "failed to create synchronization objects for a frame!");
-    }
+    image_available_semaphores_.emplace_back(
+        device_.createSemaphore(semaphore_info));
+    render_finished_semaphores_.emplace_back(
+        device_.createSemaphore(semaphore_info));
+    in_flight_fences_.emplace_back(device_.createFence(fence_info));
   }
 }
 
@@ -935,70 +911,46 @@ void VulkanDemo::UpdateUniformBuffer(uint32_t current_image) {
 }
 
 void VulkanDemo::DrawFrame() {
-  // device_.waitForFences(1, &in_flight_fences_[current_frame_], VK_TRUE,
-  //                       std::numeric_limits<uint64_t>::max());
-  vkWaitForFences(device_, 1, &in_flight_fences_[current_frame_], VK_TRUE,
-                  std::numeric_limits<uint64_t>::max());
+  vk::Result result =
+      device_.waitForFences(in_flight_fences_[current_frame_], VK_TRUE,
+                            std::numeric_limits<uint64_t>::max());
 
   uint32_t image_index;
-  VkResult result = vkAcquireNextImageKHR(
-      device_, swap_chain_, std::numeric_limits<uint64_t>::max(),
-      image_available_semaphores_[current_frame_], VK_NULL_HANDLE,
-      &image_index);
+  result = device_.acquireNextImageKHR(
+      swap_chain_, std::numeric_limits<uint64_t>::max(),
+      image_available_semaphores_[current_frame_], {}, &image_index);
 
-  if (result == VK_ERROR_OUT_OF_DATE_KHR) {
+  if (result == vk::Result::eErrorOutOfDateKHR) {
     RecreateSwapChain();
     return;
-  } else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
+  } else if (result != vk::Result::eSuccess &&
+             result != vk::Result::eSuboptimalKHR) {
     throw std::runtime_error("failed to acquire swap chain image!");
   }
 
   UpdateUniformBuffer(image_index);
 
-  VkSubmitInfo submit_info = {};
-  submit_info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+  vk::SubmitInfo submit_info;
+  submit_info.setWaitSemaphores(image_available_semaphores_[current_frame_]);
+  vk::PipelineStageFlags stage_flags = vk::PipelineStageFlagBits::eColorAttachmentOutput;
+  submit_info.setPWaitDstStageMask(&stage_flags);
+  submit_info.setCommandBuffers(command_buffers_[image_index]);
+  submit_info.setSignalSemaphores(render_finished_semaphores_[current_frame_]);
+  device_.resetFences(in_flight_fences_[current_frame_]);
 
-  VkSemaphore wait_semaphores[] = {image_available_semaphores_[current_frame_]};
-  VkPipelineStageFlags wait_stages[] = {
-      VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-  submit_info.waitSemaphoreCount = 1;
-  submit_info.pWaitSemaphores = wait_semaphores;
-  submit_info.pWaitDstStageMask = wait_stages;
+  graphics_queue_.submit(submit_info, in_flight_fences_[current_frame_]);
 
-  submit_info.commandBufferCount = 1;
-  submit_info.pCommandBuffers = &command_buffers_[image_index];
+  vk::PresentInfoKHR present_info;
+  present_info.setWaitSemaphores(render_finished_semaphores_[current_frame_]);
+  present_info.setSwapchains(swap_chain_);
+  present_info.setImageIndices(image_index);
 
-  VkSemaphore signal_semaphores[] = {
-      render_finished_semaphores_[current_frame_]};
-  submit_info.signalSemaphoreCount = 1;
-  submit_info.pSignalSemaphores = signal_semaphores;
-
-  vkResetFences(device_, 1, &in_flight_fences_[current_frame_]);
-
-  if (vkQueueSubmit(graphics_queue_, 1, &submit_info,
-                    in_flight_fences_[current_frame_]) != VK_SUCCESS) {
-    throw std::runtime_error("failed to submit draw command buffer!");
-  }
-
-  VkPresentInfoKHR present_info = {};
-  present_info.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
-
-  present_info.waitSemaphoreCount = 1;
-  present_info.pWaitSemaphores = signal_semaphores;
-
-  VkSwapchainKHR swapChains[] = {swap_chain_};
-  present_info.swapchainCount = 1;
-  present_info.pSwapchains = swapChains;
-
-  present_info.pImageIndices = &image_index;
-
-  result = vkQueuePresentKHR(present_queue_, &present_info);
-
-  if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR ||
-      framebuffer_resized_) {
+  result = present_queue_.presentKHR(present_info);
+  if (result == vk::Result::eErrorOutOfDateKHR ||
+      result == vk::Result::eSuboptimalKHR || framebuffer_resized_) {
     framebuffer_resized_ = false;
     RecreateSwapChain();
-  } else if (result != VK_SUCCESS) {
+  } else if (result != vk::Result::eSuccess) {
     throw std::runtime_error("failed to present swap chain image!");
   }
 
