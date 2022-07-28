@@ -67,10 +67,10 @@ class VulkanDemo {
   void CreateGraphicsPipeline();
   void CreateFramebuffers();
   void CreateBuffer(size_t buffer_size,
-                    VkBufferUsageFlags buffer_usage,
-                    VkMemoryPropertyFlags properties,
-                    VkBuffer* buffer,
-                    VkDeviceMemory* memory);
+                    vk::BufferUsageFlags buffer_usage,
+                    vk::MemoryPropertyFlags properties,
+                    vk::Buffer* buffer,
+                    vk::DeviceMemory* memory);
   void CreateImage(uint32_t width,
                    uint32_t height,
                    vk::Format format,
@@ -141,8 +141,8 @@ class VulkanDemo {
   std::vector<VkFramebuffer> swap_chain_framebuffers_;
 
   VkRenderPass render_pass_ = VK_NULL_HANDLE;
-  VkDescriptorSetLayout descriptor_set_layout_ = VK_NULL_HANDLE;
-  VkPipelineLayout pipeline_layout_ = VK_NULL_HANDLE;
+  vk::DescriptorSetLayout descriptor_set_layout_;
+  vk::PipelineLayout pipeline_layout_;
   VkPipeline graphics_pipeline_ = VK_NULL_HANDLE;
 
   VkCommandPool command_pool_ = VK_NULL_HANDLE;
@@ -152,14 +152,14 @@ class VulkanDemo {
   vk::ImageView texture_image_view_;
   vk::DeviceMemory texture_image_memory_;
 
-  VkBuffer vertex_buffer_ = VK_NULL_HANDLE;
-  VkDeviceMemory vertex_buffer_memory_ = VK_NULL_HANDLE;
+  vk::Buffer vertex_buffer_;
+  vk::DeviceMemory vertex_buffer_memory_;
 
-  VkBuffer index_buffer_ = VK_NULL_HANDLE;
-  VkDeviceMemory index_buffer_memory_ = VK_NULL_HANDLE;
+  vk::Buffer index_buffer_;
+  vk::DeviceMemory index_buffer_memory_;
 
-  std::vector<VkBuffer> uniform_buffers_;
-  std::vector<VkDeviceMemory> uniform_buffers_memory_;
+  std::vector<vk::Buffer> uniform_buffers_;
+  std::vector<vk::DeviceMemory> uniform_buffers_memory_;
 
   vk::DescriptorPool descriptor_pool_;
   std::vector<VkDescriptorSet> descriptor_sets_;

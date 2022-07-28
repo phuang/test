@@ -426,22 +426,15 @@ void VulkanDemo::CreateRenderPass() {
 }
 
 void VulkanDemo::CreateDescriptorSetLayout() {
-  VkDescriptorSetLayoutBinding ubo_layout_binding{};
-  ubo_layout_binding.binding = 0;
-  ubo_layout_binding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-  ubo_layout_binding.descriptorCount = 1;
-  ubo_layout_binding.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-  ubo_layout_binding.pImmutableSamplers = nullptr;  // Optional
+  vk::DescriptorSetLayoutBinding ubo_layout_binding;
+  ubo_layout_binding.setBinding(0)
+      .setDescriptorType(vk::DescriptorType::eUniformBuffer)
+      .setDescriptorCount(1)
+      .setStageFlags(vk::ShaderStageFlagBits::eVertex);
+  vk::DescriptorSetLayoutCreateInfo layout_info;
+  layout_info.setBindingCount(1).setPBindings(&ubo_layout_binding);
 
-  VkDescriptorSetLayoutCreateInfo layout_info{};
-  layout_info.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-  layout_info.bindingCount = 1;
-  layout_info.pBindings = &ubo_layout_binding;
-
-  if (vkCreateDescriptorSetLayout(device_, &layout_info, nullptr,
-                                  &descriptor_set_layout_) != VK_SUCCESS) {
-    throw std::runtime_error("failed to create descriptor set layout!");
-  }
+  descriptor_set_layout_ = device_.createDescriptorSetLayout(layout_info);
 }
 
 void VulkanDemo::CreateGraphicsPipeline() {
@@ -541,16 +534,8 @@ void VulkanDemo::CreateGraphicsPipeline() {
   color_blending.blendConstants[2] = 0.0f;
   color_blending.blendConstants[3] = 0.0f;
 
-  VkPipelineLayoutCreateInfo pipeline_layout_info = {};
-  pipeline_layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-  pipeline_layout_info.setLayoutCount = 1;
-  pipeline_layout_info.pSetLayouts = &descriptor_set_layout_;
-  pipeline_layout_info.pushConstantRangeCount = 0;
-
-  if (vkCreatePipelineLayout(device_, &pipeline_layout_info, nullptr,
-                             &pipeline_layout_) != VK_SUCCESS) {
-    throw std::runtime_error("failed to create pipeline layout!");
-  }
+  vk::PipelineLayoutCreateInfo pipeline_layout_info({}, descriptor_set_layout_);
+  pipeline_layout_ = device_.createPipelineLayout(pipeline_layout_info);
 
   VkGraphicsPipelineCreateInfo pipeline_info = {};
   pipeline_info.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
@@ -599,32 +584,26 @@ void VulkanDemo::CreateFramebuffers() {
 }
 
 void VulkanDemo::CreateBuffer(size_t buffer_size,
-                              VkBufferUsageFlags buffer_usage,
-                              VkMemoryPropertyFlags properties,
-                              VkBuffer* buffer,
-                              VkDeviceMemory* memory) {
-  VkBufferCreateInfo buffer_info{};
-  buffer_info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-  buffer_info.size = buffer_size;
-  buffer_info.usage = buffer_usage;
-  buffer_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-  if (vkCreateBuffer(device_, &buffer_info, nullptr, buffer) != VK_SUCCESS) {
-    throw std::runtime_error("failed to create buffer!");
-  }
+                              vk::BufferUsageFlags buffer_usage,
+                              vk::MemoryPropertyFlags properties,
+                              vk::Buffer* buffer,
+                              vk::DeviceMemory* memory) {
+  vk::BufferCreateInfo buffer_info;
+  buffer_info.setSize(buffer_size)
+      .setUsage(buffer_usage)
+      .setSharingMode(vk::SharingMode::eExclusive);
+  *buffer = device_.createBuffer(buffer_info);
 
   VkMemoryRequirements mem_requirements;
   vkGetBufferMemoryRequirements(device_, *buffer, &mem_requirements);
 
-  VkMemoryAllocateInfo alloc_info{};
-  alloc_info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-  alloc_info.allocationSize = mem_requirements.size;
-  alloc_info.memoryTypeIndex =
-      FindMemoryType(mem_requirements.memoryTypeBits, properties);
-  if (vkAllocateMemory(device_, &alloc_info, nullptr, memory) != VK_SUCCESS) {
-    throw std::runtime_error("failed to allocate buffer memory!");
-  }
+  vk::MemoryAllocateInfo alloc_info;
 
-  vkBindBufferMemory(device_, *buffer, *memory, 0);
+  alloc_info.setAllocationSize(mem_requirements.size)
+      .setMemoryTypeIndex(
+          FindMemoryType(mem_requirements.memoryTypeBits, (VkMemoryPropertyFlags)properties));
+  *memory = device_.allocateMemory(alloc_info);
+  device_.bindBufferMemory(*buffer, *memory, 0);
 }
 
 void VulkanDemo::CreateImage(uint32_t width,
@@ -673,11 +652,10 @@ void VulkanDemo::CreateTextureImage() {
     throw std::runtime_error("failed to load texture image!");
   }
 
-  VkBuffer stagingBuffer;
-  VkDeviceMemory stagingBufferMemory;
-  CreateBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT,
-               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+  vk::Buffer stagingBuffer;
+  vk::DeviceMemory stagingBufferMemory;
+  CreateBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc,
+               vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                &stagingBuffer, &stagingBufferMemory);
   void* data = device_.mapMemory(stagingBufferMemory, 0, imageSize);
   memcpy(data, pixels, static_cast<size_t>(imageSize));
@@ -754,9 +732,8 @@ void VulkanDemo::createTextureSampler() {
 
 void VulkanDemo::CreateVertexBuffer() {
   auto buffer_size = sizeof(kVertices[0]) * kVertices.size();
-  CreateBuffer(buffer_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+  CreateBuffer(buffer_size, vk::BufferUsageFlagBits::eVertexBuffer,
+               vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                &vertex_buffer_, &vertex_buffer_memory_);
   void* data = device_.mapMemory(vertex_buffer_memory_, 0, buffer_size);
   memcpy(data, kVertices.data(), buffer_size);
@@ -765,9 +742,8 @@ void VulkanDemo::CreateVertexBuffer() {
 
 void VulkanDemo::CreateIndexBuffer() {
   auto buffer_size = sizeof(kIndices[0]) * kIndices.size();
-  CreateBuffer(buffer_size, VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-               VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                   VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+  CreateBuffer(buffer_size, vk::BufferUsageFlagBits::eIndexBuffer,
+  vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                &index_buffer_, &index_buffer_memory_);
   void* data = device_.mapMemory(index_buffer_memory_, 0, buffer_size);
   memcpy(data, kIndices.data(), buffer_size);
@@ -781,16 +757,15 @@ void VulkanDemo::CreateUniformBuffers() {
   uniform_buffers_memory_.resize(swap_chain_images_.size());
 
   for (size_t i = 0; i < swap_chain_images_.size(); i++) {
-    CreateBuffer(buffer_size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-                 VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT |
-                     VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+    CreateBuffer(buffer_size, vk::BufferUsageFlagBits::eUniformBuffer,
+                 vk::MemoryPropertyFlagBits::eHostVisible | vk::MemoryPropertyFlagBits::eHostCoherent,
                  &uniform_buffers_[i], &uniform_buffers_memory_[i]);
   }
 }
 
 void VulkanDemo::CreateDescriptorPool() {
-  std::array<vk::DescriptorPoolSize, 1> pool_size{vk::DescriptorPoolSize{
-      vk::DescriptorType::eUniformBuffer, (uint32_t)swap_chain_images_.size()}};
+  vk::DescriptorPoolSize pool_size(vk::DescriptorType::eUniformBuffer,
+                                   (uint32_t)swap_chain_images_.size());
   vk::DescriptorPoolCreateInfo pool_info({}, swap_chain_images_.size(),
                                          pool_size);
   descriptor_pool_ = device_.createDescriptorPool(pool_info);
