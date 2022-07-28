@@ -2,12 +2,13 @@ GTEST_FILTER := *
 
 # build output dir
 OUT := out/Release
+# OUT := out_msan/Release
 # OUT := out_cros/Release
 # OUT := out_official/Release
 # OUT := out_wayland/Release
-# OUT := out_android/Release
+OUT := out_android/Release
 # OUT := out_android_x86/Release
-OUT := out_win/Release
+# OUT := out_win/Release
 # GOMA_DISABLED=true
 
 J := 3000
@@ -33,7 +34,7 @@ DEPLOY_FLAGS = \
 	# --nostartui \
 
 # Flags for unittests
-GTEST_FLAGS = --test-launcher-jobs=50 --single-process-tests-no --use-gpu-in-tests-no
+GTEST_FLAGS = --test-launcher-jobs=50 --single-process-tests --use-gpu-in-tests-no
 
 # CHROME_FLAGS += --wait-for-debugger=ui
 # EXO_DEMO = exo_demo
@@ -42,7 +43,7 @@ WEBGL_DEMO = http://www.yuichiroharai.com/wgl/
 
 # Pages
 PAGE = https://www.google.com
-PAGE = https://solidot.org 
+# PAGE = https://solidot.org 
 # PAGE = https://www.facebook.com
 # PAGE = file:///usr/local/google/home/penghuang/sources/phuang.github.io/backdrop_with_mask.html
 # PAGE = phuang.github.io/backdrop_with_mask.html
@@ -58,7 +59,7 @@ PAGE = https://solidot.org
 # PAGE = phuang.github.io/fuzz/fuzz-70.html
 # PAGE = https://codepen.io/sol0mka/pen/mICGv
 # PAGE = third_party/blink/web_tests/media/alpha-video-playback.html
-PAGE = http://webglsamples.org/aquarium/aquarium.html
+# PAGE = http://webglsamples.org/aquarium/aquarium.html
 # PAGE = https://mrdoob.com/projects/chromeexperiments/ball-pool/
 # PAGE = http://webglsamples.org/field/field.html
 # PAGE = file:///home/penghuang/sources/chromium/src/content/test/data/gpu/pixel_canvas_display_linear-rgb.html
@@ -72,7 +73,18 @@ PAGE = http://webglsamples.org/aquarium/aquarium.html
 # PAGE = https://mdn.github.io/webgl-examples/tutorial/sample8/
 # PAGE = https://phuang.github.io/canvas.html
 # PAGE = https://phuang.github.io/canvas2.html
-PAGE = https://www.therecord.com/?redirect=true
+# PAGE = https://www.therecord.com/?redirect=true
+# PAGE = https://www.openstreetmap.org/#map=5/51.454/10.459
+# PAGE = text_shadow.html
+# PAGE = https://www.solidot.org
+# PAGE = text_shadow_zoom.html
+# PAGE = svg.html
+# PAGE = crash.html
+PAGE = third_party/blink/web_tests/fast/canvas/canvas-drawImage-video.html
+PAGE = third_party/webgl/src/conformance-suites/2.0.0/conformance/glsl/constructors/glsl-construct-vec-mat-index.html
+PAGE = third_party/webgl/src/conformance-suites/1.0.3/conformance/glsl/constructors/glsl-construct-vec-mat-index.html
+PAGE = third_party/webgl/src/sdk/tests/conformance/glsl/constructors/glsl-construct-vec-mat-index.html
+PAGE = third_party/webgl/src/sdk/tests/conformance/glsl/functions/glsl-function-abs.html
 
 
 FEATURES := CanvasOopRasterization
@@ -177,7 +189,6 @@ run_chrome_swangle_vk: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
 		--enable-features=Vulkan,VulkanFromANGLE,$(FEATURES) \
 		--use-angle=swiftshader \
-		--show-composited-layer-borders \
 		--no-sandbox
 
 run_chrome_passthrough: chrome
@@ -192,13 +203,37 @@ run_chrome_passthrough: chrome
 	  --use-cmd-decoder=passthrough \
 	  --no-sandbox
 
-run_chrome_raw_draw: chrome
+run_chrome_no_raw_draw: chrome
 	$(OUT)/chrome  $(CHROME_FLAGS) \
-		--enable-features=Vulkan,VulkanFromANGLE,CanvasOopRasterization,RawDraw \
+		--enable-features=Vulkan,VulkanFromANGLE,NoRawDraw:IsUsingMSAA/true/TileSizeFactor/0.5 \
 		--use-angle=swiftshader \
 		--force-device-scale-factor=1 \
-		--enable-gpu-benchmarking \
+		--disable-vulkan-fallback-to-gl-for-testing \
+		--enable-unsafe-webgpu \
+		--use-webgpu-adapter=swiftshader \
+		--ignore-gpu-blocklist  \
+		--force-color-profile=scrgb-linear \
+		--no-sandbox
+
+run_chrome_raw_draw: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=Vulkan,VulkanFromANGLE,RawDraw:IsUsingMSAA/true/TileSizeFactor/0.5/SVGImageInLayer/true \
+		--force-device-scale-factor=1 \
+		--disable-vulkan-fallback-to-gl-for-testing \
+		--enable-unsafe-webgpu \
+		--ignore-gpu-blocklist  \
+		--force-color-profile=scrgb-linear \
+		--no-sandbox \
+		--use-angle=swiftshader \
 		--show-composited-layer-borders \
+
+run_chrome_raw_draw_gl: chrome
+	$(OUT)/chrome  $(CHROME_FLAGS) \
+		--enable-features=RawDraw:UsingMSAA/true \
+		--disable-features=Vulkan,VulkanFromANGLE \
+		--use-angle=swiftshader \
+		--force-device-scale-factor=1 \
+		--disable-vulkan-fallback-to-gl-for-testing \
 		--no-sandbox
 
 run_chrome_oopd: chrome
@@ -588,10 +623,21 @@ content_browsertests_vk:
 
 content_browsertests:
 	$(NINJIA) $@ && $(OUT)/$@ \
-		--gtest_filter=$(GTEST_FILTER)
+		--gtest_filter=$(GTEST_FILTER) \
+		$(CHROME_FLAGS)
+
+components_browsertests:
+	$(NINJIA) $@ && $(OUT)/$@ \
+		--gtest_filter=$(GTEST_FILTER) \
+		$(CHROME_FLAGS)
+
 
 content_shell:
 	$(NINJIA) $@ && $(OUT)/$@
+
+content_shell_raw_draw:
+	$(NINJIA) content_shell && $(OUT)/content_shell --enable-features=Vulkan,VulkanFromANGLE,RawDraw --no-sandbox $(PAGE)
+
 
 browser_tests:
 	$(NINJIA) $@ && xvfb-run $(OUT)/$@ --gtest_filter=$(GTEST_FILTER) --no-sandbox
@@ -659,6 +705,10 @@ gpu_perftests:
 
 gpu_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER) $(GTEST_FLAGS)
+
+gfx_unittests:
+	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER) $(GTEST_FLAGS)
+
 
 viz_unittests:
 	$(NINJIA) $@ && $(OUT)/$@ --gtest_filter=$(GTEST_FILTER) $(GTEST_FLAGS)
@@ -748,7 +798,7 @@ rsync:
 		--exclude '*.pdb' \
 		--delete \
 		out_win/Release \
-		penghuang@penghuang-win.c.googlers.com:/cygdrive/c/chrome
+		penghuang@penghuang-win.c.googlers.com:/cygdrive/c/src
 
 deploy_windows:
 	ninja -C out_win/Release -j 128 chrome
