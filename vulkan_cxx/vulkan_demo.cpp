@@ -162,13 +162,17 @@ void VulkanDemo::CleanupSwapChain() {
 
   for (auto image_view : swap_chain_image_views_)
     device_.destroyImageView(image_view);
+  swap_chain_image_views_.clear();
 
   device_.destroySwapchainKHR(swap_chain_);
 
-  for (size_t i = 0; i < swap_chain_images_.size(); i++) {
-    device_.destroyBuffer(uniform_buffers_[i]);
-    device_.freeMemory(uniform_buffers_memory_[i]);
-  }
+  for (auto buffer : uniform_buffers_)
+    device_.destroyBuffer(buffer);
+  uniform_buffers_.clear();
+
+  for (auto memory : uniform_buffers_memory_)
+    device_.freeMemory(memory);
+  uniform_buffers_memory_.clear();
 
   device_.destroyDescriptorPool(descriptor_pool_);
 }
@@ -181,6 +185,10 @@ void VulkanDemo::Cleanup() {
   device_.destroyBuffer(index_buffer_);
   device_.freeMemory(index_buffer_memory_);
   device_.destroyDescriptorSetLayout(descriptor_set_layout_);
+
+  device_.freeMemory(texture_image_memory_);
+  device_.destroyImageView(texture_image_view_);
+  device_.destroyImage(texture_image_);
 
   for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
     device_.destroySemaphore(render_finished_semaphores_[i]);
@@ -675,6 +683,9 @@ void VulkanDemo::CreateTextureImage() {
   transitionImageLayout(texture_image_, vk::Format::eR8G8B8A8Srgb,
                         vk::ImageLayout::eTransferDstOptimal,
                         vk::ImageLayout::eShaderReadOnlyOptimal);
+  
+  device_.destroyBuffer(stagingBuffer);
+  device_.freeMemory(stagingBufferMemory);
 }
 
 vk::ImageView VulkanDemo::CreateImageView(vk::Image image, vk::Format format) {
@@ -930,20 +941,21 @@ void VulkanDemo::DrawFrame() {
 
   UpdateUniformBuffer(image_index);
 
+  vk::PipelineStageFlags stage_flags =
+      vk::PipelineStageFlagBits::eColorAttachmentOutput;
   vk::SubmitInfo submit_info;
-  submit_info.setWaitSemaphores(image_available_semaphores_[current_frame_]);
-  vk::PipelineStageFlags stage_flags = vk::PipelineStageFlagBits::eColorAttachmentOutput;
-  submit_info.setPWaitDstStageMask(&stage_flags);
-  submit_info.setCommandBuffers(command_buffers_[image_index]);
-  submit_info.setSignalSemaphores(render_finished_semaphores_[current_frame_]);
+  submit_info.setWaitSemaphores(image_available_semaphores_[current_frame_])
+      .setPWaitDstStageMask(&stage_flags)
+      .setCommandBuffers(command_buffers_[image_index])
+      .setSignalSemaphores(render_finished_semaphores_[current_frame_]);
   device_.resetFences(in_flight_fences_[current_frame_]);
 
   graphics_queue_.submit(submit_info, in_flight_fences_[current_frame_]);
 
   vk::PresentInfoKHR present_info;
-  present_info.setWaitSemaphores(render_finished_semaphores_[current_frame_]);
-  present_info.setSwapchains(swap_chain_);
-  present_info.setImageIndices(image_index);
+  present_info.setWaitSemaphores(render_finished_semaphores_[current_frame_])
+      .setSwapchains(swap_chain_)
+      .setImageIndices(image_index);
 
   result = present_queue_.presentKHR(present_info);
   if (result == vk::Result::eErrorOutOfDateKHR ||
@@ -1173,9 +1185,9 @@ void VulkanDemo::endSingleTimeCommands(vk::CommandBuffer command_buffer) {
   device_.freeCommandBuffers(command_pool_, command_buffer);
 }
 
-void VulkanDemo::copyBuffer(VkBuffer src_buffer,
-                            VkBuffer dst_buffer,
-                            VkDeviceSize size) {
+void VulkanDemo::copyBuffer(vk::Buffer src_buffer,
+                            vk::Buffer dst_buffer,
+                            vk::DeviceSize size) {
   vk::CommandBuffer command_buffer = beginSingleTimeCommands();
 
   vk::BufferCopy copy_region(0, 0, size);
