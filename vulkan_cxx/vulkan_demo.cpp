@@ -605,8 +605,8 @@ void VulkanDemo::CreateBuffer(size_t buffer_size,
   vk::MemoryAllocateInfo alloc_info;
 
   alloc_info.setAllocationSize(mem_requirements.size)
-      .setMemoryTypeIndex(FindMemoryType(mem_requirements.memoryTypeBits,
-                                         (VkMemoryPropertyFlags)properties));
+      .setMemoryTypeIndex(
+          FindMemoryType(mem_requirements.memoryTypeBits, properties));
   *memory = device_.allocateMemory(alloc_info);
   device_.bindBufferMemory(*buffer, *memory, 0);
 }
@@ -640,8 +640,8 @@ void VulkanDemo::CreateImage(uint32_t width,
 
   vk::MemoryAllocateInfo allocInfo;
   allocInfo.allocationSize = requirements.size;
-  allocInfo.memoryTypeIndex = FindMemoryType(requirements.memoryTypeBits,
-                                             (VkMemoryPropertyFlags)properties);
+  allocInfo.memoryTypeIndex =
+      FindMemoryType(requirements.memoryTypeBits, properties);
 
   imageMemory = device_.allocateMemory(allocInfo);
   device_.bindImageMemory(image, imageMemory, 0);
@@ -683,7 +683,7 @@ void VulkanDemo::CreateTextureImage() {
   transitionImageLayout(texture_image_, vk::Format::eR8G8B8A8Srgb,
                         vk::ImageLayout::eTransferDstOptimal,
                         vk::ImageLayout::eShaderReadOnlyOptimal);
-  
+
   device_.destroyBuffer(stagingBuffer);
   device_.freeMemory(stagingBufferMemory);
 }
@@ -1055,14 +1055,7 @@ bool VulkanDemo::IsDeviceSuitable(vk::PhysicalDevice device) {
 }
 
 bool VulkanDemo::CheckDeviceExtensionSupport(vk::PhysicalDevice device) {
-  uint32_t extension_count;
-  vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count,
-                                       nullptr);
-
-  std::vector<VkExtensionProperties> available_extensions(extension_count);
-  vkEnumerateDeviceExtensionProperties(device, nullptr, &extension_count,
-                                       available_extensions.data());
-
+  auto available_extensions = device.enumerateDeviceExtensionProperties();
   std::set<std::string> required_extensions(kDeviceExtensions.begin(),
                                             kDeviceExtensions.end());
 
@@ -1075,25 +1068,15 @@ bool VulkanDemo::CheckDeviceExtensionSupport(vk::PhysicalDevice device) {
 
 QueueFamilyIndices VulkanDemo::FindQueueFamilies(vk::PhysicalDevice device) {
   QueueFamilyIndices indices;
-
-  uint32_t queue_family_count = 0;
-  vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count,
-                                           nullptr);
-
-  std::vector<VkQueueFamilyProperties> queue_families(queue_family_count);
-  vkGetPhysicalDeviceQueueFamilyProperties(device, &queue_family_count,
-                                           queue_families.data());
-
+  auto queue_families = device.getQueueFamilyProperties();
   int i = 0;
   for (const auto& queue_family : queue_families) {
     if (queue_family.queueCount > 0 &&
-        queue_family.queueFlags & VK_QUEUE_GRAPHICS_BIT) {
+        queue_family.queueFlags & vk::QueueFlagBits::eGraphics) {
       indices.graphics_family = i;
     }
 
-    VkBool32 present_support = false;
-    vkGetPhysicalDeviceSurfaceSupportKHR(device, i, surface_, &present_support);
-
+    auto present_support = device.getSurfaceSupportKHR(i, surface_);
     if (queue_family.queueCount > 0 && present_support) {
       indices.present_family = i;
     }
@@ -1124,11 +1107,7 @@ std::vector<const char*> VulkanDemo::GetRequiredExtensions() {
 }
 
 bool VulkanDemo::CheckValidationLayerSupport() {
-  uint32_t layer_count;
-  vkEnumerateInstanceLayerProperties(&layer_count, nullptr);
-
-  std::vector<VkLayerProperties> available_layers(layer_count);
-  vkEnumerateInstanceLayerProperties(&layer_count, available_layers.data());
+  auto available_layers = vk::enumerateInstanceLayerProperties();
 
   for (const char* layer_name : kValidationLayers) {
     bool layer_found = false;
@@ -1149,9 +1128,10 @@ bool VulkanDemo::CheckValidationLayerSupport() {
 }
 
 uint32_t VulkanDemo::FindMemoryType(uint32_t type_filter,
-                                    VkMemoryPropertyFlags properties) {
-  VkPhysicalDeviceMemoryProperties mem_properties;
-  vkGetPhysicalDeviceMemoryProperties(physical_device_, &mem_properties);
+                                    vk::MemoryPropertyFlags properties) {
+  // VkPhysicalDeviceMemoryProperties mem_properties;
+  // vkGetPhysicalDeviceMemoryProperties(physical_device_, &mem_properties);
+  auto mem_properties = physical_device_.getMemoryProperties();
   for (uint32_t i = 0; i < mem_properties.memoryTypeCount; i++) {
     if (type_filter & (1 << i) && (mem_properties.memoryTypes[i].propertyFlags &
                                    properties) == properties) {

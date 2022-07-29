@@ -106,7 +106,7 @@ class VulkanDemo {
   std::vector<const char*> GetRequiredExtensions();
   bool CheckValidationLayerSupport();
   uint32_t FindMemoryType(uint32_t type_filter,
-                          VkMemoryPropertyFlags properties);
+                          vk::MemoryPropertyFlags properties);
   VkCommandBuffer beginSingleTimeCommands();
   void endSingleTimeCommands(vk::CommandBuffer commandBuffer);
   void copyBuffer(vk::Buffer srcBuffer, vk::Buffer dstBuffer, vk::DeviceSize size);
