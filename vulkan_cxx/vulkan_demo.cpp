@@ -616,21 +616,12 @@ void VulkanDemo::CreateImage(uint32_t width,
                              vk::MemoryPropertyFlags properties,
                              vk::Image& image,
                              vk::DeviceMemory& image_memory) {
-  vk::ImageCreateInfo imageInfo;
-  imageInfo.imageType = vk::ImageType::e2D;
-  imageInfo.extent.width = width;
-  imageInfo.extent.height = height;
-  imageInfo.extent.depth = 1;
-  imageInfo.mipLevels = 1;
-  imageInfo.arrayLayers = 1;
-  imageInfo.format = format;
-  imageInfo.tiling = tiling;
-  imageInfo.initialLayout = vk::ImageLayout::eUndefined;
-  imageInfo.usage = usage;
-  imageInfo.samples = vk::SampleCountFlagBits::e1;
-  imageInfo.sharingMode = vk::SharingMode::eExclusive;
+  vk::ImageCreateInfo image_info(
+      {}, vk::ImageType::e2D, format, {width, height, 1}, 1, 1,
+      vk::SampleCountFlagBits::e1, tiling, usage, vk::SharingMode::eExclusive,
+      0, nullptr, vk::ImageLayout::eUndefined);
 
-  image = device_.createImage(imageInfo);
+  image = device_.createImage(image_info);
 
   vk::MemoryRequirements requirements =
       device_.getImageMemoryRequirements(image);
