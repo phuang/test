@@ -489,8 +489,11 @@ void VulkanDemo::CreateGraphicsPipeline() {
   pipeline_info.setSubpass(0);
   pipeline_info.setBasePipelineHandle({});
 
-  graphics_pipeline_ = device_.createGraphicsPipeline({}, pipeline_info).value;
-
+  auto [result, pipeline] = device_.createGraphicsPipeline({}, pipeline_info);
+  if (result != vk::Result::eSuccess) {
+    throw new std::runtime_error("Create graphics pipeline failed.");
+  }
+  graphics_pipeline_ = pipeline;
   device_.destroyShaderModule(frag_shader_module);
   device_.destroyShaderModule(vert_shader_module);
 }
