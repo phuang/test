@@ -615,7 +615,7 @@ void VulkanDemo::CreateImage(uint32_t width,
                              vk::ImageUsageFlags usage,
                              vk::MemoryPropertyFlags properties,
                              vk::Image& image,
-                             vk::DeviceMemory& imageMemory) {
+                             vk::DeviceMemory& image_memory) {
   vk::ImageCreateInfo imageInfo;
   imageInfo.imageType = vk::ImageType::e2D;
   imageInfo.extent.width = width;
@@ -634,14 +634,12 @@ void VulkanDemo::CreateImage(uint32_t width,
 
   vk::MemoryRequirements requirements =
       device_.getImageMemoryRequirements(image);
+  vk::MemoryAllocateInfo alloc_info(
+      requirements.size,
+      FindMemoryType(requirements.memoryTypeBits, properties));
 
-  vk::MemoryAllocateInfo allocInfo;
-  allocInfo.allocationSize = requirements.size;
-  allocInfo.memoryTypeIndex =
-      FindMemoryType(requirements.memoryTypeBits, properties);
-
-  imageMemory = device_.allocateMemory(allocInfo);
-  device_.bindImageMemory(image, imageMemory, 0);
+  image_memory = device_.allocateMemory(alloc_info);
+  device_.bindImageMemory(image, image_memory, 0);
 }
 
 void VulkanDemo::CreateTextureImage() {
@@ -829,47 +827,31 @@ void VulkanDemo::CreateCommandBuffers() {
   command_buffers_ = device_.allocateCommandBuffers(alloc_info);
 
   for (size_t i = 0; i < command_buffers_.size(); i++) {
-    VkCommandBufferBeginInfo begin_info = {};
-    begin_info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
-    begin_info.flags = VK_COMMAND_BUFFER_USAGE_SIMULTANEOUS_USE_BIT;
+    vk::CommandBufferBeginInfo begin_info(
+        vk::CommandBufferUsageFlagBits::eSimultaneousUse);
+    command_buffers_[i].begin(begin_info);
 
-    if (vkBeginCommandBuffer(command_buffers_[i], &begin_info) != VK_SUCCESS) {
-      throw std::runtime_error("failed to begin recording command buffer!");
-    }
+    std::array<vk::ClearValue, 2> clear_values;
+    clear_values[0].color =
+        vk::ClearColorValue(std::array<float, 4>({{0.2f, 0.2f, 0.2f, 0.2f}}));
+    clear_values[1].depthStencil = vk::ClearDepthStencilValue(1.0f, 0);
+    vk::RenderPassBeginInfo render_pass_info(
+        render_pass_, swap_chain_framebuffers_[i], {{0, 0}, swap_chain_extent_},
+        clear_values);
+    command_buffers_[i].beginRenderPass(render_pass_info,
+                                        vk::SubpassContents::eInline);
 
-    VkRenderPassBeginInfo render_pass_info = {};
-    render_pass_info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    render_pass_info.renderPass = render_pass_;
-    render_pass_info.framebuffer = swap_chain_framebuffers_[i];
-    render_pass_info.renderArea.offset = {0, 0};
-    render_pass_info.renderArea.extent = (VkExtent2D)swap_chain_extent_;
-
-    VkClearValue clear_color = {0.0f, 0.0f, 0.0f, 1.0f};
-    render_pass_info.clearValueCount = 1;
-    render_pass_info.pClearValues = &clear_color;
-
-    vkCmdBeginRenderPass(command_buffers_[i], &render_pass_info,
-                         VK_SUBPASS_CONTENTS_INLINE);
-
-    vkCmdBindPipeline(command_buffers_[i], VK_PIPELINE_BIND_POINT_GRAPHICS,
-                      graphics_pipeline_);
-
-    VkBuffer vertex_buffers[] = {vertex_buffer_};
-    VkDeviceSize offsets[] = {0};
-    vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, vertex_buffers, offsets);
-    vkCmdBindIndexBuffer(command_buffers_[i], index_buffer_, 0,
-                         VK_INDEX_TYPE_UINT16);
+    command_buffers_[i].bindPipeline(vk::PipelineBindPoint::eGraphics,
+                                     graphics_pipeline_);
+    command_buffers_[i].bindVertexBuffers(0, vertex_buffer_, {0});
+    command_buffers_[i].bindIndexBuffer(index_buffer_, 0,
+                                        vk::IndexType::eUint16);
     command_buffers_[i].bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
                                            pipeline_layout_, 0,
                                            descriptor_sets_[i], {});
-    vkCmdDrawIndexed(command_buffers_[i],
-                     static_cast<uint32_t>(kIndices.size()), 1, 0, 0, 0);
-
-    vkCmdEndRenderPass(command_buffers_[i]);
-
-    if (vkEndCommandBuffer(command_buffers_[i]) != VK_SUCCESS) {
-      throw std::runtime_error("failed to record command buffer!");
-    }
+    command_buffers_[i].drawIndexed(kIndices.size(), 1, 0, 0, 0);
+    command_buffers_[i].endRenderPass();
+    command_buffers_[i].end();
   }
 }
 
