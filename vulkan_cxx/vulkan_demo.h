@@ -133,19 +133,19 @@ class VulkanDemo {
   vk::Queue graphics_queue_;
   vk::Queue present_queue_;
 
-  vk::SwapchainKHR swap_chain_ = VK_NULL_HANDLE;
+  vk::SwapchainKHR swap_chain_;
   std::vector<vk::Image> swap_chain_images_;
   vk::Format swap_chain_image_format_;
   vk::Extent2D swap_chain_extent_;
   std::vector<VkImageView> swap_chain_image_views_;
   std::vector<VkFramebuffer> swap_chain_framebuffers_;
 
-  VkRenderPass render_pass_ = VK_NULL_HANDLE;
+  vk::RenderPass render_pass_;
   vk::DescriptorSetLayout descriptor_set_layout_;
   vk::PipelineLayout pipeline_layout_;
-  VkPipeline graphics_pipeline_ = VK_NULL_HANDLE;
+  vk::Pipeline graphics_pipeline_;
 
-  VkCommandPool command_pool_ = VK_NULL_HANDLE;
+  vk::CommandPool command_pool_;
   std::vector<vk::CommandBuffer> command_buffers_;
 
   vk::Image texture_image_;
