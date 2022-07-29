@@ -599,11 +599,8 @@ void VulkanDemo::CreateBuffer(size_t buffer_size,
       .setSharingMode(vk::SharingMode::eExclusive);
   *buffer = device_.createBuffer(buffer_info);
 
-  VkMemoryRequirements mem_requirements;
-  vkGetBufferMemoryRequirements(device_, *buffer, &mem_requirements);
-
+  auto mem_requirements = device_.getBufferMemoryRequirements(*buffer);
   vk::MemoryAllocateInfo alloc_info;
-
   alloc_info.setAllocationSize(mem_requirements.size)
       .setMemoryTypeIndex(
           FindMemoryType(mem_requirements.memoryTypeBits, properties));
@@ -651,7 +648,7 @@ void VulkanDemo::CreateTextureImage() {
   int texWidth, texHeight, texChannels;
   stbi_uc* pixels = stbi_load("textures/texture.jpg", &texWidth, &texHeight,
                               &texChannels, STBI_rgb_alpha);
-  VkDeviceSize imageSize = texWidth * texHeight * 4;
+  vk::DeviceSize imageSize = texWidth * texHeight * 4;
 
   if (!pixels) {
     throw std::runtime_error("failed to load texture image!");
@@ -762,7 +759,7 @@ void VulkanDemo::CreateIndexBuffer() {
 }
 
 void VulkanDemo::CreateUniformBuffers() {
-  VkDeviceSize buffer_size = sizeof(UniformBufferObject);
+  vk::DeviceSize buffer_size = sizeof(UniformBufferObject);
 
   uniform_buffers_.resize(swap_chain_images_.size());
   uniform_buffers_memory_.resize(swap_chain_images_.size());
@@ -784,40 +781,31 @@ void VulkanDemo::CreateDescriptorPool() {
 }
 
 void VulkanDemo::CreateDescriptorSets() {
-  std::vector<VkDescriptorSetLayout> layouts(swap_chain_images_.size(),
-                                             descriptor_set_layout_);
-  VkDescriptorSetAllocateInfo allocInfo{};
-  allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-  allocInfo.descriptorPool = descriptor_pool_;
-  allocInfo.descriptorSetCount =
-      static_cast<uint32_t>(swap_chain_images_.size());
-  allocInfo.pSetLayouts = layouts.data();
+  std::vector<vk::DescriptorSetLayout> layouts(swap_chain_images_.size(),
+                                               descriptor_set_layout_);
+  vk::DescriptorSetAllocateInfo allocInfo;
+  allocInfo.setDescriptorPool(descriptor_pool_);
+  allocInfo.setSetLayouts(layouts);
 
-  descriptor_sets_.resize(swap_chain_images_.size());
-  if (vkAllocateDescriptorSets(device_, &allocInfo, descriptor_sets_.data()) !=
-      VK_SUCCESS) {
-    throw std::runtime_error("failed to allocate descriptor sets!");
-  }
+  descriptor_sets_ = device_.allocateDescriptorSets(allocInfo);
 
   for (size_t i = 0; i < swap_chain_images_.size(); i++) {
-    VkDescriptorBufferInfo buffer_info{};
+    vk::DescriptorBufferInfo buffer_info;
     buffer_info.buffer = uniform_buffers_[i];
     buffer_info.offset = 0;
     buffer_info.range = sizeof(UniformBufferObject);
 
-    VkWriteDescriptorSet descriptor_write{};
-    descriptor_write.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+    vk::WriteDescriptorSet descriptor_write{};
     descriptor_write.dstSet = descriptor_sets_[i];
     descriptor_write.dstBinding = 0;
     descriptor_write.dstArrayElement = 0;
 
-    descriptor_write.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+    descriptor_write.descriptorType = vk::DescriptorType::eUniformBuffer;
     descriptor_write.descriptorCount = 1;
 
     descriptor_write.pBufferInfo = &buffer_info;
-    descriptor_write.pImageInfo = nullptr;        // Optional
-    descriptor_write.pTexelBufferView = nullptr;  // Optional
-    vkUpdateDescriptorSets(device_, 1, &descriptor_write, 0, nullptr);
+    device_.updateDescriptorSets(descriptor_write, {});
+    // vkUpdateDescriptorSets(device_, 1, &descriptor_write, 0, nullptr);
   }
 }
 
@@ -871,9 +859,9 @@ void VulkanDemo::CreateCommandBuffers() {
     vkCmdBindVertexBuffers(command_buffers_[i], 0, 1, vertex_buffers, offsets);
     vkCmdBindIndexBuffer(command_buffers_[i], index_buffer_, 0,
                          VK_INDEX_TYPE_UINT16);
-    vkCmdBindDescriptorSets(command_buffers_[i],
-                            VK_PIPELINE_BIND_POINT_GRAPHICS, pipeline_layout_,
-                            0, 1, &descriptor_sets_[i], 0, nullptr);
+    command_buffers_[i].bindDescriptorSets(vk::PipelineBindPoint::eGraphics,
+                                           pipeline_layout_, 0,
+                                           descriptor_sets_[i], {});
     vkCmdDrawIndexed(command_buffers_[i],
                      static_cast<uint32_t>(kIndices.size()), 1, 0, 0, 0);
 

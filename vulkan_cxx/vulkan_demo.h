@@ -162,7 +162,7 @@ class VulkanDemo {
   std::vector<vk::DeviceMemory> uniform_buffers_memory_;
 
   vk::DescriptorPool descriptor_pool_;
-  std::vector<VkDescriptorSet> descriptor_sets_;
+  std::vector<vk::DescriptorSet> descriptor_sets_;
 
   std::vector<vk::Semaphore> image_available_semaphores_;
   std::vector<vk::Semaphore> render_finished_semaphores_;
