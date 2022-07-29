@@ -442,7 +442,7 @@ void VulkanDemo::CreateGraphicsPipeline() {
 
   vk::Rect2D scissor;
   scissor.offset = vk::Offset2D(0, 0);
-  scissor.extent = (VkExtent2D)swap_chain_extent_;
+  scissor.extent = swap_chain_extent_;
 
   vk::PipelineViewportStateCreateInfo viewport_state;
   viewport_state.setViewports(viewport);
@@ -575,15 +575,15 @@ void VulkanDemo::CreateTextureImage() {
     throw std::runtime_error("failed to load texture image!");
   }
 
-  vk::Buffer stagingBuffer;
-  vk::DeviceMemory stagingBufferMemory;
+  vk::Buffer staging_buffer;
+  vk::DeviceMemory staging_buffer_memory;
   CreateBuffer(imageSize, vk::BufferUsageFlagBits::eTransferSrc,
                vk::MemoryPropertyFlagBits::eHostVisible |
                    vk::MemoryPropertyFlagBits::eHostCoherent,
-               &stagingBuffer, &stagingBufferMemory);
-  void* data = device_.mapMemory(stagingBufferMemory, 0, imageSize);
+               &staging_buffer, &staging_buffer_memory);
+  void* data = device_.mapMemory(staging_buffer_memory, 0, imageSize);
   memcpy(data, pixels, static_cast<size_t>(imageSize));
-  device_.unmapMemory(stagingBufferMemory);
+  device_.unmapMemory(staging_buffer_memory);
   stbi_image_free(pixels);
 
   CreateImage(
@@ -595,15 +595,15 @@ void VulkanDemo::CreateTextureImage() {
   transitionImageLayout(texture_image_, vk::Format::eR8G8B8A8Srgb,
                         vk::ImageLayout::eUndefined,
                         vk::ImageLayout::eTransferDstOptimal);
-  copyBufferToImage(stagingBuffer, texture_image_,
+  copyBufferToImage(staging_buffer, texture_image_,
                     static_cast<uint32_t>(texWidth),
                     static_cast<uint32_t>(texHeight));
   transitionImageLayout(texture_image_, vk::Format::eR8G8B8A8Srgb,
                         vk::ImageLayout::eTransferDstOptimal,
                         vk::ImageLayout::eShaderReadOnlyOptimal);
 
-  device_.destroyBuffer(stagingBuffer);
-  device_.freeMemory(stagingBufferMemory);
+  device_.destroyBuffer(staging_buffer);
+  device_.freeMemory(staging_buffer_memory);
 }
 
 vk::ImageView VulkanDemo::CreateImageView(vk::Image image, vk::Format format) {
@@ -704,11 +704,11 @@ void VulkanDemo::CreateDescriptorPool() {
 void VulkanDemo::CreateDescriptorSets() {
   std::vector<vk::DescriptorSetLayout> layouts(swap_chain_images_.size(),
                                                descriptor_set_layout_);
-  vk::DescriptorSetAllocateInfo allocInfo;
-  allocInfo.setDescriptorPool(descriptor_pool_);
-  allocInfo.setSetLayouts(layouts);
+  vk::DescriptorSetAllocateInfo alloc_info;
+  alloc_info.setDescriptorPool(descriptor_pool_);
+  alloc_info.setSetLayouts(layouts);
 
-  descriptor_sets_ = device_.allocateDescriptorSets(allocInfo);
+  descriptor_sets_ = device_.allocateDescriptorSets(alloc_info);
 
   for (size_t i = 0; i < swap_chain_images_.size(); i++) {
     vk::DescriptorBufferInfo buffer_info;
@@ -784,11 +784,11 @@ void VulkanDemo::CreateSyncObjects() {
 }
 
 void VulkanDemo::UpdateUniformBuffer(uint32_t current_image) {
-  static auto startTime = std::chrono::high_resolution_clock::now();
+  static auto start_time = std::chrono::high_resolution_clock::now();
 
-  auto currentTime = std::chrono::high_resolution_clock::now();
+  auto current_time = std::chrono::high_resolution_clock::now();
   float time = std::chrono::duration<float, std::chrono::seconds::period>(
-                   currentTime - startTime)
+                   current_time - start_time)
                    .count();
 
   UniformBufferObject ubo{};
@@ -979,15 +979,14 @@ QueueFamilyIndices VulkanDemo::FindQueueFamilies(vk::PhysicalDevice device) {
 
 std::vector<const char*> VulkanDemo::GetRequiredExtensions() {
   uint32_t glfwExtensionCount = 0;
-  const char** glfwExtensions;
-  glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+  const char** glfwExtensions =
+      glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
 
   std::vector<const char*> extensions(glfwExtensions,
                                       glfwExtensions + glfwExtensionCount);
 
-  if (kEnableValidationLayers) {
+  if (kEnableValidationLayers)
     extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
-  }
 
   return extensions;
 }
@@ -1005,9 +1004,8 @@ bool VulkanDemo::CheckValidationLayerSupport() {
       }
     }
 
-    if (!layer_found) {
+    if (!layer_found)
       return false;
-    }
   }
 
   return true;
