@@ -17,12 +17,12 @@ cd ${HOME}/command-line-tools/sdk/default/openharmony/native/llvm/lib
 ln -s aarch64-linux-ohos aarch64-unknown-linux-ohos
 ln -s x86_64-linux-ohos x86_64-unknown-linux-ohos
  ```
-5. Download prebuilt latest [llvm](https://drive.google.com/file/d/1ylDw3YgAtE9MEg-5bIp2lonNcnMUtnEs/view?usp=drive_link) for OHOS, and extra it to ${HOME}/llvm-install
-6. Download prebuilt latest [rust-toolchain](https://drive.google.com/file/d/1Iecbs6ZkMjpDDJgyea0t3sH9I6BC-Kv3/view?usp=drive_link) for OHOS, and extra it to ${HOME}/rust-toolchain
+5. Download prebuilt latest [llvm](https://drive.google.com/file/d/1ylDw3YgAtE9MEg-5bIp2lonNcnMUtnEs/view?usp=drive_link) for OHOS, and extra it to ${HOME}/chrome-prebuilts-ohos
+6. Download prebuilt latest [rust-toolchain](https://drive.google.com/file/d/1Iecbs6ZkMjpDDJgyea0t3sH9I6BC-Kv3/view?usp=drive_link) for OHOS, and extra it to ${HOME}/chrome-prebuilts-ohos
 ```shell
 cd /path/to/chromium/src/third_party
 rm -rf rust-toolchain
-ln -s ${HOME}/rust-toolchain
+ln -s ${HOME}/chrome-prebuilts-ohos/rust-toolchain .
 ```
 7. Checkout my branch of chromium at...
 8. Run `gn args out/Release` with below build arguments
@@ -39,9 +39,9 @@ ohos_ndk_level = ""
 ohos_sdk_root = "/home/penghuang/sources/command-line-tools/sdk/default/openharmony"
 
 # replace it to sdk path on your file system
-clang_base_path = "/home/penghuang/sources/command-line-tools/sdk/default/openharmony/native/llvm"
+clang_base_path = "/home/penghuang/sources/llvm-install"
 
-# rust_sysroot_absolute = "/home/penghuang/sources/chrome-prebuilts-ohos/rust-toolchain/"
+# rust_sysroot_absolute = "/home/penghuang/chrome-prebuilts-ohos/rust-toolchain/"
 # rust_bindgen_root = "/home/penghuang/sources/chrome-prebuilts-ohos/rust-toolchain"
 # rustc_version = "rustc 1.83.0-dev (f5cd2c5888011d4d80311e5b771c6da507d860dd-2-llvmorg-20-init-6794-g3dbd929e chromium)"
 
