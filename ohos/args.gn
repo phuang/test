@@ -1,0 +1,37 @@
+target_os = "ohos"
+target_cpu = "arm64"
+
+is_debug = false
+dcheck_always_on = true
+is_component_build = true
+
+clang_base_path = "/home/penghuang/sources/chrome-prebuilts-ohos/llvm"
+# rust_sysroot_absolute = "/home/penghuang/sources/chrome-prebuilts-ohos/rust-toolchain/"
+# rust_bindgen_root = "/home/penghuang/sources/chrome-prebuilts-ohos/rust-toolchain"
+# rustc_version = "rustc 1.83.0-dev (f5cd2c5888011d4d80311e5b771c6da507d860dd-2-llvmorg-20-init-6794-g3dbd929e chromium)"
+
+# workaround some build errors
+treat_warnings_as_errors = false
+
+dawn_use_swiftshader = false
+use_custom_libcxx = true
+
+chrome_root_store_only = true
+use_kerberos = false
+
+# build errors with ohos and musl
+use_allocator_shim = false
+use_partition_alloc = false
+use_partition_alloc_as_malloc = false
+toolchain_allows_use_partition_alloc_as_malloc = false
+
+# disable symbol
+blink_symbol_level = 0
+v8_symbol_level = 0
+enable_nacl = false
+
+use_ozone = true
+use_aura = true
+
+# try build graphite and dawn
+skia_use_dawn = true
