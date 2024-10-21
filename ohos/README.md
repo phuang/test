@@ -1,4 +1,4 @@
-# Build Update Stream for OHOS
+# Build Upstream Chromium for OHOS
 
 1. Follow steps [get source code](https://chromium.googlesource.com/chromium/src/+/main/docs/linux/build_instructions.md#Get-the-code) to get upstream chromium source code.
 2. Download HarmonyOS command line tootls from [huawei](https://developer.huawei.com/consumer/cn/download/command-line-tools-for-hmos). (The link may not work outside of China.)
