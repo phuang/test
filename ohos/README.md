@@ -39,10 +39,10 @@ is_component_build = true
 
 ohos_ndk_level = ""
 # replace it to sdk path on your file system
-ohos_sdk_root = "/home/penghuang/sources/command-line-tools/sdk/default/openharmony"
+ohos_sdk_root = "/home/penghuang/command-line-tools/sdk/default/openharmony"
 
 # replace it to sdk path on your file system
-clang_base_path = "/home/penghuang/sources/llvm-install"
+clang_base_path = "/home/penghuang/chrome-prebuilts-ohos/llvm"
 
 # rust_sysroot_absolute = "/home/penghuang/chrome-prebuilts-ohos/rust-toolchain/"
 # rust_bindgen_root = "/home/penghuang/sources/chrome-prebuilts-ohos/rust-toolchain"
