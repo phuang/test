@@ -72,3 +72,7 @@ use_aura = true
 skia_use_dawn = true
 
 ```
+9. Build chromium conthen_shell
+```shell
+ninja -C out/Release content_shell
+```
