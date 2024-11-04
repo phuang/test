@@ -3,7 +3,10 @@ target_cpu = "arm64"
 
 is_debug = false
 dcheck_always_on = true
-is_component_build = true
+is_component_build = false
+
+ohos_ndk_level = ""
+ohos_sdk_root = "/home/penghuang/sources/command-line-tools/sdk/default/openharmony"
 
 clang_base_path = "/home/penghuang/sources/chrome-prebuilts-ohos/llvm"
 # rust_sysroot_absolute = "/home/penghuang/sources/chrome-prebuilts-ohos/rust-toolchain/"
@@ -14,24 +17,36 @@ clang_base_path = "/home/penghuang/sources/chrome-prebuilts-ohos/llvm"
 treat_warnings_as_errors = false
 
 dawn_use_swiftshader = false
+
+# cxx args
 use_custom_libcxx = true
+# use_libcxx_modules = true
+# libcxx_is_shared = false
 
 chrome_root_store_only = true
 use_kerberos = false
 
 # build errors with ohos and musl
-use_allocator_shim = false
-use_partition_alloc = false
-use_partition_alloc_as_malloc = false
-toolchain_allows_use_partition_alloc_as_malloc = false
+# use_allocator_shim = false
+# use_partition_alloc = false
+# use_partition_alloc_as_malloc = false
+# toolchain_allows_use_partition_alloc_as_malloc = false
+use_partition_alloc_as_malloc = true
 
 # disable symbol
 blink_symbol_level = 0
 v8_symbol_level = 0
 enable_nacl = false
 
-use_ozone = true
+# use_ozone = true
 use_aura = true
 
 # try build graphite and dawn
+use_dawn = true
 skia_use_dawn = true
+
+# //components/signin/features.gni
+enable_bound_session_credentials  = true
+
+enable_printing = false
+use_zygote = true
