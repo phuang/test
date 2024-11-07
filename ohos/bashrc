@@ -1,0 +1,5 @@
+export OHOS_COMMAND_LINE_TOOLS_PATH=/home/penghuang/sources/command-line-tools
+if [ -d "$OHOS_COMMAND_LINE_TOOLS_PATH" ]; then
+    export OHOS_TOOLCHAINS_PATH="$OHOS_COMMAND_LINE_TOOLS_PATH/sdk/default/openharmony/toolchains"
+    PATH="$OHOS_COMMAND_LINE_TOOLS_PATH/bin:$OHOS_TOOLCHAINS_PATH:$PATH"
+fi
