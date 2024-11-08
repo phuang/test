@@ -1,13 +1,14 @@
 SIGN_TOOL_PATH = /home/penghuang/sources/command-line-tools/sdk/default/openharmony/toolchains/lib
 APP_BUNDLE_NAME = "com.samples.ndkopengl"
 
-
 all:
 
-build-hap:
-	hvigorw assembleHap
-
 sign-profile: openharmony_sx.p7b
+
+build-unsigned-hap: entry/build/default/outputs/default/entry-default-unsigned.hap
+
+entry/build/default/outputs/default/entry-default-unsigned.hap:
+	hvigorw assembleHap
 
 openharmony_sx.p7b: UnsgnedReleasedProfileTemplate.json
 	java -jar ${SIGN_TOOL_PATH}/hap-sign-tool.jar sign-profile \
@@ -45,3 +46,9 @@ stop:
 run:
 	hdc shell aa start -b ${APP_BUNDLE_NAME} -a EntryAbility
 	hdc hilog
+
+clean:
+	rm \
+		entry/build/default/outputs/default/entry-default-unsigned.hap \
+		entry-default-signed.hap \
+		openharmony_sx.p7b
