@@ -82,8 +82,11 @@ ninja -C out/Release content_shell
 
 10. Optional build llvm and rust-toolchains instead of using prebuilt
 ```shell
-cd chromium/src/tools/clang/scripts
+cd ${path_to_chromium}/src/tools/clang/scripts
 ./build.py --bootstrap --with-ohos --without-android --without-fuchsia --install-dir ${path_to_llvm_install_dir}
+
+cd ${path_to_chromium}/src/tools/rust
+./build_rust.py
 ```
 
 "123456" -> "00000016C6C9BBAB7344B306427EF427323778FA8BE63A8DB1E3BA19E6C73D9E0E93066BBC7D"
