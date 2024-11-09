@@ -1,52 +1,52 @@
 target_os = "ohos"
 target_cpu = "arm64"
+cc_wrapper = "ccache"
 
 is_debug = false
-dcheck_always_on = true
+dcheck_always_on = false
 is_component_build = false
 
-ohos_ndk_level = ""
-ohos_sdk_root = "/home/penghuang/sources/command-line-tools/sdk/default/openharmony"
-
-clang_base_path = "/home/penghuang/sources/chrome-prebuilts-ohos/llvm"
-# rust_sysroot_absolute = "/home/penghuang/sources/chrome-prebuilts-ohos/rust-toolchain/"
-# rust_bindgen_root = "/home/penghuang/sources/chrome-prebuilts-ohos/rust-toolchain"
-# rustc_version = "rustc 1.83.0-dev (f5cd2c5888011d4d80311e5b771c6da507d860dd-2-llvmorg-20-init-6794-g3dbd929e chromium)"
+ohos_native_root = "/home/penghuang/sources/command-line-tools/sdk/default/openharmony/native"
+clang_base_path = "/home/penghuang/sources/llvm-install"
 
 # workaround some build errors
 treat_warnings_as_errors = false
 
+# build graphite and dawn
+use_dawn = true
+skia_use_dawn = true
 dawn_use_swiftshader = false
+dawn_enable_vulkan = true
 
 # cxx args
-use_custom_libcxx = true
+# use_custom_libcxx = true
 # use_libcxx_modules = true
 # libcxx_is_shared = false
 
 chrome_root_store_only = true
 use_kerberos = false
 
-# build errors with ohos and musl
-# use_allocator_shim = false
-# use_partition_alloc = false
-# use_partition_alloc_as_malloc = false
-# toolchain_allows_use_partition_alloc_as_malloc = false
-use_partition_alloc_as_malloc = true
-
 # disable symbol
-blink_symbol_level = 0
 v8_symbol_level = 0
+blink_symbol_level = 0
 enable_nacl = false
 
 # use_ozone = true
 use_aura = true
-
-# try build graphite and dawn
-use_dawn = true
-skia_use_dawn = true
 
 # //components/signin/features.gni
 enable_bound_session_credentials  = true
 
 enable_printing = false
 use_zygote = true
+# use_static_angle = true
+
+# enable_base_tracing = false
+enable_screen_capture = false
+
+use_bundled_fontconfig = true
+enable_pdf = false
+enable_screen_ai_service = false
+enable_extensions = false
+
+v8_control_flow_integrity = false

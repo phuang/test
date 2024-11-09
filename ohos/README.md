@@ -1,83 +1,141 @@
 # Build Upstream Chromium for OHOS
 
-1. Follow steps [get source code](https://chromium.googlesource.com/chromium/src/+/main/docs/linux/build_instructions.md#Get-the-code) to get upstream chromium source code.
-2. Download HarmonyOS command line tootls from [huawei](https://developer.huawei.com/consumer/cn/download/command-line-tools-for-hmos). (The link may not work outside of China.)
-3. Unextract the commandline-tools-windows-x64-5.0.3.900.zip to ${HOME} (You can put it to other place as well).
-4. Add several symbol links in ${HOME}/command-line-tools. It fixes several compile issues.
+1. Follow steps to [install depot_tools](https://chromium.googlesource.com/chromium/src/+/main/docs/linux/build_instructions.md#install).
+2. Checkout chromium source code branch ohos_support at https://github.com/phuang/chromium/tree/ohos_support
 ```shell
-cd ${HOME}/command-line-tools/sdk/default/openharmony/native/sysroot/usr/include/
-ln -s aarch64-linux-ohos aarch64-unknown-linux-ohos
-ln -s x86_64-linux-ohos x86_64-unknown-linux-ohos
-
-cd ${HOME}/command-line-tools/sdk/default/openharmony/native/sysroot/usr/lib/
-ln -s aarch64-linux-ohos aarch64-unknown-linux-ohos
-ln -s x86_64-linux-ohos x86_64-unknown-linux-ohos
-
-cd ${HOME}/command-line-tools/sdk/default/openharmony/native/llvm/lib
-ln -s aarch64-linux-ohos aarch64-unknown-linux-ohos
-ln -s x86_64-linux-ohos x86_64-unknown-linux-ohos
- ```
-5. Fix some problem is ohos header files
-   * Rename struct `sockaddr_storage` to `__kernel_sockaddr_storage` in command-line-tools/sdk/default/openharmony/native/sysroot/usr/include/linux/socket.h:
-   * 
-5. Download prebuilt latest [llvm](https://drive.google.com/file/d/1ylDw3YgAtE9MEg-5bIp2lonNcnMUtnEs/view?usp=drive_link) for OHOS, and extra it to ${HOME}/chrome-prebuilts-ohos
-6. Download prebuilt latest [rust-toolchain](https://drive.google.com/file/d/1Iecbs6ZkMjpDDJgyea0t3sH9I6BC-Kv3/view?usp=drive_link) for OHOS, and extra it to ${HOME}/chrome-prebuilts-ohos
+mkdir -p ${HOME}/sources/chromium
+cd ${HOME}/sources/chromium
+git clone --branch ohos_support https://github.com/phuang/chromium.git src
+# Use --depth=1 to clone with only 1 commit history to reduce clone time  
+# git clone --depth=1 --branch ohos_support https://github.com/phuang/chromium.git src
+```
+2. Download [commandline-tools-linux-x64-5.0.3.900.tar.xz](https://drive.usercontent.google.com/download?id=1BJIbv5Rn3UMKM3OE8LxyT7SKpm-a4_3T&export=download&authuser=0&confirm=t&uuid=837c091a-1b5c-4c21-b97d-804cb592ae57&at=APvzH3peCb1wdDamWS4tm4VIkIP8:1735003783831), [llvm-install.tar.xz](https://drive.usercontent.google.com/download?id=1vgoPyihF5fIeTukZIQVA80ZxYq-ahhI_&export=download&authuser=2&confirm=t&uuid=479ce1a3-b3be-43e4-adc0-01a8bac23743&at=APvzH3pKBCfRd501fF5XdcJDY7C9:1734833729696) and [rust-toolchain.tar.xz](https://drive.usercontent.google.com/download?id=1SEcXeEAJcYWKPIotm9o0Afe3Gw_YcYLs&export=download&authuser=0&confirm=t&uuid=9b1d4552-4a67-4855-9a4e-3c0999630396&at=APvzH3rTOR2-9-sPJZSOgoS3RJly:1735003699551) from [Google Drive](https://drive.google.com/drive/folders/19mz5nA8PWqA3e0wEk1cQNbgEnaTkZ4GB?usp=drive_link)
+3. Extract `commandline-tools-linux-x64-5.0.3.900.tar.xz` and `llvm-install.tar.xz` to `${HOME}/sources` (You can put it to other place as well).
 ```shell
-cd /path/to/chromium/src/third_party
-rm -rf rust-toolchain
-ln -s ${HOME}/chrome-prebuilts-ohos/rust-toolchain .
+tar -Jxvf commandline-tools-linux-x64-5.0.3.900.tar.xz -C ${HOME}/sources
+tar -Jxvf llvm-install.tar.xz -C ${HOME}/sources
 ```
-7. Checkout my branch of chromium at...
-8. Run `gn args out/Release` with below build arguments
+4. Extract `rust-toolchain.tar.xz` to `${HOME}/chromium/src/third_party` folder
+```shell
+tar -Jxvf rust-toolchain.tar.xz -C ${HOME}/sources/chromium/src/third_party
 ```
+5. Create ${HOME}/chromium/.gclient with below content
+```python
+solutions = [
+  {
+    "name": "src",
+    "url": "https://github.com/phuang/chromium.git@ohos_support",
+    "managed": False,
+    "custom_deps": {
+      'src/third_party/llvm-build/Release+Asserts': None,
+      'src/third_party/rust-toolchain': None,
+      'src/third_party/angle': 'https://github.com/phuang/angle.git@ohos_support',
+      'src/third_party/dawn': 'https://github.com/phuang/dawn.git@ohos_support',
+      'src/third_party/ffmpeg': 'https://github.com/phuang/FFmpeg.git@ohos_support',
+      'src/third_party/perfetto': 'https://github.com/phuang/perfetto.git@ohos_support',
+      'src/third_party/skia': 'https://github.com/phuang/skia.git@ohos_support',
+      'src/third_party/vulkan-headers/src': 'https://github.com/phuang/Vulkan-Headers.git@ohos_support',
+      'src/third_party/webrtc': 'https://github.com/phuang/webrtc.git@ohos_support',
+      'src/v8': 'https://github.com/phuang/v8.git@ohos_support',
+
+      # Below deps can reduce gclient sync time
+      'src/third_party/angle/third_party/VK-GL-CTS/src': None,
+      'src/third_party/chromium-variations': None,
+    },
+    "custom_vars": {
+      "checkout_rust_toolchain_deps": True,
+    },
+    "custom_hooks": []
+  },
+]
+```
+6. Run `gclient sync` or `gclient sync --shallow` in ${HOME}/sources/chromium to sync the tree, using `--shallow` can reduce sync up time.
+7. Run `gn args out/Release` with below build arguments
+```shell
 target_os = "ohos"
 target_cpu = "arm64"
+cc_wrapper = "ccache"
 
 is_debug = false
-dcheck_always_on = true
-is_component_build = true
+dcheck_always_on = false
+is_component_build = false
 
-ohos_ndk_level = ""
-# replace it to sdk path on your file system
-ohos_sdk_root = "/home/penghuang/command-line-tools/sdk/default/openharmony"
-
-# replace it to sdk path on your file system
-clang_base_path = "/home/penghuang/chrome-prebuilts-ohos/llvm"
-
-# rust_sysroot_absolute = "/home/penghuang/chrome-prebuilts-ohos/rust-toolchain/"
-# rust_bindgen_root = "/home/penghuang/sources/chrome-prebuilts-ohos/rust-toolchain"
-# rustc_version = "rustc 1.83.0-dev (f5cd2c5888011d4d80311e5b771c6da507d860dd-2-llvmorg-20-init-6794-g3dbd929e chromium)"
+# Replace ${HOME} with your home path
+ohos_native_root = "${HOME}/sources/command-line-tools/sdk/default/openharmony/native"
+clang_base_path = "${HOME}/sources/llvm-install"
 
 # workaround some build errors
 treat_warnings_as_errors = false
 
+# build graphite and dawn
+use_dawn = true
+skia_use_dawn = true
 dawn_use_swiftshader = false
-use_custom_libcxx = true
+dawn_enable_vulkan = true
+
+# cxx args
+# use_custom_libcxx = true
+# use_libcxx_modules = true
+# libcxx_is_shared = false
 
 chrome_root_store_only = true
 use_kerberos = false
 
-# build errors with ohos and musl
-use_allocator_shim = false
-use_partition_alloc = false
-use_partition_alloc_as_malloc = false
-toolchain_allows_use_partition_alloc_as_malloc = false
-
 # disable symbol
-blink_symbol_level = 0
 v8_symbol_level = 0
+blink_symbol_level = 0
 enable_nacl = false
 
-use_ozone = true
+# use_ozone = true
 use_aura = true
 
-# try build graphite and dawn
-skia_use_dawn = true
+# //components/signin/features.gni
+enable_bound_session_credentials  = true
 
+enable_printing = false
+use_zygote = true
+# use_static_angle = true
+
+# enable_base_tracing = false
+enable_screen_capture = false
+
+use_bundled_fontconfig = true
+enable_pdf = false
+enable_screen_ai_service = false
+enable_extensions = false
+
+# Workaround v8 crash
+v8_control_flow_integrity = false
 ```
-9. Build chromium conthen_shell
+
+8. Build chromium content_shell
 ```shell
 ninja -C out/Release content_shell
 ```
 
-"123456" -> "00000016C6C9BBAB7344B306427EF427323778FA8BE63A8DB1E3BA19E6C73D9E0E93066BBC7D"
+9. Build entry-default-signed.hap
+```shell
+cd ${HOME}/sources/chromium/src/content/shell/ohos/shell_hap
+make content_shell && make signed-hap
+# The hap file entry-default-signed.hap will be created in this folder
+# You can install it to a OHOS device.
+```
+10. [Optional] Config ccache for faster build, put below content in ` ${HOME}/.ccache/ccache.conf`
+```shell
+max_size = 10G
+sloppiness = include_file_mtime
+
+# change it to ${HOME}/sources
+base_dir = /home/penghuang/sources
+
+# Set it to true, if you have multiple chromium trees. So the same cache can be hit within multiple chromium trees
+hash_dir = false
+```
+1`. [Optional] Build llvm and rust-toolchains from source code instead of using prebuilt from step 2
+```shell
+cd ${HOME}/sources/chromium/src/tools/clang/scripts
+./build.py --bootstrap --with-ohos --without-android --without-fuchsia --install-dir ${HOME}/sources/llvm-install
+
+cd ${HOME}/sources/chromium/src/tools/rust
+./build_rust.py
+```
