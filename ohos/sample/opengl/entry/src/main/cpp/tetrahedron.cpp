@@ -224,18 +224,20 @@ int32_t Tetrahedron::Init(void *window, int32_t width,  int32_t height)
             return -1;
         }
     }
-    
+
     /* Create EGLContext from */
     int attrib3_list[] = {
         EGL_CONTEXT_CLIENT_VERSION, 2,
         EGL_NONE
     };
-    
+
     mEGLContext = eglCreateContext(mEGLDisplay, mEGLConfig, mSharedEGLContext, attrib3_list);
     if (!eglMakeCurrent(mEGLDisplay, mEGLSurface, mEGLSurface, mEGLContext)) {
         LOGE("eglMakeCurrent error = %{public}d", eglGetError());
     }
-    
+
+    LOGE("glGetString(GL_VERSION)=%{public}s", glGetString(GL_VERSION));
+
     mProgramHandle = CreateProgram(g_vertexShader, g_fragmentShader);
     if (!mProgramHandle) {
         LOGE("Could not create CreateProgram");

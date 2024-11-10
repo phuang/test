@@ -48,7 +48,7 @@ run:
 	hdc hilog
 
 clean:
+	hvigorw clean
 	rm \
-		entry/build/default/outputs/default/entry-default-unsigned.hap \
 		entry-default-signed.hap \
 		openharmony_sx.p7b

@@ -50,3 +50,6 @@ enable_bound_session_credentials  = true
 
 enable_printing = false
 use_zygote = true
+# use_static_angle = true
+
+# enable_base_tracing = false
