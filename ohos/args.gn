@@ -35,7 +35,6 @@ use_partition_alloc_as_malloc = true
 
 # disable symbol
 blink_symbol_level = 0
-v8_symbol_level = 0
 enable_nacl = false
 
 # use_ozone = true
@@ -53,3 +52,14 @@ use_zygote = true
 # use_static_angle = true
 
 # enable_base_tracing = false
+enable_screen_capture = false
+
+use_bundled_fontconfig = true
+
+# v8_symbol_level = 0
+# v8_jitless = true
+v8_enable_webassembly = false
+v8_enable_jit_code_sign = true
+v8_enable_sandbox = false
+
+safe_browsing_mode = 0
