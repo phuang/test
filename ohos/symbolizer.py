@@ -6,7 +6,7 @@ import os.path
 import re
 
 SYMBOLIZER = "/home/penghuang/sources/chrome-prebuilts-ohos/llvm/bin/llvm-symbolizer"
-LIBRARY = "/home/penghuang/sources/chromium/src/out/Release/lib.unstripped/libhap_test_entry.so"
+LIBRARY = "/home/penghuang/sources/chromium/src/out/Release/lib.unstripped/libcontent_shell_content_view.so"
 BASENAMES = "/home/penghuang/sources/chromium/src/out/Release/../../"
 
 def main():
