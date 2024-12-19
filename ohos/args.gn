@@ -45,3 +45,8 @@ use_zygote = true
 enable_screen_capture = false
 
 use_bundled_fontconfig = true
+enable_pdf = false
+enable_screen_ai_service = false
+enable_extensions = false
+use_swiftshader = false
+dawn_use_swiftshader  = false

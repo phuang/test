@@ -1,0 +1,17 @@
+solutions = [
+  {
+    "name": "src",
+    "url": "https://chromium.googlesource.com/chromium/src.git",
+    "managed": False,
+    "custom_deps": {
+      'src/third_party/llvm-build/Release+Asserts': None,
+      'src/third_party/rust-toolchain': None,
+    },
+    "custom_vars": {
+      "checkout_rust_toolchain_deps": True,
+    },
+  },
+]
+target_os = [
+  "linux",
+]
