@@ -49,7 +49,9 @@ is_debug = false
 dcheck_always_on = false
 is_component_build = false
 
-clang_base_path = "/home/penghuang/sources/llvm-install"
+# Replace ${HOME} to path of your home folder
+ohos_native_root = "${HOME}/sources/command-line-tools/sdk/default/openharmony/native"
+clang_base_path = "${HOME}/sources/llvm-install"
 
 # workaround some build errors
 treat_warnings_as_errors = false
