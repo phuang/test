@@ -107,9 +107,9 @@ make content_shell && make signed-hap
 
 9. Optional build llvm and rust-toolchains instead of using prebuilt
 ```shell
-cd ${path_to_chromium}/src/tools/clang/scripts
+cd ${HOME}/sources/chromium/src/tools/clang/scripts
 ./build.py --bootstrap --with-ohos --without-android --without-fuchsia --install-dir ${HOME}/sources/llvm-install
 
-cd ${path_to_chromium}/src/tools/rust
+cd ${HOME}/sources/chromium/src/tools/rust
 ./build_rust.py
 ```
