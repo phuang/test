@@ -1,6 +1,6 @@
 # Build Upstream Chromium for OHOS
 
-1. Follow steps [get source code](https://chromium.googlesource.com/chromium/src/+/main/docs/linux/build_instructions.md#install) to install depot_tools.
+1. Follow steps to [install depot_tools](https://chromium.googlesource.com/chromium/src/+/main/docs/linux/build_instructions.md#install).
 2. Checkout chromium source code at https://github.com/phuang/chromium
 ```shell
 mkdir -p ${HOME}/sources/chromium
@@ -95,7 +95,7 @@ use_swiftshader = false
 dawn_use_swiftshader  = false
 ```
 
-8. Build chromium conthen_shell
+8. Build chromium content_shell
 ```shell
 ninja -C out/Release content_shell
 ```
@@ -106,7 +106,7 @@ cd ${HOME}/sources/chromium/src/content/shell/ohos/shell_hap
 make content_shell && make signed-hap
 ```
 
-10. Optional build llvm and rust-toolchains instead of using prebuilt
+10. [Optional] Build llvm and rust-toolchains from source code instead of using prebuilt from step 2
 ```shell
 cd ${HOME}/sources/chromium/src/tools/clang/scripts
 ./build.py --bootstrap --with-ohos --without-android --without-fuchsia --install-dir ${HOME}/sources/llvm-install
