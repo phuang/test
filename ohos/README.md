@@ -99,7 +99,7 @@ dawn_use_swiftshader  = false
 ninja -C out/Release content_shell
 ```
 
-8. Build and test hap
+8. Build and entry-default-signed.hap
 ```shell
 cd ${HOME}/sources/chromium/src/content/shell/ohos/shell_hap
 make content_shell && make signed-hap
