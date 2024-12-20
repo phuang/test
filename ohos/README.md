@@ -49,7 +49,7 @@ is_debug = false
 dcheck_always_on = false
 is_component_build = false
 
-# Replace ${HOME} to path of your home folder
+# Replace ${HOME} with your home path
 ohos_native_root = "${HOME}/sources/command-line-tools/sdk/default/openharmony/native"
 clang_base_path = "${HOME}/sources/llvm-install"
 
