@@ -38,7 +38,8 @@ target_os = [
   "linux",
 ]
 ```
-6. Run `gn args out/Release` with below build arguments
+6. Run `gclient sync` in ${HOME}/sources/chromium/src to sync the tree
+7. Run `gn args out/Release` with below build arguments
 ```
 target_os = "ohos"
 target_cpu = "arm64"
@@ -94,18 +95,18 @@ use_swiftshader = false
 dawn_use_swiftshader  = false
 ```
 
-7. Build chromium conthen_shell
+8. Build chromium conthen_shell
 ```shell
 ninja -C out/Release content_shell
 ```
 
-8. Build and entry-default-signed.hap
+9. Build and entry-default-signed.hap
 ```shell
 cd ${HOME}/sources/chromium/src/content/shell/ohos/shell_hap
 make content_shell && make signed-hap
 ```
 
-9. Optional build llvm and rust-toolchains instead of using prebuilt
+10. Optional build llvm and rust-toolchains instead of using prebuilt
 ```shell
 cd ${HOME}/sources/chromium/src/tools/clang/scripts
 ./build.py --bootstrap --with-ohos --without-android --without-fuchsia --install-dir ${HOME}/sources/llvm-install
