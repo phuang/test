@@ -5,7 +5,7 @@ import sys
 import os.path
 import re
 
-SYMBOLIZER = "/home/penghuang/sources/chrome-prebuilts-ohos/llvm/bin/llvm-symbolizer"
+SYMBOLIZER = "/home/penghuang/sources/llvm-install/bin/llvm-symbolizer"
 LIBRARY = "/home/penghuang/sources/chromium/src/out/Release/lib.unstripped/libcontent_shell_content_view.so"
 # LIBRARY = "/home/penghuang/sources/chromium/src/out/Debug/exe.unstripped/base_unittests"
 # LIBRARY = "/home/penghuang/sources/chromium/src/out/Release/exe.unstripped/d8"

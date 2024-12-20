@@ -49,35 +49,34 @@ is_debug = false
 dcheck_always_on = false
 is_component_build = false
 
-# Replace ${HOME} with your home path
-ohos_native_root = "${HOME}/sources/command-line-tools/sdk/default/openharmony/native"
-clang_base_path = "${HOME}/sources/llvm-install"
+# Replace /home/penghuang with your home path
+ohos_native_root = "/home/penghuang/sources/command-line-tools/sdk/default/openharmony/native"
+clang_base_path = "/home/penghuang/sources/llvm-install"
 
 # workaround some build errors
 treat_warnings_as_errors = false
 
+# build graphite and dawn
+use_dawn = true
+skia_use_dawn = true
 dawn_use_swiftshader = false
+dawn_enable_vulkan = true
 
 # cxx args
-use_custom_libcxx = true
+# use_custom_libcxx = true
 # use_libcxx_modules = true
+# libcxx_is_shared = false
 
 chrome_root_store_only = true
 use_kerberos = false
 
-
 # disable symbol
 v8_symbol_level = 0
 blink_symbol_level = 0
-
 enable_nacl = false
 
 # use_ozone = true
 use_aura = true
-
-# try build graphite and dawn
-use_dawn = true
-skia_use_dawn = true
 
 # //components/signin/features.gni
 enable_bound_session_credentials  = true
@@ -93,8 +92,9 @@ use_bundled_fontconfig = true
 enable_pdf = false
 enable_screen_ai_service = false
 enable_extensions = false
-use_swiftshader = false
-dawn_use_swiftshader  = false
+
+# Workaround v8 crash
+v8_control_flow_integrity = false
 ```
 
 8. Build chromium content_shell
