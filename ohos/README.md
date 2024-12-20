@@ -1,11 +1,11 @@
 # Build Upstream Chromium for OHOS
 
 1. Follow steps to [install depot_tools](https://chromium.googlesource.com/chromium/src/+/main/docs/linux/build_instructions.md#install).
-2. Checkout chromium source code at https://github.com/phuang/chromium
+2. Checkout chromium source code branch ohos_support at https://github.com/phuang/chromium/tree/ohos_support
 ```shell
 mkdir -p ${HOME}/sources/chromium
 cd ${HOME}/sources/chromium
-git clone git@github.com:phuang/chromium.git src
+git clone --branch ohos_support git@github.com:phuang/chromium.git src
 ```
 2. Download commandline-tools-linux-x64-5.0.3.900.tar.xz, llvm-install.tar.xz and rust-toolchain.tar.xz from [Google Drive](https://drive.google.com/drive/folders/19mz5nA8PWqA3e0wEk1cQNbgEnaTkZ4GB?usp=drive_link)
 3. Extract commandline-tools-linux-x64-5.0.3.900.tar.xz & llvm-install.tar.xz to ${HOME}/sources (You can put it to other place as well).
