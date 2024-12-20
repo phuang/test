@@ -1,92 +1,115 @@
 # Build Upstream Chromium for OHOS
 
-1. Follow steps [get source code](https://chromium.googlesource.com/chromium/src/+/main/docs/linux/build_instructions.md#Get-the-code) to get upstream chromium source code.
-2. Download HarmonyOS command line tootls from [huawei](https://developer.huawei.com/consumer/cn/download/command-line-tools-for-hmos). (The link may not work outside of China.)
-3. Unextract the commandline-tools-windows-x64-5.0.3.900.zip to ${HOME} (You can put it to other place as well).
-4. Add several symbol links in ${HOME}/command-line-tools. It fixes several compile issues.
+1. Follow steps [get source code](https://chromium.googlesource.com/chromium/src/+/main/docs/linux/build_instructions.md#install) to install depot_tools.
+2. Checkout chromium source code at https://github.com/phuang/chromium
 ```shell
-cd ${HOME}/command-line-tools/sdk/default/openharmony/native/sysroot/usr/include/
-ln -s aarch64-linux-ohos aarch64-unknown-linux-ohos
-ln -s x86_64-linux-ohos x86_64-unknown-linux-ohos
-
-cd ${HOME}/command-line-tools/sdk/default/openharmony/native/sysroot/usr/lib/
-ln -s aarch64-linux-ohos aarch64-unknown-linux-ohos
-ln -s x86_64-linux-ohos x86_64-unknown-linux-ohos
-
-cd ${HOME}/command-line-tools/sdk/default/openharmony/native/llvm/lib
-ln -s aarch64-linux-ohos aarch64-unknown-linux-ohos
-ln -s x86_64-linux-ohos x86_64-unknown-linux-ohos
- ```
-5. Fix some problem is ohos header files
-   * Rename struct `sockaddr_storage` to `__kernel_sockaddr_storage` in command-line-tools/sdk/default/openharmony/native/sysroot/usr/include/linux/socket.h:
-   * 
-5. Download prebuilt latest [llvm](https://drive.google.com/file/d/1ylDw3YgAtE9MEg-5bIp2lonNcnMUtnEs/view?usp=drive_link) for OHOS, and extra it to ${HOME}/chrome-prebuilts-ohos
-6. Download prebuilt latest [rust-toolchain](https://drive.google.com/file/d/1Iecbs6ZkMjpDDJgyea0t3sH9I6BC-Kv3/view?usp=drive_link) for OHOS, and extra it to ${HOME}/chrome-prebuilts-ohos
-```shell
-cd /path/to/chromium/src/third_party
-rm -rf rust-toolchain
-ln -s ${HOME}/chrome-prebuilts-ohos/rust-toolchain .
+mkdir -p ${HOME}/sources/chromium
+cd ${HOME}/sources/chromium
+git clone git@github.com:phuang/chromium.git src
 ```
-7. Checkout my branch of chromium at...
-8. Run `gn args out/Release` with below build arguments
+2. Download commandline-tools-linux-x64-5.0.3.900.tar.xz, llvm-install.tar.xz and rust-toolchain.tar.xz from [Google Drive](https://drive.google.com/drive/folders/19mz5nA8PWqA3e0wEk1cQNbgEnaTkZ4GB?usp=drive_link)
+3. Extract commandline-tools-linux-x64-5.0.3.900.tar.xz & llvm-install.tar.xz to ${HOME}/sources (You can put it to other place as well).
+4. Extract rust-toolchain.tar.xz to ${HOME}/chromium/src/third_party/ folder
+5. Create ${HOME}/chromium/.gclient with below content
+```json
+solutions = [
+  {
+    "name": "src",
+    "url": "https://chromium.googlesource.com/chromium/src.git",
+    "managed": False,
+    "custom_deps": {
+      'src/third_party/llvm-build/Release+Asserts': None,
+      'src/third_party/rust-toolchain': None,
+      'src/third_party/angle': 'https://github.com/phuang/angle.git@ohos_support',
+      'src/third_party/dawn': 'https://github.com/phuang/dawn.git@ohos_support',
+      'src/third_party/ffmpeg': 'https://github.com/phuang/FFmpeg.git@ohos_support',
+      'src/third_party/perfetto': 'https://github.com/phuang/perfetto.git@ohos_support',
+      'src/third_party/skia': 'https://github.com/phuang/skia.git@ohos_support',
+      'src/third_party/webrtc': 'https://github.com/phuang/webrtc.git@ohos_support',
+      'src/v8': 'https://github.com/phuang/v8.git@ohos_support',
+    },
+    "custom_vars": {
+      "rbe_instance": "projects/rbe-chromium-untrusted/instances/default_instance",
+      "checkout_rust_toolchain_deps": True,
+    },
+  },
+]
+target_os = [
+  "linux",
+]
+```
+6. Run `gn args out/Release` with below build arguments
 ```
 target_os = "ohos"
 target_cpu = "arm64"
+cc_wrapper = "ccache"
 
 is_debug = false
-dcheck_always_on = true
-is_component_build = true
+dcheck_always_on = false
+is_component_build = false
 
-ohos_ndk_level = ""
-# replace it to sdk path on your file system
-ohos_sdk_root = "/home/penghuang/command-line-tools/sdk/default/openharmony"
-
-# replace it to sdk path on your file system
-clang_base_path = "/home/penghuang/chrome-prebuilts-ohos/llvm"
-
-# rust_sysroot_absolute = "/home/penghuang/chrome-prebuilts-ohos/rust-toolchain/"
-# rust_bindgen_root = "/home/penghuang/sources/chrome-prebuilts-ohos/rust-toolchain"
-# rustc_version = "rustc 1.83.0-dev (f5cd2c5888011d4d80311e5b771c6da507d860dd-2-llvmorg-20-init-6794-g3dbd929e chromium)"
+clang_base_path = "/home/penghuang/sources/llvm-install"
 
 # workaround some build errors
 treat_warnings_as_errors = false
 
 dawn_use_swiftshader = false
+
+# cxx args
 use_custom_libcxx = true
+# use_libcxx_modules = true
 
 chrome_root_store_only = true
 use_kerberos = false
 
-# build errors with ohos and musl
-use_allocator_shim = false
-use_partition_alloc = false
-use_partition_alloc_as_malloc = false
-toolchain_allows_use_partition_alloc_as_malloc = false
 
 # disable symbol
-blink_symbol_level = 0
 v8_symbol_level = 0
+blink_symbol_level = 0
+
 enable_nacl = false
 
-use_ozone = true
+# use_ozone = true
 use_aura = true
 
 # try build graphite and dawn
+use_dawn = true
 skia_use_dawn = true
 
+# //components/signin/features.gni
+enable_bound_session_credentials  = true
+
+enable_printing = false
+use_zygote = true
+# use_static_angle = true
+
+# enable_base_tracing = false
+enable_screen_capture = false
+
+use_bundled_fontconfig = true
+enable_pdf = false
+enable_screen_ai_service = false
+enable_extensions = false
+use_swiftshader = false
+dawn_use_swiftshader  = false
 ```
-9. Build chromium conthen_shell
+
+7. Build chromium conthen_shell
 ```shell
 ninja -C out/Release content_shell
 ```
 
-10. Optional build llvm and rust-toolchains instead of using prebuilt
+8. Build and test hap
+```shell
+cd ${HOME}/sources/chromium/src/content/shell/ohos/shell_hap
+make content_shell && make signed-hap
+```
+
+9. Optional build llvm and rust-toolchains instead of using prebuilt
 ```shell
 cd ${path_to_chromium}/src/tools/clang/scripts
-./build.py --bootstrap --with-ohos --without-android --without-fuchsia --install-dir ${path_to_llvm_install_dir}
+./build.py --bootstrap --with-ohos --without-android --without-fuchsia --install-dir ${HOME}/sources/llvm-install
 
 cd ${path_to_chromium}/src/tools/rust
 ./build_rust.py
 ```
-
-"123456" -> "00000016C6C9BBAB7344B306427EF427323778FA8BE63A8DB1E3BA19E6C73D9E0E93066BBC7D"

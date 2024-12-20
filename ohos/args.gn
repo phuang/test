@@ -6,6 +6,7 @@ is_debug = false
 dcheck_always_on = false
 is_component_build = false
 
+ohos_native_root = "/home/penghuang/sources/command-line-tools/sdk/default/openharmony/native"
 clang_base_path = "/home/penghuang/sources/llvm-install"
 
 # workaround some build errors
