@@ -38,9 +38,10 @@ solutions = [
       'src/third_party/webrtc': 'https://github.com/phuang/webrtc.git@ohos_support',
       'src/v8': 'https://github.com/phuang/v8.git@ohos_support',
 
-      # Below deps can reduce gclient sync time
+      # Removing below deps can reduce gclient sync time
       'src/third_party/angle/third_party/VK-GL-CTS/src': None,
       'src/third_party/chromium-variations': None,
+      'src/third_party/dawn/third_party/webgpu-cts': None,
     },
     "custom_vars": {
       "checkout_rust_toolchain_deps": True,
