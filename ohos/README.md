@@ -9,11 +9,10 @@ git clone --branch ohos_support https://github.com/phuang/chromium.git src
 # Use --depth=1 to clone with only 1 commit history to reduce clone time  
 # git clone --depth=1 --branch ohos_support https://github.com/phuang/chromium.git src
 ```
-2. Download [commandline-tools-linux-x64-5.0.3.900.tar.xz](https://drive.usercontent.google.com/download?id=1BJIbv5Rn3UMKM3OE8LxyT7SKpm-a4_3T&export=download&authuser=0&confirm=t&uuid=837c091a-1b5c-4c21-b97d-804cb592ae57&at=APvzH3peCb1wdDamWS4tm4VIkIP8:1735003783831), [llvm-install.tar.xz](https://drive.usercontent.google.com/download?id=1vgoPyihF5fIeTukZIQVA80ZxYq-ahhI_&export=download&authuser=2&confirm=t&uuid=479ce1a3-b3be-43e4-adc0-01a8bac23743&at=APvzH3pKBCfRd501fF5XdcJDY7C9:1734833729696) and [rust-toolchain.tar.xz](https://drive.usercontent.google.com/download?id=1SEcXeEAJcYWKPIotm9o0Afe3Gw_YcYLs&export=download&authuser=0&confirm=t&uuid=9b1d4552-4a67-4855-9a4e-3c0999630396&at=APvzH3rTOR2-9-sPJZSOgoS3RJly:1735003699551) from [Google Drive](https://drive.google.com/drive/folders/19mz5nA8PWqA3e0wEk1cQNbgEnaTkZ4GB?usp=drive_link)
-3. Extract `commandline-tools-linux-x64-5.0.3.900.tar.xz` and `llvm-install.tar.xz` to `${HOME}/sources` (You can put it to other place as well).
+2. Download [command-line-tools-linux-x86_64-5.0.3.900.tar.xz](https://drive.usercontent.google.com/download?id=19BdNjtjuP7GZ3f9iCnkTmXu9c0kQTG9b&export=download&authuser=2&confirm=t&uuid=69656fbb-c018-427c-9772-f94105cf4134&at=APvzH3pTiaU7dmkM8zBgNmKlFfkG:1735530990435) and [rust-toolchain.tar.xz](https://drive.usercontent.google.com/download?id=1SEcXeEAJcYWKPIotm9o0Afe3Gw_YcYLs&export=download&authuser=0&confirm=t&uuid=9b1d4552-4a67-4855-9a4e-3c0999630396&at=APvzH3rTOR2-9-sPJZSOgoS3RJly:1735003699551) from [Google Drive](https://drive.google.com/drive/folders/19mz5nA8PWqA3e0wEk1cQNbgEnaTkZ4GB?usp=drive_link)
+3. Extract `command-line-tools-linux-x86_64-5.0.3.900.tar.xz` to `${HOME}/sources` (You can put it to other place as well).
 ```shell
-tar -Jxvf commandline-tools-linux-x64-5.0.3.900.tar.xz -C ${HOME}/sources
-tar -Jxvf llvm-install.tar.xz -C ${HOME}/sources
+tar -Jxvf command-line-tools-linux-x86_64-5.0.3.900.tar.xz -C ${HOME}/sources
 ```
 4. Extract `rust-toolchain.tar.xz` to `${HOME}/chromium/src/third_party` folder
 ```shell
@@ -63,7 +62,7 @@ is_component_build = false
 
 # Replace ${HOME} with your home path
 ohos_native_root = "${HOME}/sources/command-line-tools/sdk/default/openharmony/native"
-clang_base_path = "${HOME}/sources/llvm-install"
+clang_base_path = "${HOME}/sources/command-line-tools/sdk/default/openharmony/native/llvm"
 
 # workaround some build errors
 treat_warnings_as_errors = false
@@ -132,11 +131,20 @@ base_dir = /home/penghuang/sources
 # Set it to true, if you have multiple chromium trees. So the same cache can be hit within multiple chromium trees
 hash_dir = false
 ```
-1`. [Optional] Build llvm and rust-toolchains from source code instead of using prebuilt from step 2
+11. [Optional] Build llvm and rust-toolchains from source code instead of using prebuilt from step 2
 ```shell
 cd ${HOME}/sources/chromium/src/tools/clang/scripts
 ./build.py --bootstrap --with-ohos --without-android --without-fuchsia --install-dir ${HOME}/sources/llvm-install
 
 cd ${HOME}/sources/chromium/src/tools/rust
 ./build_rust.py
+```
+
+Note:
+```shell
+# tar llvm to a compressed llvm-x86_64.tar.xz
+tar cvf - llvm | xz -z -T 0 > llvm-x86_64.tar.xz
+
+# untar the compressed llvm-x86_64.tar.xz
+xz -d -T 0 -c llvm-x86_64.tar.xz| tar -xv
 ```
