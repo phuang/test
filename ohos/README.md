@@ -12,11 +12,11 @@ git clone --branch ohos_support https://github.com/phuang/chromium.git src
 2. Download [command-line-tools-linux-x86_64-5.0.3.900.tar.xz](https://drive.usercontent.google.com/download?id=1LbtM7iGqF5q5o9abVBWMKTlT1NglOM5Q&export=download&authuser=2&confirm=t&uuid=2bf26830-39e0-489c-bc2e-28144ca8e8ce&at=APvzH3qpLjDx5fMNf0e0BLae-MWF:1735589467950) and [rust-toolchain.tar.xz](https://drive.usercontent.google.com/download?id=1SEcXeEAJcYWKPIotm9o0Afe3Gw_YcYLs&export=download&authuser=0&confirm=t&uuid=9b1d4552-4a67-4855-9a4e-3c0999630396&at=APvzH3rTOR2-9-sPJZSOgoS3RJly:1735003699551) from [Google Drive](https://drive.google.com/drive/folders/19mz5nA8PWqA3e0wEk1cQNbgEnaTkZ4GB?usp=drive_link)
 3. Extract `command-line-tools-linux-x86_64-5.0.3.900.tar.xz` to `${HOME}/sources` (You can put it to other place as well).
 ```shell
-tar -Jxvf command-line-tools-linux-x86_64-5.0.3.900.tar.xz -C ${HOME}/sources
+xz -d -T 0 -c command-line-tools-linux-x86_64-5.0.3.900.tar.xz | tar -xv  -C ${HOME}/sources
 ```
 4. Extract `rust-toolchain.tar.xz` to `${HOME}/chromium/src/third_party` folder
 ```shell
-tar -Jxvf rust-toolchain.tar.xz -C ${HOME}/sources/chromium/src/third_party
+xz -d -T 0 -c rust-toolchain.tar.xz | tar -xv -C ${HOME}/sources/chromium/src/third_party
 ```
 5. Create ${HOME}/chromium/.gclient with below content
 ```python
