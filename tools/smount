@@ -67,6 +67,13 @@ def unmount():
     wsl_detach()
 
 
+# Query the status of the disk
+def query():
+  is_attached, is_mounted = is_attached_and_mounted()
+  print("Attached: ", is_attached)
+  print("Mounted: ", is_mounted)
+
+
 # Parse the command line arguments
 def main():
   parser = argparse.ArgumentParser()
@@ -78,11 +85,16 @@ def main():
   # Create the parser for the "unmount" command
   parser_unmount = subparsers.add_parser('unmount')
 
+  # Create the parser for the "query" command
+  parser_query = subparsers.add_parser('query')
+
   args = parser.parse_args()
   if args.command == 'mount':
     mount()
   elif args.command == 'unmount':
     unmount()
+  elif args.command == 'query':
+    query()
   else:
     parser.print_help()
 
