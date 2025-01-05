@@ -1,0 +1,91 @@
+#!/usr/bin/python3
+
+import argparse
+import subprocess
+import getpass
+
+DISK_PATH = 'F:\\WSL\\chrome_ohos.vhdx'
+SOURCES_FS_UUID = 'ea1fed23-f73a-4c40-8e86-e57185d4e8c3'
+MOUNT_POINT = '/home/penghuang/sources'
+
+
+# Check if the disk is attached
+def is_attached_and_mounted():
+  command = [ 'lsblk', '--fs' ]
+  result = subprocess.run(command, capture_output=True, text=True)
+  if result.returncode != 0:
+    raise Exception("lsblk failed: ", result.stderr)
+
+  return SOURCES_FS_UUID in result.stdout, MOUNT_POINT in result.stdout
+
+
+# Attach the disk to wsl
+def wsl_attach():
+  command = [ 'wsl.exe', '--mount', '--vhd', DISK_PATH, '--bare' ]
+  result = subprocess.run(command, capture_output=True, text=True)
+
+  if result.returncode != 0:
+    raise Exception("wsl --mount failed: ", result.stderr)
+
+
+# Detach the disk from wsl
+def wsl_detach():
+  command = [ 'wsl.exe', '--unmount', DISK_PATH]
+  result = subprocess.run(command, capture_output=True, text=True)
+
+  if result.returncode != 0:
+    raise Exception("wsl --unmount failed: ", result.stderr)
+
+
+# Mount the disk by uuid
+def mount():
+  is_attached, is_mounted = is_attached_and_mounted()
+  if not is_attached:
+    wsl_attach()
+
+  if is_mounted:
+    print("Already mounted")
+    return
+
+  command = [ 'sudo', 'mount', '--uuid', SOURCES_FS_UUID, MOUNT_POINT ]
+  result = subprocess.run(command, capture_output=False, text=True)
+
+  if result.returncode != 0:
+    wsl_detach()
+    raise Exception("mount failed: ", result.stderr)
+
+
+# Unmount the disk and detach it from wsl
+def unmount():
+  is_attached, is_mounted = is_attached_and_mounted()
+
+  if is_mounted:
+    command = [ 'sudo', 'umount', MOUNT_POINT ]
+    result = subprocess.run(command, capture_output=True, text=True)
+
+  if is_attached:
+    wsl_detach()
+
+
+# Parse the command line arguments
+def main():
+  parser = argparse.ArgumentParser()
+  subparsers = parser.add_subparsers(dest='command')
+
+  # Create the parser for the "mount" command
+  parser_mount = subparsers.add_parser('mount')
+
+  # Create the parser for the "unmount" command
+  parser_unmount = subparsers.add_parser('unmount')
+
+  args = parser.parse_args()
+  if args.command == 'mount':
+    mount()
+  elif args.command == 'unmount':
+    unmount()
+  else:
+    parser.print_help()
+
+
+if __name__ == '__main__':
+  main()
