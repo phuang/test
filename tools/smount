@@ -47,7 +47,7 @@ def mount():
     print("Already mounted")
     return
 
-  command = [ 'sudo', 'mount', '--uuid', SOURCES_FS_UUID, MOUNT_POINT ]
+  command = [ 'sudo', 'mount', '-o', 'compress=zstd', '--uuid', SOURCES_FS_UUID, MOUNT_POINT ]
   result = subprocess.run(command, capture_output=False, text=True)
 
   if result.returncode != 0:
