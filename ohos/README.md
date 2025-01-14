@@ -61,8 +61,8 @@ dcheck_always_on = false
 is_component_build = false
 
 # Replace ${HOME} with your home path
-ohos_native_root = "${HOME}/sources/command-line-tools/sdk/default/openharmony/native"
-clang_base_path = "${HOME}/sources/command-line-tools/sdk/default/openharmony/native/llvm"
+ohos_native_root = "/home/penghuang/sources/command-line-tools/sdk/default/openharmony/native"
+clang_base_path = "/home/penghuang/sources/command-line-tools/sdk/default/openharmony/native/llvm"
 
 # workaround some build errors
 treat_warnings_as_errors = false
@@ -70,6 +70,7 @@ treat_warnings_as_errors = false
 # build graphite and dawn
 use_dawn = true
 skia_use_dawn = true
+skia_use_vulkan = true
 dawn_use_swiftshader = false
 dawn_enable_vulkan = true
 
@@ -97,7 +98,6 @@ use_zygote = true
 # use_static_angle = true
 
 # enable_base_tracing = false
-enable_screen_capture = false
 
 use_bundled_fontconfig = true
 enable_pdf = false
@@ -106,6 +106,7 @@ enable_extensions = false
 
 # Workaround v8 crash
 v8_control_flow_integrity = false
+
 ```
 
 8. Build chromium content_shell
