@@ -20,32 +20,38 @@ xz -d -T 0 -c rust-toolchain.tar.xz | tar -xv -C ${HOME}/sources/chromium/src/th
 ```
 5. Create ${HOME}/chromium/.gclient with below content
 ```python
+vars = {
+  'branch': 'ohos_support_133',
+  # old branch
+  # 'branch': 'ohos_support',
+}
+
 solutions = [
   {
-    "name": "src",
-    "url": "https://github.com/phuang/chromium.git@ohos_support",
+    'name': 'src',
+    'url': 'https://github.com/phuang/chromium.git' + '@' + vars['branch'],
     "managed": False,
     "custom_deps": {
       'src/third_party/llvm-build/Release+Asserts': None,
       'src/third_party/rust-toolchain': None,
-      'src/third_party/angle': 'https://github.com/phuang/angle.git@ohos_support',
-      'src/third_party/dawn': 'https://github.com/phuang/dawn.git@ohos_support',
-      'src/third_party/ffmpeg': 'https://github.com/phuang/FFmpeg.git@ohos_support',
-      'src/third_party/perfetto': 'https://github.com/phuang/perfetto.git@ohos_support',
-      'src/third_party/skia': 'https://github.com/phuang/skia.git@ohos_support',
-      'src/third_party/vulkan-headers/src': 'https://github.com/phuang/Vulkan-Headers.git@ohos_support',
-      'src/third_party/webrtc': 'https://github.com/phuang/webrtc.git@ohos_support',
-      'src/v8': 'https://github.com/phuang/v8.git@ohos_support',
+      'src/third_party/angle': 'https://github.com/phuang/angle.git' + '@' + vars['branch'],
+      'src/third_party/dawn': 'https://github.com/phuang/dawn.git' + '@' + vars['branch'],
+      'src/third_party/ffmpeg': 'https://github.com/phuang/FFmpeg.git' + '@' + vars['branch'],
+      'src/third_party/perfetto': 'https://github.com/phuang/perfetto.git' + '@' + vars['branch'],
+      'src/third_party/skia': 'https://github.com/phuang/skia.git' + '@' + vars['branch'],
+      'src/third_party/vulkan-headers/src': 'https://github.com/phuang/Vulkan-Headers.git' + '@' + vars['branch'],
+      'src/third_party/webrtc': 'https://github.com/phuang/webrtc.git' + '@' + vars['branch'],
+      'src/v8': 'https://github.com/phuang/v8.git' + '@' + vars['branch'],
 
       # Removing below deps can reduce gclient sync time
       'src/third_party/angle/third_party/VK-GL-CTS/src': None,
       'src/third_party/chromium-variations': None,
       'src/third_party/dawn/third_party/webgpu-cts': None,
     },
-    "custom_vars": {
-      "checkout_rust_toolchain_deps": True,
+    'custom_vars': {
+      'checkout_rust_toolchain_deps': True,
     },
-    "custom_hooks": []
+    'custom_hooks': []
   },
 ]
 ```
