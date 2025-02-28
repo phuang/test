@@ -1,3 +1,5 @@
+// https://android.googlesource.com/platform/frameworks/native/+/master/include/android/surface_control.h?pli=1#
+
 // 创建一个Node（surface control），他的父节点是一个native window
 ASurfaceControl* _Nullable ASurfaceControl_createFromWindow(ANativeWindow* _Nonnull parent,
                                                             const char* _Nonnull debug_name)
