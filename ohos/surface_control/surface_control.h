@@ -31,6 +31,30 @@ typedef void (*ASurfaceTransaction_OnCommit)(void* _Null_unspecified context,
                                              ASurfaceTransactionStats* _Nonnull stats)
         __INTRODUCED_IN(31);
 
+/**
+ * Sets the callback that will be invoked when the updates from this transaction
+ * are presented. For details on the callback semantics and data, see the
+ * comments on the ASurfaceTransaction_OnComplete declaration above.
+ *
+ * Available since API level 29.
+ */
+void ASurfaceTransaction_setOnComplete(ASurfaceTransaction* _Nonnull transaction,
+                                       void* _Null_unspecified context,
+                                       ASurfaceTransaction_OnComplete _Nonnull func)
+        __INTRODUCED_IN(29);
+
+/**
+ * Sets the callback that will be invoked when the updates from this transaction are applied and are
+ * ready to be presented. This callback will be invoked before the ASurfaceTransaction_OnComplete
+ * callback.
+ *
+ * Available since API level 31.
+ */
+void ASurfaceTransaction_setOnCommit(ASurfaceTransaction* _Nonnull transaction,
+                                     void* _Null_unspecified context,
+                                     ASurfaceTransaction_OnCommit _Nonnull func)
+        __INTRODUCED_IN(31);
+
 
 // 控制一个surface是否可见
 void ASurfaceTransaction_setVisibility(ASurfaceTransaction* _Nonnull transaction,
