@@ -1,6 +1,7 @@
 #include "A.h"
+#include "B.h"
 
 int main() {
-  A a;
+  test::B b;
   return 0;
 }

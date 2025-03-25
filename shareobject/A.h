@@ -4,8 +4,12 @@
 #define A_EXPORT
 #endif
 
+namespace test {
+
 class A_EXPORT A {
  public:
   A();
   virtual ~A();
 };
+
+}  // namespace test
