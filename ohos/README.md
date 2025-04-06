@@ -141,7 +141,8 @@ hash_dir = false
 11. [Optional] Build llvm and rust-toolchains from source code instead of using prebuilt from step 2
 ```shell
 cd ${HOME}/sources/chromium/src/tools/clang/scripts
-./build.py --bootstrap --with-ohos --without-android --without-fuchsia --install-dir ${HOME}/sources/llvm-install
+./build.py --bootstrap --with-ohos --without-android --without-fuchsia --with-ccache --install-dir ${HOME}/sources/llvm-install
+# ./build.py --bootstrap --with-ohos --without-android --without-fuchsia --with-ccache --skip-checkout --install-dir ${HOME}/sources/llvm-install
 
 cd ${HOME}/sources/chromium/src/tools/rust
 ./build_rust.py
