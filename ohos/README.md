@@ -22,8 +22,8 @@ xz -d -T 0 -c rust-toolchain.tar.xz | tar -xv -C ${HOME}/sources/chromium/src/th
 ```python
 vars = {
   'branch': 'ohos_support_135',
+  # old branches
   # 'branch': 'ohos_support_133',
-  # old branch
   # 'branch': 'ohos_support',
 }
 
