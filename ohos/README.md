@@ -21,7 +21,8 @@ xz -d -T 0 -c rust-toolchain.tar.xz | tar -xv -C ${HOME}/sources/chromium/src/th
 5. Create ${HOME}/chromium/.gclient with below content
 ```python
 vars = {
-  'branch': 'ohos_support_133',
+  'branch': 'ohos_support_135',
+  # 'branch': 'ohos_support_133',
   # old branch
   # 'branch': 'ohos_support',
 }
