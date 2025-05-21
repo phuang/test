@@ -110,6 +110,9 @@ angle_enable_gl = true
 angle_enable_swiftshader = false
 angle_use_custom_libvulkan = false
 
+# Build validating command decoder
+enable_validating_command_decoder = true
+
 # enable_base_tracing = false
 
 use_bundled_fontconfig = true
