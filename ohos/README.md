@@ -102,7 +102,13 @@ enable_bound_session_credentials  = true
 
 enable_printing = false
 use_zygote = true
+
+# ANGLE args
 # use_static_angle = true
+angle_enable_vulkan = true
+angle_enable_gl = true
+angle_enable_swiftshader = false
+angle_use_custom_libvulkan = false
 
 # enable_base_tracing = false
 
