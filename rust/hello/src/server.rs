@@ -1,7 +1,9 @@
+#![allow(dead_code)]
+
 use mio::net::{TcpListener as MioTcpListener, TcpStream as MioTcpStream};
 use mio::{Events, Interest, Poll, Token};
 use std::collections::HashMap;
-use std::io::{self, Read, Write};
+use std::io::{Read, Write};
 use std::net::SocketAddr;
 
 pub struct Server {
