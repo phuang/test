@@ -1,0 +1,9 @@
+[package]
+name = "hello"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+time = "0.1.22"
+regex = "0.1.41"
+mio = { version = "1.0.4", features = ["net", "os-poll"] }

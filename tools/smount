@@ -7,6 +7,7 @@ import getpass
 DISK_PATH = 'F:\\WSL\\chrome_ohos.vhdx'
 SOURCES_FS_UUID = 'ea1fed23-f73a-4c40-8e86-e57185d4e8c3'
 MOUNT_POINT = '/home/penghuang/sources'
+BTRFS_OPTIONS = 'compress=zstd'
 
 
 # Check if the disk is attached
@@ -47,7 +48,7 @@ def mount():
     print("Already mounted")
     return
 
-  command = [ 'sudo', 'mount', '-o', 'compress=zstd', '--uuid', SOURCES_FS_UUID, MOUNT_POINT ]
+  command = [ 'sudo', 'mount', '-o', BTRFS_OPTIONS, '--uuid', SOURCES_FS_UUID, MOUNT_POINT ]
   result = subprocess.run(command, capture_output=False, text=True)
 
   if result.returncode != 0:

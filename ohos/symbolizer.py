@@ -6,10 +6,11 @@ import os.path
 import re
 
 SYMBOLIZER = "/home/penghuang/sources/command-line-tools/sdk/default/openharmony/native/llvm/bin/llvm-symbolizer"
-LIBRARY = "/home/penghuang/sources/chromium/src/out/Release/lib.unstripped/libcontent_shell_content_view.so"
+LIBRARY = "/home/penghuang/sources/chromium/135/src/out/Release/lib.unstripped/libcontent_shell_content_view.so"
 # LIBRARY = "/home/penghuang/sources/chromium/src/out/Debug/exe.unstripped/base_unittests"
 # LIBRARY = "/home/penghuang/sources/chromium/src/out/Release/exe.unstripped/d8"
-BASENAMES = "/home/penghuang/sources/chromium/src/out/Release/../../"
+# LIBRARY = "/home/penghuang/sources/helloxcomponent/entry/build/default/intermediates/libs/default/arm64-v8a/libsurface_control.so"
+BASENAMES = "/home/penghuang/sources/chromium/135/src/out/Release/../../"
 
 def main():
   args = [
@@ -22,6 +23,7 @@ def main():
   process = subprocess.Popen(args, stdin=subprocess.PIPE, stdout=sys.stdout, stderr=sys.stderr)
   pattern = r"(?<=pc )([0-9a-fA-F]+)"
   for line in sys.stdin.readlines():
+    line.strip()
     match = re.search(pattern, line)
     if match:
       address = match.group(1)
