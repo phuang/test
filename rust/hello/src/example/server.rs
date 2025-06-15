@@ -8,6 +8,7 @@ use std::net::SocketAddr;
 
 pub struct Server {
     address_: String,
+    is_running_: bool,
     unique_token_: usize,
     clients_: HashMap<Token, MioTcpStream>,
     addr_map_: HashMap<Token, SocketAddr>,
@@ -18,6 +19,7 @@ impl Server {
     pub fn new(address: &str) -> Self {
         Server {
             address_: address.to_string(),
+            is_running_: false,
             unique_token_: 1,
             clients_: HashMap::new(),
             addr_map_: HashMap::new(),
@@ -35,8 +37,9 @@ impl Server {
             .register(&mut listener, Token(0), Interest::READABLE)?;
 
         println!("Server listening on {}", self.address_);
+        self.is_running_ = true;
 
-        loop {
+        while self.is_running_ {
             poll.poll(&mut events, None)?;
             println!("Events: {}", events.iter().count());
             for event in events.iter() {
@@ -61,6 +64,7 @@ impl Server {
                 }
             }
         }
+        return Ok(());
     }
 
     fn handle_client_event(
@@ -94,7 +98,7 @@ impl Server {
                     remove_client = true;
                 } else if data.trim() == "shutdown" {
                     println!("Shutdown command received. Stopping server.");
-                    std::process::exit(0);
+                    self.is_running_ = false;
                 } else {
                     let response = format!("echo: {}", data);
                     stream.write_all(response.as_bytes())?;
