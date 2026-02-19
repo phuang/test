@@ -1,0 +1,35 @@
+# Makefile for some useful android command lines
+
+# lunch:
+#	source build/envsetup.sh
+#   source build/make/rbesetup.sh
+#	lunch ${codename}-trunk_staging-userdebug
+
+CODENAME := grizzly
+
+PRODUCT_OUT :=  out/target/product/${CODENAME}
+VENDOR_OUT := ${PRODUCT_OUT}/vendor
+VENDOR_TARGET := /vendor
+
+libperfmgr:
+	mmm hardware/google/pixel/power-libperfmgr
+
+push_powerhal:
+	adb shell rm /vendor/bin/hw/android.hardware.power-service.pixel-libperfmgr
+	adb push \
+		${VENDOR_OUT}/bin/hw/android.hardware.power-service.pixel-libperfmgr \
+		/vendor/bin/hw/android.hardware.power-service.pixel-libperfmgr
+
+restart_powerhal:
+	adb shell setprop ctl.stop vendor.power-hal-aidl
+	sleep 1
+	adb shell setprop ctl.start vendor.power-hal-aidl
+
+flash:
+	./vendor/google/tools/flashall
+
+flash_incremental:
+	./vendor/google/tools/flashall --incremental_flash
+
+reboot:
+	adb reboot
