@@ -25,11 +25,16 @@ restart_powerhal:
 	sleep 1
 	adb shell setprop ctl.start vendor.power-hal-aidl
 
+FLASH_FLAGS := \
+	--disable_verity \
+	--disable_verification \
+	$(NULL)
+
 flash:
-	./vendor/google/tools/flashall
+	./vendor/google/tools/flashall ${FLASH_FLAGS}
 
 flash_incremental:
-	./vendor/google/tools/flashall --incremental_flash
+	./vendor/google/tools/flashall ${FLASH_FLAGS} --incremental_flash
 
 reboot:
 	adb reboot

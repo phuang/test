@@ -1,23 +1,23 @@
-DEVICE = spacecraft
+# Makefile for some useful android kernel build comandlines
+
+DEVICE = rango
 DIST_DIR = out/${DEVICE}/dist
 
-build:
-	./build_${DEVICE}.sh
-
-build_noprebuilt:
-	./build_${DEVICE}.sh --nouse_prebuilt_kernel
+build_kernel:
+# 	./build_${DEVICE}.sh --distdir=${DIST_DIR}
+	./build_${DEVICE}.sh --nouse_prebuilt_kernel --distdir=${DIST_DIR}
 
 disable_verify:
 	fastboot oem disable-verity
 	fastboot oem disable-verification
 
-flash_dtbo:
+flash_dtbo: disable_verify
 	fastboot flash dtbo ${DIST_DIR}/dtbo.img
 
 flash_boot:
 	fastboot flash vendor_kernel_boot ${DIST_DIR}/vendor_kernel_boot.img
 	fastboot flash boot ${DIST_DIR}/boot.img
-# 	fastboot reboot fastboot
+	fastboot reboot fastboot
 
 flash_dlkm:
 	fastboot flash vendor_dlkm ${DIST_DIR}/vendor_dlkm.img
@@ -26,6 +26,9 @@ flash_dlkm:
 
 reboot:
 	fastboot reboot
+
+reboot_w:
+	fastboot -w reboot
 
 reboot_fastboot:
 	adb reboot bootloader

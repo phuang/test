@@ -1,0 +1,15 @@
+PICK_PREBUILD = "/google/data/ro/teams/android-nexus/scm/pick_prebuilt.par"
+DEVICES = "spacecraft"
+PREBUILTS = "kernel-and-modules"
+KERNEL_BUILDID = "P119902850"
+
+build:
+	$(PICK_PREBUILD) \
+	--devices $(DEVICES) \
+	--abranches main \
+	--build_id $(KERNEL_BUILDID) \
+	--prebuilts $(PREBUILTS) \
+	--push
+
+help:
+	$(PICK_PREBUILD) --help
