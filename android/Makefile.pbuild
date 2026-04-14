@@ -1,15 +1,24 @@
 PICK_PREBUILD = "/google/data/ro/teams/android-nexus/scm/pick_prebuilt.par"
 DEVICES = "spacecraft"
-PREBUILTS = "kernel-and-modules"
-KERNEL_BUILDID = "P119902850"
+KERNEL_BUILDID = "P120403391"
+BOOTLOADER_BUILDID = "P121141651"
 
-build:
+pick_prebuilt_kernel:
 	$(PICK_PREBUILD) \
 	--devices $(DEVICES) \
 	--abranches main \
 	--build_id $(KERNEL_BUILDID) \
-	--prebuilts $(PREBUILTS) \
+	--prebuilts kernel-and-modules \
 	--push
 
 help:
 	$(PICK_PREBUILD) --help
+
+pick_prebuilt_bootloader:
+	${PICK_PREBUILD} \
+	--devices ${DEVICES} \
+	--abranches main \
+	--build_id P121141651  \
+	--config 26D1-test-signed \
+	--prebuilts malibu-bootloader \
+	--push

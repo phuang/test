@@ -1,34 +1,68 @@
 # Makefile for some useful android kernel build comandlines
 
-DEVICE = rango
+DEVICE = spacecraft
 DIST_DIR = out/${DEVICE}/dist
+
+WARN = \033[31mWARN\033[0m:
+INFO = \033[32mINFO\033[0m:
 
 build_kernel:
 # 	./build_${DEVICE}.sh --distdir=${DIST_DIR}
 	./build_${DEVICE}.sh --nouse_prebuilt_kernel --distdir=${DIST_DIR}
 
 disable_verify:
+	@echo -e "${INFO} Disabling verity and verification on the device..."
 	fastboot oem disable-verity
 	fastboot oem disable-verification
 
+# dtbo.img contains the Device Tree Blob Overlay.
 flash_dtbo: disable_verify
+	@echo -e "${INFO} Flashing dtbo image..."
 	fastboot flash dtbo ${DIST_DIR}/dtbo.img
 
+# vendor_kernel_boot.img contains the vendor ramdisk with first-stage kernel
+# modules (especially those needed to mount other partitions), the device-specific
+# Device Tree Blob (DTB), and other vendor-specific boot code. 
 flash_boot:
+	@echo -e "${INFO} Flashing vendor_kernel_boot and boot images..."
 	fastboot flash vendor_kernel_boot ${DIST_DIR}/vendor_kernel_boot.img
 	fastboot flash boot ${DIST_DIR}/boot.img
+	@echo -e "${INFO} Flashing completed. Rebooting the device into fastboot mode..."
+	@read -p "Press Enter to reboot the device into fastboot mode..."
 	fastboot reboot fastboot
 
+# vendor_dlkm.img: This partition holds vendor Dynamically Loadable Kernel Modules.
+# These are device-specific or System-on-a-Chip (SoC) specific kernel modules.
+# Separating them into their own partition allows the vendor to update these drivers
+# independently of the main vendor image or the kernel image.
+#
+# system_dlkm.img: This partition contains Generic Kernel Image (GKI) modules. These
+# modules are part of the GKI effort but are not built into the core kernel binary
+# in boot.img. This allows for a modular kernel design and easier updates to these
+# system-level modules.
 flash_dlkm:
+	@echo -e "${INFO} Flashing vendor_dlkm and system_dlkm images..."
 	fastboot flash vendor_dlkm ${DIST_DIR}/vendor_dlkm.img
 	fastboot flash system_dlkm ${DIST_DIR}/system_dlkm.img
 	fastboot reboot bootloader
+	@echo -e "${INFO} Flashing completed. Rebooting the device..."
 
 reboot:
+	@echo -e "${INFO} Rebooting the device..."
 	fastboot reboot
 
 reboot_w:
+	@echo -e "${WARN} Rebooting the device with wipe (factory reset)..."
 	fastboot -w reboot
 
 reboot_fastboot:
+	@echo -e "${INFO} Rebooting the device into fastboot mode..."
 	adb reboot bootloader
+
+flash_all: reboot_fastboot flash_dtbo flash_boot flash_dlkm
+
+test:
+    # echo with green color
+	@echo -e "${INFO} This is a test target. You can run 'make flash_all' to flash all images."
+	@echo -e "${WARN} This is a test target. You can run 'make flash_all' to flash all images."
+	@echo -e "${INFO} This is a test target. You can run 'make flash_all' to flash all images."
