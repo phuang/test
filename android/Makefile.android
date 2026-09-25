@@ -4,8 +4,10 @@
 #	source build/envsetup.sh
 #   source build/make/rbesetup.sh
 #	lunch ${codename}-trunk_staging-userdebug
+#
+# alias fastm='prebuilts/build-tools/linux-x86/bin/ninja -f out/combined-${TARGET_PRODUCT}.ninja'
 
-CODENAME := grizzly
+CODENAME := cubs
 
 PRODUCT_OUT :=  out/target/product/${CODENAME}
 VENDOR_OUT := ${PRODUCT_OUT}/vendor
@@ -15,7 +17,7 @@ libperfmgr:
 	mmm hardware/google/pixel/power-libperfmgr
 
 push_powerhal:
-	adb shell rm /vendor/bin/hw/android.hardware.power-service.pixel-libperfmgr
+	-adb shell rm /vendor/bin/hw/android.hardware.power-service.pixel-libperfmgr
 	adb push \
 		${VENDOR_OUT}/bin/hw/android.hardware.power-service.pixel-libperfmgr \
 		/vendor/bin/hw/android.hardware.power-service.pixel-libperfmgr
@@ -38,3 +40,24 @@ flash_incremental:
 
 reboot:
 	adb reboot
+
+pull_qos_config:
+	adb pull /vendor/etc/app_qos_processes.json app_qos_processes.json
+	adb pull /vendor/etc/app_qos_mappings.json app_qos_mappings.json
+
+pull_powerhint_config:
+	adb pull /vendor/etc/powerhint.json powerhint.json
+
+pull_config: pull_qos_config pull_powerhint_config
+
+push_qos_config:
+	adb push app_qos_processes.json /data/vendor/etc/app_qos_processes.json
+	adb push app_qos_mappings.json /data/vendor/etc/app_qos_mappings.json
+
+push_powerhint_config:
+	adb push powerhint.json /data/vendor/etc/powerhint.json
+
+push_config: push_qos_config push_powerhint_config
+
+enable_debug:
+	adb shell setprop persist.vendor.powerhal.config.debug true

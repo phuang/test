@@ -28,7 +28,7 @@ flash_boot:
 	fastboot flash vendor_kernel_boot ${DIST_DIR}/vendor_kernel_boot.img
 	fastboot flash boot ${DIST_DIR}/boot.img
 	@echo -e "${INFO} Flashing completed. Rebooting the device into fastboot mode..."
-	@read -p "Press Enter to reboot the device into fastboot mode..."
+	# @read -p "Press Enter to reboot the device into fastboot mode..."
 	fastboot reboot fastboot
 
 # vendor_dlkm.img: This partition holds vendor Dynamically Loadable Kernel Modules.
@@ -57,12 +57,15 @@ reboot_w:
 
 reboot_fastboot:
 	@echo -e "${INFO} Rebooting the device into fastboot mode..."
-	adb reboot bootloader
+	-adb reboot bootloader
 
 flash_all: reboot_fastboot flash_dtbo flash_boot flash_dlkm
 
 test:
-    # echo with green color
 	@echo -e "${INFO} This is a test target. You can run 'make flash_all' to flash all images."
 	@echo -e "${WARN} This is a test target. You can run 'make flash_all' to flash all images."
 	@echo -e "${INFO} This is a test target. You can run 'make flash_all' to flash all images."
+
+
+adb_reboot_bootloader:
+	adb reboot bootloader
